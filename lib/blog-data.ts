@@ -575,6 +575,62 @@ Banyak pembeli cemas saat melacak resi Shopee Express (SPX) dan mendapati paket 
       buttonText: 'Lacak Paket Sekarang 🔍',
     },
   },
+  {
+    slug: 'cara-membuat-slide-presentasi-otomatis-ai-powerpoint',
+    title: 'Cara Membuat Slide Presentasi Otomatis dengan AI Siap Download PPTX',
+    excerpt: 'Panduan menyusun materi presentasi rapat kantor, pitch deck bisnis, atau tugas kuliah hanya dari satu kalimat topik.',
+    category: 'Tips SEO',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Buntu Saat Harus Membuat Slide Presentasi Mendadak?
+Membuat slide presentasi PowerPoint sering kali memakan waktu berjam-jam: mulai dari memikirkan struktur alur bab, merumuskan poin ringkas, hingga menyiapkan catatan pembicara (*speaker notes*).
+
+Kini dengan [AI Presentation Generator](/ai-presentation-maker) di KompresKilat, Anda cukup mengetikkan topik bahasan, dan kecerdasan buatan akan menyusun seluruh struktur slide dalam sekejap.
+
+---
+
+### Keunggulan Format Berkas Asli .PPTX:
+- **Bisa Diedit Bebas**: File unduhan berupa ekstensi *.pptx* asli, bukan sekadar tangkapan layar gambar atau PDF kaku.
+- **Kompatibel Lintas Platform**: Dapat dibuka di Microsoft PowerPoint, Google Slides, LibreOffice, maupun WPS Office di HP dan laptop.
+- **Dilengkapi Catatan Pembicara**: Membantu Anda percaya diri saat berbicara di depan audiens tanpa harus menghafal seluruh isi materi.
+    `,
+    relatedTool: {
+      title: 'Coba AI Presentation Generator',
+      description: 'Ketik topik Anda dan unduh berkas PowerPoint (.pptx) lengkap dalam 5 detik.',
+      url: '/ai-presentation-maker',
+      icon: '📊',
+      buttonText: 'Buat Slide AI Sekarang ⚡',
+    },
+  },
+  {
+    slug: 'cara-memperjelas-foto-buram-online-super-resolution',
+    title: 'Cara Memperjelas Foto Buram & Pecah Menjadi HD dengan AI Super Resolution',
+    excerpt: 'Teknik meningkatkan resolusi foto pas foto KTP atau gambar lama hingga 4x Ultra HD tanpa pecah secara instan.',
+    category: 'Gambar & Foto',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Mengapa Foto Terlihat Pecah dan Berbintik?
+Saat foto beresolusi kecil diperbesar secara manual di aplikasi galeri, piksel gambar akan meregang dan menghasilkan efek kotak-kotak (*pixelated*) atau buram (*blur*).
+
+Teknologi **AI Super Resolution & Unsharp Masking** di KompresKilat bekerja secara cerdas:
+1. **Rekonstruksi Sub-Piksel**: Menghitung gradien warna di antara piksel yang renggang agar tekstur tetap halus.
+2. **Penajaman Garis Tepi**: Mempertegas kontur mata, bibir, pakaian, dan huruf tulisan pada dokumen KTP atau ijazah.
+3. **Peningkatan Resolusi Hingga 4x**: Mengubah foto kecil 500px menjadi gambar tajam 2000px siap cetak.
+
+Coba langsung fitur [AI Photo Enhancer](/ai-image-tools) kami secara gratis langsung di browser Anda.
+    `,
+    relatedTool: {
+      title: 'Perjelas Foto Anda Sekarang',
+      description: 'Pertajam foto buram dan naikkan resolusi hingga 4x Ultra HD gratis.',
+      url: '/ai-image-tools',
+      icon: '✨',
+      buttonText: 'Tingkatkan Kualitas Foto 📸',
+    },
+  },
 ];
 
 export function getAllPosts(): BlogPost[] {

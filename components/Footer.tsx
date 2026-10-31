@@ -22,6 +22,12 @@ export default function Footer() {
           <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Alat Populer</h4>
           <ul className="space-y-1.5">
             <li>
+              <Link href="/ai-image-tools" className="hover:text-indigo-600 transition font-medium text-indigo-700">✨ AI Photo Enhancer &amp; Upscaler</Link>
+            </li>
+            <li>
+              <Link href="/ai-presentation-maker" className="hover:text-indigo-600 transition font-medium text-indigo-700">📊 AI Presentation Generator (.pptx)</Link>
+            </li>
+            <li>
               <Link href="/tools/image" className="hover:text-indigo-600 transition">Kompres Gambar KTP / CPNS</Link>
             </li>
             <li>

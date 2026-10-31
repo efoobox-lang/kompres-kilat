@@ -25,6 +25,20 @@ export default function Home() {
 
         {/* Kotak Pilihan Tools Utama */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 text-left mb-10 sm:mb-16">
+          <Link href="/ai-image-tools" className="bg-gradient-to-br from-indigo-50/50 to-white p-5 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+            <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BARU AI</span>
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">✨</div>
+            <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">AI Photo Enhancer &amp; Upscale</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">Perjelas foto buram, naikkan resolusi hingga 4x Ultra HD, dan perbaiki pencahayaan.</p>
+          </Link>
+
+          <Link href="/ai-presentation-maker" className="bg-gradient-to-br from-purple-50/50 to-white p-5 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+            <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BARU AI</span>
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
+            <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-purple-600 mb-1">AI Presentation Generator</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">Susun struktur presentasi dari ide teks dan unduh langsung format PowerPoint (.pptx).</p>
+          </Link>
+
           <Link href="/tools/image" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
             <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🖼️</div>
             <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">Kompres &amp; Konversi Gambar</h2>

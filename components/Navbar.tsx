@@ -10,9 +10,9 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Beranda' },
-    { href: '/tools/image', label: 'Kompres Gambar' },
-    { href: '/tools/remove-bg', label: 'Ganti Background' },
-    { href: '/tools/object-eraser', label: 'Hapus Objek' },
+    { href: '/tools/image', label: 'Kompres' },
+    { href: '/ai-image-tools', label: '✨ AI Image' },
+    { href: '/ai-presentation-maker', label: '📊 AI Slide' },
     { href: '/tools/tracking', label: 'Lacak Resi' },
     { href: '/blog', label: 'Blog' },
   ];
@@ -97,6 +97,24 @@ export default function Navbar() {
             }`}
           >
             🖼️ Kompres Gambar (KTP/CPNS)
+          </Link>
+          <Link
+            href="/ai-image-tools"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/ai-image-tools') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            ✨ AI Photo Enhancer &amp; Upscale
+          </Link>
+          <Link
+            href="/ai-presentation-maker"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/ai-presentation-maker') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            📊 AI Presentation (PPTX Generator)
           </Link>
           <Link
             href="/tools/remove-bg"
