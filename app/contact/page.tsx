@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function ContactPage() {
@@ -15,26 +15,18 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <header className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center border-b border-slate-200">
-        <div className="flex items-center space-x-2">
-          <Link href="/" className="text-2xl font-black text-indigo-600">⚡ KompresKilat</Link>
-        </div>
-        <nav className="space-x-6 text-sm font-medium">
-          <Link href="/" className="text-slate-600 hover:text-indigo-600">Beranda</Link>
-          <Link href="/blog" className="text-slate-600 hover:text-indigo-600">Blog & Panduan</Link>
-        </nav>
-      </header>
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+      <Navbar />
 
-      <section className="max-w-4xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Kolom Informasi Kontak */}
-          <div className="md:col-span-1 space-y-6">
+          <div className="md:col-span-1 space-y-4 sm:space-y-6">
             <div>
-              <span className="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 Layanan Bantuan
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 mt-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
                 Hubungi Kami
               </h1>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
@@ -42,10 +34,10 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs">
+            <div className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3 sm:space-y-4 text-xs">
               <div>
                 <span className="text-slate-400 block font-medium">Email Dukungan &amp; Iklan:</span>
-                <a href="mailto:support@kompreskilat.com" className="font-bold text-indigo-600 hover:underline">
+                <a href="mailto:support@kompreskilat.com" className="font-bold text-indigo-600 hover:underline break-all">
                   support@kompreskilat.com
                 </a>
               </div>
@@ -62,8 +54,8 @@ export default function ContactPage() {
 
           {/* Kolom Formulir Pesan */}
           <div className="md:col-span-2">
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Kirimkan Pesan Anda</h2>
+            <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4">Kirimkan Pesan Anda</h2>
 
               {isSubmitted ? (
                 <div className="p-6 bg-green-50 border border-green-200 rounded-xl text-center space-y-2">
@@ -77,13 +69,13 @@ export default function ContactPage() {
                       setIsSubmitted(false);
                       setFormData({ name: '', email: '', subject: '', message: '' });
                     }}
-                    className="mt-3 text-xs text-green-800 underline font-semibold"
+                    className="mt-3 text-xs text-green-800 underline font-semibold cursor-pointer"
                   >
                     Kirim Pesan Lain
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 text-xs">
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap:</label>
                     <input
@@ -92,7 +84,7 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Masukkan nama Anda"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -104,7 +96,7 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="nama@domain.com"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -113,7 +105,7 @@ export default function ContactPage() {
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                      className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                     >
                       <option value="">Pilih Subjek Pesan</option>
                       <option value="pertanyaan">Pertanyaan Penggunaan Tools</option>
@@ -131,13 +123,13 @@ export default function ContactPage() {
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder="Tuliskan pesan, masukan, atau kendala Anda di sini..."
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm cursor-pointer"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm cursor-pointer text-xs sm:text-sm"
                   >
                     Kirim Pesan Sekarang 🚀
                   </button>
@@ -152,4 +144,3 @@ export default function ContactPage() {
     </main>
   );
 }
-

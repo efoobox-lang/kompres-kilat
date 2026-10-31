@@ -4,6 +4,7 @@ import { getAllPosts, getPostBySlug } from '@/lib/blog-data';
 import type { Metadata } from 'next';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 interface PageProps {
@@ -84,19 +85,11 @@ export default async function BlogPostPage({ params }: PageProps) {
     <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
       <JsonLd data={articleSchema} />
 
-      {/* Header / Navbar */}
-      <header className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center border-b border-slate-200">
-        <div className="flex items-center space-x-2">
-          <Link href="/" className="text-2xl font-black text-indigo-600">⚡ KompresKilat</Link>
-        </div>
-        <nav className="space-x-6 text-sm font-medium">
-          <Link href="/" className="text-slate-600 hover:text-indigo-600">Beranda</Link>
-          <Link href="/blog" className="text-indigo-600 font-bold">Blog & Panduan</Link>
-        </nav>
-      </header>
+      {/* Header / Navbar Responsif */}
+      <Navbar />
 
       {/* Konten Artikel */}
-      <article className="max-w-3xl mx-auto px-6 py-10">
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="mb-6">
           <Link href="/blog" className="text-xs font-semibold text-indigo-600 hover:underline mb-4 inline-flex items-center gap-1">
             <span>←</span> Kembali ke Semua Artikel
