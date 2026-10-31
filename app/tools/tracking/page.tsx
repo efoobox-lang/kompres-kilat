@@ -321,15 +321,6 @@ export default function TrackingPage() {
         {/* Hasil Lacak Resi */}
         {trackingResult && (
           <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-            {trackingResult.isDemo && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-                <span>💡</span>
-                <div>
-                  <b>Info Sistem:</b> {trackingResult.demoNotice}
-                </div>
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <p className="text-xs text-slate-400">Kurir Pengiriman: <b>{trackingResult.courierName}</b></p>

@@ -9,17 +9,17 @@ export default function StickyAd() {
 
   return (
     <aside 
-      aria-label="Iklan Sponsor"
+      aria-label="Iklan"
       className="fixed bottom-0 left-0 right-0 z-50 px-2 py-1.5 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl"
     >
       <div className="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
-        <div className="flex-1 flex items-center justify-center bg-indigo-50/70 rounded-lg border border-indigo-100 py-1.5 px-2.5 text-center">
-          <p className="text-[10px] sm:text-xs text-slate-800 line-clamp-1">
-            <span className="bg-indigo-600 text-white font-bold text-[9px] px-1.5 py-0.5 rounded mr-1.5 inline-block">
-              SPONSOR
+        <div className="flex-1 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200 py-1.5 px-2.5 text-center">
+          <p className="text-[10px] sm:text-xs text-slate-700 line-clamp-1">
+            <span className="bg-slate-200 text-slate-700 font-bold text-[9px] px-1.5 py-0.5 rounded mr-1.5 inline-block">
+              Iklan
             </span>
-            <span className="font-semibold">
-              ⚡ Promo Cloud Hosting &amp; Domain Murah untuk Web &amp; Bisnis Online
+            <span className="font-medium text-slate-600">
+              Layanan Kompres &amp; Konversi File Kilat Tanpa Batas — 100% Gratis &amp; Privasi Terjaga
             </span>
           </p>
         </div>

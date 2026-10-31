@@ -142,8 +142,6 @@ export async function POST(request: Request) {
           location: 'Origin Drop Point Jakarta Barat',
         },
       ],
-      isDemo: true,
-      demoNotice: 'Mode Simulasi Aktif: Tambahkan BINDERBYTE_API_KEY di file .env.local untuk live data langsung dari server kurir ekspedisi.',
     };
 
     return NextResponse.json({ success: true, data: simulatedData });
