@@ -2,7 +2,7 @@ export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel';
+  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel' | 'Kecerdasan Buatan (AI)';
   date: string;
   readTime: string;
   author: string;
@@ -629,6 +629,120 @@ Coba langsung fitur [AI Photo Enhancer](/ai-image-tools) kami secara gratis lang
       url: '/ai-image-tools',
       icon: '✨',
       buttonText: 'Tingkatkan Kualitas Foto 📸',
+    },
+  },
+  {
+    slug: 'cara-mengubah-pdf-ke-excel-tabel-rapi-tanpa-software',
+    title: 'Cara Mengubah Dokumen PDF ke Excel Rapi Per Kolom Tanpa Berantakan',
+    excerpt: 'Panduan mengekstrak tabel laporan keuangan, mutasi rekening, dan invoice PDF langsung menjadi file spreadsheet Microsoft Excel (.xlsx) asli.',
+    category: 'Spreadsheet & Excel',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Masalah Klasik: Tabel PDF yang Hancur Saat Disalin ke Excel
+Hampir setiap staf administrasi, akuntan, mahasiswa, atau pebisnis pernah mengalami rasa frustrasi saat menyalin (*copy-paste*) tabel dari dokumen PDF ke Microsoft Excel. Hasilnya seringkali berantakan: seluruh angka dan teks menumpuk di satu kolom tunggal, spasi bergeser, atau format garis tabel hilang sama sekali.
+
+Mengapa hal ini terjadi? Dokumen PDF dirancang untuk mempertahankan tampilan visual grafis di atas kertas (*vector layout*), bukan struktur sel basis data. Akibatnya, peramban dan editor teks biasa tidak memahami batas antar-kolom.
+
+---
+
+### Solusi Cerdas: Konversi Otomatis dengan Algoritma Pemetaan Sel
+Fitur [Konversi PDF ke Excel](/tools/pdf-to-excel) di KompresKilat hadir untuk mengatasi kendala tersebut dengan teknologi pemindaian koordinat teks cerdas:
+1. **Deteksi Delimiter & Kolom Otomatis**: Sistem secara otomatis mengidentifikasi pemisah tab, koma, titik koma, atau spasi lebar untuk menentukan letak kolom yang tepat.
+2. **Generasi Berkas XLSX Murni**: Berkas yang diunduh bukan sekadar file teks yang diganti namanya, melainkan spreadsheet **OpenXML (.xlsx)** asli berstandar Microsoft Excel.
+3. **Privasi 100% Terjaga**: Laporan keuangan, slip gaji, dan data rahasia Anda diproses langsung di memori perangkat lokal Anda tanpa pernah diunggah ke server pihak ketiga.
+
+---
+
+### Langkah Mudah Mengonversi PDF ke Lembar Kerja Excel:
+1. Buka halaman alat [PDF ke Excel KompresKilat](/tools/pdf-to-excel).
+2. Unggah dokumen PDF tabel yang ingin Anda olah.
+3. Pilih pemisah kolom (tersedia opsi **Otomatis**, **Tab**, **Koma**, **Titik Koma**, atau **Spasi Ganda**).
+4. Tinjau pratinjau tabel pada layar untuk memastikan batas kolom sudah rapi.
+5. Klik **Unduh Berkas Excel (.xlsx) Asli** dan file siap langsung diolah rumusnya di Excel atau Google Sheets.
+    `,
+    relatedTool: {
+      title: 'Konversi PDF ke Excel Sekarang',
+      description: 'Ekstrak tabel dan mutasi PDF ke format .xlsx rapi per kolom gratis tanpa instalasi.',
+      url: '/tools/pdf-to-excel',
+      icon: '📊',
+      buttonText: 'Ubah PDF ke Excel 🚀',
+    },
+  },
+  {
+    slug: 'cara-membuat-poster-promosi-brosur-jualan-ai-otomatis',
+    title: 'Cara Membuat Brosur & Poster Promosi Jualan Otomatis dengan AI Siap Cetak',
+    excerpt: 'Tips merancang materi promosi, flyer diskon kuliner, dan pamflet bisnis beresolusi tinggi 1080p tanpa perlu keahlian desain grafis.',
+    category: 'Kecerdasan Buatan (AI)',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Tantangan Pelaku Usaha UMKM dalam Membuat Materi Iklan
+Bagi pemilik kedai kopi, usaha kuliner, waralaba, atau pelaku bisnis online, membuat materi promosi visual yang menarik seringkali terkendala oleh dua hal: biaya sewa desainer grafis yang tinggi dan rumitnya mengoperasikan software desain profesional seperti Adobe Photoshop atau Illustrator.
+
+Kini, dengan pemanfaatan kecerdasan buatan (*Artificial Intelligence*), membuat poster promosi memikat hanya memerlukan beberapa detik.
+
+---
+
+### Keunggulan Studio Desain AI di KompresKilat:
+- **Copywriting Persuasif Otomatis**: Cukup ketik konsep singkat (contoh: *buatkan brosur jualan kopi desainnya lebih meriah*), AI akan langsung menyusun judul (*headline* kapital tebal), badge promo khusus, deskripsi persuasif, poin keunggulan, hingga ajakan aksi (*Call To Action* WhatsApp).
+- **Format Siap Posting & Siap Cetak**: Menghasilkan gambar beresolusi tinggi **1080p HD** dalam rasio Persegi 1:1 (ideal untuk Instagram Feed & WhatsApp Status) atau Vertikal 4:5 (Flyer & Story).
+- **Bebas Tipografi Rusak**: Menggunakan mesin visual canvas lokal yang menjamin tulisan Bahasa Indonesia tercetak tajam, jelas, dan tanpa salah eja.
+
+---
+
+### Cara Menggunakan AI Poster & Brosur Studio:
+1. Kunjungi [AI Poster & Brosur Studio](/tools/poster-generator).
+2. Tulis deskripsi produk atau promo yang Anda tawarkan di kolom prompt.
+3. Pilih rasio desain (Persegi 1:1 atau Vertikal 4:5).
+4. Klik tombol **Rancang Poster & Brosur Sekarang ⚡**.
+5. Klik **Unduh Gambar Poster HD (.png)** untuk langsung membagikannya ke media sosial atau mencetaknya.
+    `,
+    relatedTool: {
+      title: 'Rancang Poster AI Anda Sekarang',
+      description: 'Hasilkan materi promosi profesional beresolusi 1080p gratis dalam hitungan detik.',
+      url: '/tools/poster-generator',
+      icon: '🎨',
+      buttonText: 'Buka Poster Generator ⚡',
+    },
+  },
+  {
+    slug: 'cara-lacak-resi-semua-ekspedisi-jne-jnt-sicepat-spx-sekaligus',
+    title: 'Cara Lacak Resi Pengiriman JNE, J&T, SiCepat, dan SPX Secara Akurat dalam Satu Layar',
+    excerpt: 'Panduan praktis mengecek histori pengiriman paket belanja online dari berbagai kurir ekspedisi populer di Indonesia secara real-time.',
+    category: 'Ekspedisi & Resi',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Memantau Paket Belanja Online Tanpa Pindah-Pindah Aplikasi
+Saat berbelanja di berbagai platform marketplace (seperti Shopee, Tokopedia, TikTok Shop, atau Lazada), penjual seringkali menggunakan kurir yang berbeda-beda: hari ini JNE, besok SiCepat, lusa Shopee Xpress (SPX) atau J&T Express.
+
+Membuka situs web atau aplikasi masing-masing kurir satu per satu sangat memakan waktu. Belum lagi jika situs ekspedisi tersebut lambat atau dipenuhi iklan pop-up yang mengganggu.
+
+---
+
+### Fitur Pelacakan Paket Terpadu di KompresKilat:
+Untuk memberikan kenyamanan maksimal bagi pengguna, KompresKilat menyediakan [Fitur Lacak Resi Otomatis](/tools/tracking) yang terhubung langsung ke gateway ekspedisi resmi:
+1. **Multi-Kurir Terlengkap**: Mendukung pelacakan resi untuk **JNE**, **J&T Express**, **SiCepat**, dan **Shopee Xpress (SPX)**.
+2. **Histori Perjalanan Terperinci**: Menampilkan linimasa perjalanan paket dari Drop Point, Hub Sortir kota asal, proses transit antar-kota, hingga nama kurir pengantar ke alamat Anda.
+3. **Penyimpanan Riwayat Terakhir**: Nomor resi yang pernah Anda lacak tersimpan secara otomatis di peramban, sehingga Anda cukup klik sekali tanpa perlu mengetik ulang nomor resi yang panjang.
+
+---
+
+### Tips Jika Paket Terlihat "Stuck" atau Berhenti Bergerak:
+- **Perhatikan Hari Libur Nasional**: Beberapa hub ekspedisi mengurangi jadwal pengiriman antarpulau pada hari libur besar.
+- **Waktu Pembaruan Sistem (Update Delay)**: Terkadang status paket fisik sudah berpindah ke armada truk, namun pemindaian barcode di gudang baru diperbarui dalam rentang 4–6 jam.
+- **Periksa Hub Transit Terakhir**: Jika paket tidak bergerak lebih dari 3x24 jam di hub yang sama, catat ID resi dan segera hubungi layanan call center resmi ekspedisi terkait.
+    `,
+    relatedTool: {
+      title: 'Lacak Paket Anda Sekarang',
+      description: 'Cek posisi paket terkini dari JNE, J&T, SiCepat, dan SPX secara instan & akurat.',
+      url: '/tools/tracking',
+      icon: '📦',
+      buttonText: 'Lacak Resi Paket 🔍',
     },
   },
 ];

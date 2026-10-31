@@ -58,6 +58,12 @@ export default function Footer() {
               <Link href="/tools/csv-to-excel" className="hover:text-indigo-600 transition">Konverter CSV ke Excel</Link>
             </li>
             <li>
+              <Link href="/tools/pdf-to-excel" className="hover:text-indigo-600 transition">Konversi PDF ke Excel (.xlsx)</Link>
+            </li>
+            <li>
+              <Link href="/tools/poster-generator" className="hover:text-indigo-600 transition">AI Poster &amp; Brosur Studio</Link>
+            </li>
+            <li>
               <Link href="/tools/zip" className="hover:text-indigo-600 transition">Pembuat Arsip ZIP</Link>
             </li>
             <li>

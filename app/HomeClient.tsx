@@ -72,6 +72,18 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_word_desc')}</p>
         </Link>
 
+        <Link href="/tools/pdf-to-excel" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📈</div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_excel_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_excel_desc')}</p>
+        </Link>
+
+        <Link href="/tools/poster-generator" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🎨</div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_poster_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_poster_desc')}</p>
+        </Link>
+
         <Link href="/tools/excel-to-csv" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_excel_csv_title')}</h2>
