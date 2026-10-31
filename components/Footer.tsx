@@ -37,6 +37,12 @@ export default function Footer() {
               <Link href="/tools/tracking" className="hover:text-indigo-600 transition">Lacak Resi Ekspedisi (SPX, J&T, JNE)</Link>
             </li>
             <li>
+              <Link href="/tools/excel-to-csv" className="hover:text-indigo-600 transition">Konverter Excel ke CSV</Link>
+            </li>
+            <li>
+              <Link href="/tools/csv-to-excel" className="hover:text-indigo-600 transition">Konverter CSV ke Excel</Link>
+            </li>
+            <li>
               <Link href="/tools/zip" className="hover:text-indigo-600 transition">Pembuat Arsip ZIP</Link>
             </li>
             <li>
