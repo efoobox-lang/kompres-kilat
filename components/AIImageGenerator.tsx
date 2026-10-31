@@ -178,7 +178,7 @@ export default function AIImageGenerator() {
 
     const dataUrl = canvas.toDataURL('image/png', 0.95);
     setGeneratedImageUrl(dataUrl);
-    setProviderInfo('KompresKilat AI Visual Studio (1080p HD)');
+    setProviderInfo('Google Gemini (AI Studio) + KompresKilat Visual Studio');
     setIsLoading(false);
   };
 
@@ -252,17 +252,17 @@ export default function AIImageGenerator() {
           </div>
         </div>
 
-        {/* Tab Mesin */}
+        {/* Info Mesin AI */}
         <div className="p-2 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-800 ml-1">
-              ⚡ <b>AI Visual Studio Engine</b>
+              ✨ Ditenagai oleh: <b>Google Gemini (AI Studio)</b>
             </span>
             <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">
               Siap Cetak 1080p HD
             </span>
           </div>
-          <span className="text-[11px] text-slate-500 hidden sm:inline">100% Gratis &amp; Siap Pakai</span>
+          <span className="text-[11px] text-slate-500 hidden sm:inline">100% Gratis &amp; Transparan</span>
         </div>
 
         <form onSubmit={handleGenerate} className="space-y-4">

@@ -95,7 +95,7 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
             return NextResponse.json({
               success: true,
               designData: parsedDesign,
-              provider: 'KompresKilat AI Visual Studio',
+              provider: 'Google Gemini (AI Studio)',
               prompt: cleanPrompt,
             });
           }
