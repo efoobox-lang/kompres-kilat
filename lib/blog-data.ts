@@ -2,7 +2,7 @@ export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto';
+  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel';
   date: string;
   readTime: string;
   author: string;
@@ -338,6 +338,241 @@ Setiap format file gambar memiliki karakteristik algoritma kompresi yang berbeda
       url: '/tools/image',
       icon: '🖼️',
       buttonText: 'Coba Konversi Gambar ⚡',
+    },
+  },
+  {
+    slug: 'aturan-warna-background-pas-foto-cpns-bumn-merah-biru',
+    title: 'Aturan Warna Background Pas Foto CPNS & BUMN: Kapan Pakai Merah dan Biru?',
+    excerpt: 'Penjelasan resmi aturan warna latar belakang pas foto ijazah, KTP, dan seleksi instansi pemerintah berdasarkan tahun kelahiran.',
+    category: 'Gambar & Foto',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Aturan Resmi Warna Background Pas Foto di Indonesia
+Salah satu penyebab berkas administrasi pelamar CPNS, PPPK, atau Rekrutmen Bersama BUMN dinyatakan Tidak Memenuhi Syarat (TMS) adalah **salah memilih warna latar belakang pas foto**.
+
+Berikut adalah pedoman standar yang ditetapkan oleh Badan Kepegawaian Negara (BKN) dan Kementerian Pendayagunaan Aparatur Negara:
+
+---
+
+### 1. Kapan Harus Menggunakan Background Merah?
+- **Tahun Kelahiran GANJIL**: Pelamar yang lahir pada tahun ganjil (contoh: 1993, 1995, 1997, 1999, 2001, 2003) diwajibkan menggunakan pas foto dengan latar belakang warna **MERAH**.
+- Kode Warna Standar: \`#DC2626\` atau \`#D92525\`.
+
+### 2. Kapan Harus Menggunakan Background Biru?
+- **Tahun Kelahiran GENAP**: Pelamar yang lahir pada tahun genap (contoh: 1994, 1996, 1998, 2000, 2002, 2004) diwajibkan menggunakan pas foto dengan latar belakang warna **BIRU**.
+- Kode Warna Standar: \`#2563EB\` atau \`#1D4ED8\`.
+
+---
+
+### Tips Pas Foto yang Lolos Verifikasi Sistem:
+1. **Pakaian Formal**: Gunakan kemeja putih polos berkerah. Untuk pelamar wanita berhijab, gunakan hijab hitam atau gelap polos.
+2. **Posisi Wajah Simetris**: Pandangan mata lurus ke depan, telinga terlihat (bagi yang tidak berhijab), dan tidak memakai kacamata hitam.
+3. **Ukuran Berkas**: Pastikan ukuran file berkisar antara **100KB hingga 300KB** dalam format JPG atau JPEG.
+
+Gunakan tool [Ganti Background Foto](/tools/remove-bg) kami untuk mengubah warna latar belakang pas foto Anda secara instan tanpa perlu ke studio foto.
+    `,
+    relatedTool: {
+      title: 'Ubah Warna Pas Foto Anda Sekarang',
+      description: 'Ganti latar belakang pas foto ke Merah atau Biru resmi dalam 5 detik tanpa Photoshop.',
+      url: '/tools/remove-bg',
+      icon: '🎨',
+      buttonText: 'Ganti Warna Pas Foto ⚡',
+    },
+  },
+  {
+    slug: 'cara-ganti-background-pas-foto-online-gratis-tanpa-photoshop',
+    title: 'Cara Ganti Background Pas Foto Online Gratis Tanpa Aplikasi Photoshop',
+    excerpt: 'Tutorial mudah mengganti latar belakang foto selfie biasa menjadi pas foto resmi merah atau biru langsung lewat HP.',
+    category: 'Gambar & Foto',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Tidak Punya Laptop atau Mahir Photoshop?
+Dulu, untuk mengubah latar belakang pas foto dari putih ke merah atau biru, kita harus mendatangi studio cetak foto atau menguasai software rumit seperti Adobe Photoshop.
+
+Kini, dengan teknologi peramban modern di KompresKilat, Anda bisa melakukannya langsung dari smartphone Anda dalam hitungan detik.
+
+---
+
+### Langkah Mudah Mengganti Background Foto:
+1. **Siapkan Foto Potret**: Ambil foto dengan posisi tegak formal menghadap ke depan. Sebaiknya gunakan latar belakang dinding polos agar pemisahan warna rapi.
+2. **Buka Tool Ganti Background**: Akses halaman [Ganti Background Pas Foto](/tools/remove-bg).
+3. **Pilih Preset Warna**: Klik tombol **Merah CPNS (Ganjil)** atau **Biru CPNS (Genap)**.
+4. **Atur Slider Toleransi**: Jika masih ada sedikit sisa bayangan di sekitar bahu atau rambut, geser slider sensitivitas ke kanan.
+5. **Download Hasil**: Klik tombol **Download Pas Foto Baru** dan berkas JPG siap digunakan untuk pendaftaran!
+    `,
+    relatedTool: {
+      title: 'Coba Ganti Background Foto',
+      description: 'Pilih warna merah, biru, atau hapus latar belakang menjadi transparan secara otomatis.',
+      url: '/tools/remove-bg',
+      icon: '📷',
+      buttonText: 'Mulai Ganti Background 🚀',
+    },
+  },
+  {
+    slug: 'cara-menghapus-watermark-dan-objek-di-foto-online',
+    title: 'Cara Menghapus Objek Mengganggu dan Watermark di Foto Tanpa Merusak Gambar',
+    excerpt: 'Trik membersihkan teks, cap tanggal, watermark, atau orang lewat pada foto menggunakan kuas cerdas Magic Eraser.',
+    category: 'Gambar & Foto',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Foto Bagus Tapi Ada Objek Mengganggu?
+Sering kali saat kita mengambil foto kenangan atau memotret dokumen, terdapat objek yang tidak diinginkan seperti:
+- Orang lain yang lewat di latar belakang (*photobomb*).
+- Cap tanggal dan waktu kamera ponsel di pojok gambar.
+- Tanda air (*watermark*) atau logo aplikasi.
+- Noda atau coretan pena pada hasil scan dokumen.
+
+---
+
+### Cara Kerja Magic Eraser di Browser:
+Dengan memanfaatkan algoritma **Inpainting Digital**, sistem akan:
+1. Mendeteksi area yang Anda warnai dengan kuas merah.
+2. Menghapus piksel di dalam area tersebut.
+3. Mengambil sampel pola warna dan tekstur dari lingkungan sekitar objek.
+4. Membaurkan (*blending*) tekstur baru sehingga area yang dihapus tampak alami seperti foto aslinya.
+
+Coba alat [Hapus Objek di Foto](/tools/object-eraser) kami sekarang secara gratis.
+    `,
+    relatedTool: {
+      title: 'Hapus Objek & Watermark',
+      description: 'Cukup warnai bagian yang ingin dihapus dengan kuas dan biarkan sistem membersihkannya.',
+      url: '/tools/object-eraser',
+      icon: '🪄',
+      buttonText: 'Gunakan Magic Eraser 🪄',
+    },
+  },
+  {
+    slug: 'cara-ubah-pdf-hasil-scan-ke-word-bisa-diedit-ocr',
+    title: 'Cara Mengubah PDF Hasil Scan Foto Menjadi Word yang Bisa Diedit dengan OCR',
+    excerpt: 'Solusi mengubah dokumen PDF yang teksnya tidak bisa diseleksi atau hasil scan menjadi file Microsoft Word yang dapat diedit.',
+    category: 'Dokumen PDF',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Perbedaan PDF Teks vs PDF Hasil Scan
+Banyak pengguna bingung saat mencoba meng-copy teks dari file PDF:
+- **PDF Digital / Asli**: Dokumen yang dibuat langsung dari Microsoft Word atau Google Docs. Teksnya dapat diblok dan disalin dengan mudah.
+- **PDF Scan / Gambar**: Dokumen yang berasal dari hasil foto kamera HP atau mesin fotokopi/scanner. Seluruh halaman sebenarnya adalah gambar foto, sehingga huruf-huruf di dalamnya tidak dikenali sebagai karakter teks oleh komputer.
+
+---
+
+### Apa Itu Teknologi OCR (Optical Character Recognition)?
+OCR adalah teknologi kecerdasan buatan (*AI Recognition*) yang bertugas memindai bentuk kurva, garis, dan titik pada gambar, lalu mencocokkannya dengan bentuk alfabet huruf (A-Z, angka 0-9, dan tanda baca).
+
+Dengan menggunakan fitur [PDF ke Word dengan OCR](/tools/pdf-to-word) di KompresKilat:
+1. Mesin OCR Tesseract akan memindai halaman PDF atau foto berkas Anda baris demi baris.
+2. Karakter yang terdeteksi disalin ke dalam struktur berkas **Microsoft Word (.docx)** asli.
+3. Anda dapat mengedit kembali nama, tanggal, maupun angka laporan di Word tanpa perlu mengetik ulang dari awal!
+    `,
+    relatedTool: {
+      title: 'Konversi PDF Scan ke Word',
+      description: 'Gunakan teknologi OCR canggih untuk mengubah dokumen hasil scan ke Word siap edit.',
+      url: '/tools/pdf-to-word',
+      icon: '🔄',
+      buttonText: 'Konversi dengan OCR Sekarang 📄',
+    },
+  },
+  {
+    slug: 'cara-mengubah-file-excel-ke-csv-agar-tidak-berantakan',
+    title: 'Cara Mengubah File Excel ke CSV Pemisah Titik Koma Tanpa Berantakan',
+    excerpt: 'Panduan mengekspor spreadsheet XLSX ke CSV dengan pemisah yang tepat agar angka ribuan dan teks Indonesia tidak menyatu.',
+    category: 'Spreadsheet & Excel',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Masalah Utama Saat Konversi Excel ke CSV
+Salah satu keluhan paling umum bagi staf admin, akuntan, dan pengelola toko online saat mengubah file Excel ke CSV adalah: **"Kenapa saat dibuka semua datanya menumpuk di satu kolom pertama?"**
+
+Penyebab utamanya adalah **perbedaan standar pemisah (*delimiter*)**:
+- **Format Windows Indonesia / Eropa**: Menggunakan tanda **Titik Koma (;)** sebagai pemisah kolom, karena tanda Koma (,) digunakan untuk angka desimal (contoh: Rp 50.000,50).
+- **Format Windows Internasional (US)**: Menggunakan tanda **Koma (,)** sebagai pemisah kolom.
+
+---
+
+### Solusi Praktis di KompresKilat:
+Di alat [Excel ke CSV](/tools/excel-to-csv) kami:
+1. Anda dapat memilih pemisah kolom sesuai kebutuhan: **Koma (,)** untuk upload ke database server, atau **Titik Koma (;)** untuk spreadsheet lokal.
+2. Berkas CSV otomatis dibekali enkripsi **UTF-8 with BOM**, sehingga saat diklik dua kali di komputer Windows, Microsoft Excel akan otomatis memecah kolomnya dengan rapi.
+    `,
+    relatedTool: {
+      title: 'Konversi Excel ke CSV',
+      description: 'Ekspor berkas XLSX atau XLS ke CSV dengan pilihan tanda koma atau titik koma.',
+      url: '/tools/excel-to-csv',
+      icon: '📊',
+      buttonText: 'Ubah Excel ke CSV Sekarang ⚡',
+    },
+  },
+  {
+    slug: 'cara-buka-file-csv-di-excel-rapi-per-kolom',
+    title: 'Cara Membuka File CSV di Excel Agar Rapi Terpisah Kolom Otomatis',
+    excerpt: 'Cara mudah mengonversi file CSV data ekspor toko online atau database menjadi file Microsoft Excel XLSX yang rapi.',
+    category: 'Spreadsheet & Excel',
+    date: '31 Oktober 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kenapa File CSV Data Toko Online Berantakan?
+Saat kita mengunduh laporan pesanan atau data produk dari marketplace (Shopee, Tokopedia, TikTok Shop) atau sistem perbankan, format yang diberikan biasanya berupa file **.csv**.
+
+Sering kali ketika dibuka di Excel, semua teks nama produk, harga, dan nomor resi tergabung menjadi satu baris panjang yang dipisahkan tanda koma sehingga sangat sulit dibaca.
+
+---
+
+### Cara Mengatasinya dalam 5 Detik:
+Alih-alih repot mengatur *Text to Columns* di Excel:
+1. Unggah berkas CSV Anda ke halaman [CSV ke Excel](/tools/csv-to-excel).
+2. Sistem akan memetakan kolom secara otomatis.
+3. Klik tombol **Download File Excel (.xlsx)**.
+4. Buka berkas unduhan di Microsoft Excel, dan seluruh data Anda sudah tertata rapi di dalam sel tabel masing-masing!
+    `,
+    relatedTool: {
+      title: 'Ubah CSV ke Excel XLSX',
+      description: 'Rapikan file CSV Anda menjadi spreadsheet Microsoft Excel resmi tanpa rumus rumit.',
+      url: '/tools/csv-to-excel',
+      icon: '📑',
+      buttonText: 'Konversi CSV ke Excel 📊',
+    },
+  },
+  {
+    slug: 'cara-komplain-paket-shopee-express-spx-tidak-bergerak',
+    title: 'Paket Shopee Express Tidak Bergerak di Hub Transit? Ini Penyebab & Solusinya',
+    excerpt: 'Langkah cepat menghubungi customer service dan arti resi SPX yang tertahan lebih dari 2 hari di DC atau Hub Sortir.',
+    category: 'Ekspedisi & Resi',
+    date: '31 Oktober 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Resi SPX Anda Tidak Berubah Status Selama Berhari-hari?
+Banyak pembeli cemas saat melacak resi Shopee Express (SPX) dan mendapati paket mereka berstatus **"Paket telah tiba di Hub Transit [Kota]"** dan tidak berpindah selama lebih dari 48 jam.
+
+---
+
+### Alasan Paket Tertahan di Hub Transit:
+1. **Penyortiran Masif Tanggal Kembar (Mega Sale)**: Pada periode promo seperti 9.9, 11.11, atau Harbolnas, gudang sortir mengalami lonjakan volume barang hingga 5x lipat.
+2. **Keterlambatan Armada Antarpulau**: Untuk pengiriman via jalur laut atau udara, faktor cuaca buruk dapat menunda keberangkatan kapal kargo logistik.
+3. **Salah Masuk Jalur Sortir (Misroute)**: Paket sempat terbawa ke hub regional lain dan sedang dalam proses pengembalian rute.
+
+---
+
+### Tindakan yang Harus Dilakukan:
+1. **Cek Nomor Resi Terkini**: Gunakan fitur [Lacak Paket](/tools/tracking) kami untuk memastikan waktu update terakhir dari kurir.
+2. **Gunakan Live Chat Shopee**: Buka aplikasi Shopee ➔ menu *Saya* ➔ *Chat dengan Shopee* ➔ ketik "Live Agent" untuk dihubungkan dengan staf bantuan resmi.
+3. **Minta Penjual Membantu Follow-up**: Penjual memiliki jalur tiket eskalasi prioritas ke tim logistik Shopee Express.
+    `,
+    relatedTool: {
+      title: 'Lacak Resi Shopee Express',
+      description: 'Pantau posisi terkini nomor resi SPX Anda dengan riwayat perjalanan lengkap.',
+      url: '/tools/tracking',
+      icon: '📦',
+      buttonText: 'Lacak Paket Sekarang 🔍',
     },
   },
 ];
