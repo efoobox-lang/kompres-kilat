@@ -9,16 +9,21 @@ const PROMPT_SUGGESTIONS = [
   'Pamflet festival konser musik akustik indie festival',
 ];
 
+interface DesignData {
+  headline: string;
+  badge: string;
+  subheadline: string;
+  bulletPoints?: string[];
+  callToAction: string;
+  colorPalette: 'amber' | 'rose' | 'indigo' | 'emerald' | 'dark';
+  iconEmoji: string;
+}
+
 export default function AIImageGenerator() {
   const [prompt, setPrompt] = useState('buatkan brosur jualan kopi desainnya lebih meriah');
-  const [mode, setMode] = useState<'canvas' | 'ai'>('canvas'); // 'canvas' (Studio Grafis) atau 'ai' (DALL-E 3)
+  const [mode, setMode] = useState<'gemini' | 'canvas'>('gemini');
   const [aspectRatio, setAspectRatio] = useState<'square' | 'portrait'>('square');
-  const [headline, setHeadline] = useState('');
-  const [subHeadline, setSubHeadline] = useState('');
-  const [badgeText, setBadgeText] = useState('');
-  const [themeColor, setThemeColor] = useState<'auto' | 'amber' | 'indigo' | 'emerald' | 'rose' | 'dark'>('auto');
-  const [openAiKey, setOpenAiKey] = useState('');
-
+  const [geminiKey, setGeminiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [providerInfo, setProviderInfo] = useState<string>('');
@@ -26,7 +31,7 @@ export default function AIImageGenerator() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Render Poster Grafis Resolusi Tinggi (1080x1080 atau 1080x1350) di Browser
-  const generateCanvasPoster = () => {
+  const renderPosterCanvas = (design: DesignData) => {
     const width = 1080;
     const height = aspectRatio === 'square' ? 1080 : 1350;
 
@@ -36,34 +41,16 @@ export default function AIImageGenerator() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const lowerPrompt = prompt.toLowerCase();
-
-    // Deteksi cerdas tema berdasarkan kata kunci prompt
-    let detectedTheme = themeColor;
-    if (detectedTheme === 'auto') {
-      if (lowerPrompt.includes('kopi') || lowerPrompt.includes('coffee') || lowerPrompt.includes('cafe')) {
-        detectedTheme = 'amber';
-      } else if (lowerPrompt.includes('kuliner') || lowerPrompt.includes('makan') || lowerPrompt.includes('restoran')) {
-        detectedTheme = 'rose';
-      } else if (lowerPrompt.includes('seminar') || lowerPrompt.includes('bisnis') || lowerPrompt.includes('teknologi')) {
-        detectedTheme = 'indigo';
-      } else if (lowerPrompt.includes('sehat') || lowerPrompt.includes('alam') || lowerPrompt.includes('fresh')) {
-        detectedTheme = 'emerald';
-      } else {
-        detectedTheme = 'indigo';
-      }
-    }
-
     const palettes = {
-      amber: { bg1: '#321405', bg2: '#78350F', accent: '#F59E0B', text: '#FFFFFF', sub: '#FEF3C7', badgeBg: '#D97706', icon: '☕' },
-      rose: { bg1: '#500724', bg2: '#9F1239', accent: '#F43F5E', text: '#FFFFFF', sub: '#FFE4E6', badgeBg: '#E11D48', icon: '🍽️' },
-      indigo: { bg1: '#0F172A', bg2: '#312E81', accent: '#6366F1', text: '#FFFFFF', sub: '#CBD5E1', badgeBg: '#4F46E5', icon: '🚀' },
-      emerald: { bg1: '#064E3B', bg2: '#065F46', accent: '#10B981', text: '#FFFFFF', sub: '#D1FAE5', badgeBg: '#059669', icon: '🌿' },
-      dark: { bg1: '#09090B', bg2: '#18181B', accent: '#E4E4E7', text: '#FFFFFF', sub: '#A1A1AA', badgeBg: '#27272A', icon: '⭐' },
+      amber: { bg1: '#321405', bg2: '#78350F', accent: '#F59E0B', text: '#FFFFFF', sub: '#FEF3C7', badgeBg: '#D97706' },
+      rose: { bg1: '#500724', bg2: '#9F1239', accent: '#F43F5E', text: '#FFFFFF', sub: '#FFE4E6', badgeBg: '#E11D48' },
+      indigo: { bg1: '#0F172A', bg2: '#312E81', accent: '#6366F1', text: '#FFFFFF', sub: '#CBD5E1', badgeBg: '#4F46E5' },
+      emerald: { bg1: '#064E3B', bg2: '#065F46', accent: '#10B981', text: '#FFFFFF', sub: '#D1FAE5', badgeBg: '#059669' },
+      dark: { bg1: '#09090B', bg2: '#18181B', accent: '#E4E4E7', text: '#FFFFFF', sub: '#A1A1AA', badgeBg: '#27272A' },
     };
-    const pal = palettes[detectedTheme as keyof typeof palettes] || palettes.amber;
+    const pal = palettes[design.colorPalette] || palettes.amber;
 
-    // Latar Belakang Gradien Mewah
+    // Latar Belakang Gradien
     const grad = ctx.createLinearGradient(0, 0, width, height);
     grad.addColorStop(0, pal.bg1);
     grad.addColorStop(0.5, pal.bg2);
@@ -72,44 +59,35 @@ export default function AIImageGenerator() {
     ctx.fillRect(0, 0, width, height);
 
     // Efek Cahaya Radial
-    const radial = ctx.createRadialGradient(width * 0.5, height * 0.42, 60, width * 0.5, height * 0.42, 500);
-    radial.addColorStop(0, `${pal.accent}44`);
+    const radial = ctx.createRadialGradient(width * 0.5, height * 0.38, 50, width * 0.5, height * 0.38, 550);
+    radial.addColorStop(0, `${pal.accent}55`);
     radial.addColorStop(1, 'transparent');
     ctx.fillStyle = radial;
     ctx.fillRect(0, 0, width, height);
 
-    // Efek Meriah: Hiasan Bintang / Konfeti Melayang jika "meriah" disebutkan
-    const isMeriah = lowerPrompt.includes('meriah') || lowerPrompt.includes('ramai') || lowerPrompt.includes('promo');
-    if (isMeriah) {
-      ctx.fillStyle = `${pal.accent}55`;
-      for (let i = 0; i < 35; i++) {
-        const rx = (i * 137) % width;
-        const ry = (i * 241) % (height - 250);
-        const size = (i % 4) + 3;
-        ctx.beginPath();
-        ctx.arc(rx, ry, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // Hiasan Partikel Meriah
+    ctx.fillStyle = `${pal.accent}44`;
+    for (let i = 0; i < 40; i++) {
+      const rx = (i * 127) % width;
+      const ry = (i * 223) % (height - 250);
+      const size = (i % 4) + 3;
+      ctx.beginPath();
+      ctx.arc(rx, ry, size, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Bingkai Emas / Aksen Mewah
-    ctx.strokeStyle = `${pal.accent}66`;
+    // Bingkai Luar Elegan
+    ctx.strokeStyle = `${pal.accent}77`;
     ctx.lineWidth = 6;
-    ctx.strokeRect(40, 40, width - 80, height - 80);
+    ctx.strokeRect(36, 36, width - 72, height - 72);
 
     // 1. Badge Pill Header
-    let finalBadge = badgeText;
-    if (!finalBadge) {
-      if (lowerPrompt.includes('kopi')) finalBadge = '☕ SPESIAL KOPI PILIHAN';
-      else if (lowerPrompt.includes('promo') || lowerPrompt.includes('diskon')) finalBadge = '🔥 PENAWARAN TERBATAS';
-      else finalBadge = `${pal.icon} PENAWARAN EKSKLUSIF`;
-    }
-
+    const badgeText = (design.badge || 'PENAWARAN SPESIAL').toUpperCase();
     ctx.font = 'bold 26px Arial, sans-serif';
-    const badgeW = ctx.measureText(finalBadge).width + 60;
+    const badgeW = ctx.measureText(badgeText).width + 60;
     const badgeH = 54;
     const badgeX = (width - badgeW) / 2;
-    const badgeY = 110;
+    const badgeY = 100;
 
     ctx.fillStyle = pal.badgeBg;
     ctx.beginPath();
@@ -118,78 +96,72 @@ export default function AIImageGenerator() {
 
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
-    ctx.fillText(finalBadge, width / 2, badgeY + 36);
+    ctx.fillText(badgeText, width / 2, badgeY + 36);
 
-    // 2. Ikon Ilustrasi Visual di Tengah
-    ctx.font = '84px Arial, sans-serif';
-    ctx.fillText(pal.icon, width / 2, 270);
+    // 2. Ikon Visual Emoji
+    ctx.font = '86px Arial, sans-serif';
+    ctx.fillText(design.iconEmoji || '✨', width / 2, 260);
 
     // 3. Judul Utama (Headline)
-    let finalTitle = headline;
-    if (!finalTitle) {
-      if (lowerPrompt.includes('kopi')) finalTitle = 'CITA RASA KOPI TERBAIK';
-      else if (lowerPrompt.includes('seminar')) finalTitle = 'SEMINAR BISNIS DIGITAL';
-      else if (lowerPrompt.includes('kuliner')) finalTitle = 'KULINER SPESIAL LEZAT';
-      else finalTitle = prompt.slice(0, 40).toUpperCase();
-    }
-
-    ctx.font = '900 68px Arial, sans-serif';
+    ctx.font = '900 64px Arial, sans-serif';
     ctx.fillStyle = pal.text;
     ctx.textAlign = 'center';
 
-    const words = finalTitle.split(' ');
+    const words = design.headline.toUpperCase().split(' ');
     let line = '';
-    let curY = 370;
+    let curY = 350;
     for (let n = 0; n < words.length; n++) {
       const testLine = line + words[n] + ' ';
       const metrics = ctx.measureText(testLine);
       if (metrics.width > width - 180 && n > 0) {
         ctx.fillText(line.trim(), width / 2, curY);
         line = words[n] + ' ';
-        curY += 82;
+        curY += 78;
       } else {
         line = testLine;
       }
     }
     ctx.fillText(line.trim(), width / 2, curY);
 
-    // Garis Aksen Pembagi
-    curY += 30;
+    // Garis Aksen Emas
+    curY += 25;
     ctx.fillStyle = pal.accent;
     ctx.fillRect((width - 160) / 2, curY, 160, 6);
 
-    // 4. Subjudul / Deskripsi Konsep
-    curY += 65;
-    let finalDesc = subHeadline;
-    if (!finalDesc) {
-      if (lowerPrompt.includes('kopi')) {
-        finalDesc = 'Dibuat dari 100% biji kopi murni dengan aroma semerbak dan racikan barista profesional. Nikmati kehangatan dan kesegarannya setiap hari!';
-      } else {
-        finalDesc = prompt;
-      }
-    }
-
-    ctx.font = 'normal 32px Arial, sans-serif';
+    // 4. Subjudul / Keterangan Persuasif
+    curY += 55;
+    ctx.font = 'normal 30px Arial, sans-serif';
     ctx.fillStyle = pal.sub;
 
-    const descWords = finalDesc.split(' ');
+    const descWords = design.subheadline.split(' ');
     let descLine = '';
     for (let i = 0; i < descWords.length; i++) {
       const test = descLine + descWords[i] + ' ';
       if (ctx.measureText(test).width > width - 220 && i > 0) {
         ctx.fillText(descLine.trim(), width / 2, curY);
         descLine = descWords[i] + ' ';
-        curY += 48;
+        curY += 44;
       } else {
         descLine = test;
       }
     }
     ctx.fillText(descLine.trim(), width / 2, curY);
 
-    // 5. Tombol Call To Action (CTA) di Bawah
-    const ctaY = height - 210;
+    // 5. Poin-Poin Keunggulan (Bullet Points) jika ada
+    if (design.bulletPoints && design.bulletPoints.length > 0 && aspectRatio === 'portrait') {
+      curY += 40;
+      ctx.font = 'bold 24px Arial, sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      design.bulletPoints.slice(0, 3).forEach((bp) => {
+        ctx.fillText(`✓ ${bp}`, width / 2, curY);
+        curY += 36;
+      });
+    }
+
+    // 6. Tombol Call To Action (CTA)
+    const ctaY = height - 190;
     const ctaW = width - 180;
-    const ctaH = 92;
+    const ctaH = 88;
     const ctaX = (width - ctaW) / 2;
 
     ctx.fillStyle = pal.accent;
@@ -197,18 +169,18 @@ export default function AIImageGenerator() {
     ctx.roundRect(ctaX, ctaY, ctaW, ctaH, 22);
     ctx.fill();
 
-    ctx.font = 'bold 36px Arial, sans-serif';
+    ctx.font = 'bold 34px Arial, sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('PESAN SEKARANG & DAPATKAN PROMO ⚡', width / 2, ctaY + 58);
+    ctx.fillText(design.callToAction || 'PESAN SEKARANG VIA WA ⚡', width / 2, ctaY + 56);
 
     // Footer Watermark
     ctx.font = 'normal 20px Arial, sans-serif';
     ctx.fillStyle = `${pal.sub}99`;
-    ctx.fillText('Didesain dengan KompresKilat Studio • kompreskilat.site', width / 2, height - 60);
+    ctx.fillText('Didesain Cerdas dengan KompresKilat Studio • kompreskilat.site', width / 2, height - 50);
 
     const dataUrl = canvas.toDataURL('image/png', 0.95);
     setGeneratedImageUrl(dataUrl);
-    setProviderInfo('Studio Desain Grafis KompresKilat (Resolusi Tajam 1080p)');
+    setProviderInfo('Google Gemini AI Studio + KompresKilat Visual Canvas');
     setIsLoading(false);
   };
 
@@ -221,27 +193,10 @@ export default function AIImageGenerator() {
       return;
     }
 
-    // Jika pengguna di mode OpenAI DALL-E 3 tetapi belum mengisi Kunci API
-    if (mode === 'ai' && !openAiKey.trim()) {
-      setErrorMessage(
-        '⚠️ Kunci API OpenAI belum diisi. Masukkan kunci API OpenAI Anda (sk-...) pada kotak di bawah, atau beralih ke tab "⚡ Studio Desain Grafis" untuk membuat poster instan tanpa perlu kunci!'
-      );
-      return;
-    }
-
     setIsLoading(true);
     setErrorMessage('');
     setGeneratedImageUrl(null);
 
-    // Mode 1: Studio Grafis Otomatis (100% Bebas Limit)
-    if (mode === 'canvas') {
-      setTimeout(() => {
-        generateCanvasPoster();
-      }, 500);
-      return;
-    }
-
-    // Mode 2: OpenAI DALL-E 3 Resmi
     try {
       const response = await fetch('/api/ai-image', {
         method: 'POST',
@@ -249,21 +204,20 @@ export default function AIImageGenerator() {
         body: JSON.stringify({
           prompt: cleanPrompt,
           action: 'generate',
-          apiKey: openAiKey.trim(),
+          apiKey: geminiKey.trim() || undefined,
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success && data.imageUrl) {
-        setGeneratedImageUrl(data.imageUrl);
-        setProviderInfo(data.provider || 'OpenAI DALL-E 3 Resmi');
+      if (response.ok && data.success && data.designData) {
+        renderPosterCanvas(data.designData);
       } else {
-        setErrorMessage(data.message || 'Gagal memanggil OpenAI DALL-E 3.');
+        setErrorMessage(data.message || 'Gagal memproses desain poster.');
+        setIsLoading(false);
       }
     } catch {
-      setErrorMessage('Terjadi kendala jaringan saat memproses permintaan ke OpenAI.');
-    } finally {
+      setErrorMessage('Terjadi kendala jaringan saat menghubungi generator.');
       setIsLoading(false);
     }
   };
@@ -275,7 +229,7 @@ export default function AIImageGenerator() {
     try {
       const a = document.createElement('a');
       a.href = generatedImageUrl;
-      a.download = `poster_kopi_${Date.now()}.png`;
+      a.download = `poster_desain_${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -293,7 +247,7 @@ export default function AIImageGenerator() {
           <span className="text-2xl">🎨</span>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-              AI Poster &amp; Brosur Studio
+              AI Poster &amp; Brosur Studio (Google Gemini)
             </h2>
             <p className="text-xs text-slate-500">
               Rancang materi promosi, flyer diskon, dan pamflet bisnis beresolusi tinggi (1080p) siap cetak dan siap posting.
@@ -301,38 +255,16 @@ export default function AIImageGenerator() {
           </div>
         </div>
 
-        {/* Tab Pilihan Mode */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-xl mb-5">
-          <button
-            type="button"
-            onClick={() => {
-              setMode('canvas');
-              setErrorMessage('');
-            }}
-            className={`py-2 px-3 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              mode === 'canvas'
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>⚡ Studio Desain Grafis</span>
-            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.2 rounded font-semibold">Gratis &amp; Bebas Limit</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode('ai');
-              setErrorMessage('');
-            }}
-            className={`py-2 px-3 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              mode === 'ai'
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🤖 OpenAI DALL-E 3</span>
-            <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-semibold">Butuh Kunci API</span>
-          </button>
+        {/* Tab Mesin */}
+        <div className="p-1.5 bg-slate-100 rounded-xl mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-800 ml-2">
+              ✨ Ditenagai oleh: <b>Google Gemini AI Studio</b>
+            </span>
+            <span className="text-[10px] bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
+              Resmi Bebas Limit
+            </span>
+          </div>
         </div>
 
         <form onSubmit={handleGenerate} className="space-y-4">
@@ -353,63 +285,36 @@ export default function AIImageGenerator() {
             />
           </div>
 
-          {/* Pengaturan Tambahan untuk Mode Studio Desain Grafis */}
-          {mode === 'canvas' && (
-            <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-700 block">
-                🛠️ Opsi Kustomisasi Teks &amp; Warna (Opsional):
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] text-slate-600 mb-0.5">Judul Utama:</label>
-                  <input
-                    type="text"
-                    placeholder="Otomatis dari prompt atau ketik judul..."
-                    value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] text-slate-600 mb-0.5">Teks Badge Atas:</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: ☕ DISKON SPESIAL 50%"
-                    value={badgeText}
-                    onChange={(e) => setBadgeText(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Kotak Input Wajib untuk OpenAI DALL-E 3 */}
-          {mode === 'ai' && (
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl space-y-2">
-              <label className="block text-xs font-bold text-purple-900">
-                🔑 Masukkan Kunci API OpenAI DALL-E 3 Anda:
+          {/* Kotak Input Kunci API Google Gemini */}
+          <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-bold text-indigo-950 flex items-center gap-1.5">
+                <span>🔑</span>
+                <span>Kunci API Google Gemini (AI Studio):</span>
               </label>
-              <input
-                type="password"
-                placeholder="sk-proj-..."
-                value={openAiKey}
-                onChange={(e) => {
-                  setOpenAiKey(e.target.value);
-                  if (errorMessage) setErrorMessage('');
-                }}
-                className="w-full px-3 py-2 text-xs border border-purple-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <p className="text-[11px] text-purple-700 leading-relaxed">
-                DALL-E 3 adalah layanan berbayar resmi dari OpenAI. Dapatkan kunci Anda di <b>platform.openai.com/api-keys</b>. Kunci hanya tersimpan sementara di peramban Anda.
-              </p>
+              <span className="text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-200">
+                Google AI Studio
+              </span>
             </div>
-          )}
+            <input
+              type="password"
+              placeholder="Tempelkan Kunci API Gemini Anda di sini..."
+              value={geminiKey}
+              onChange={(e) => {
+                setGeminiKey(e.target.value);
+                if (errorMessage) setErrorMessage('');
+              }}
+              className="w-full px-3 py-2 text-xs border border-indigo-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <p className="text-[11px] text-indigo-700 leading-relaxed">
+              Kunci API dari <b>aistudio.google.com</b>. Kunci tersimpan aman di browser Anda dan langsung memproses konsep poster secara cerdas.
+            </p>
+          </div>
 
           {/* Format Ukuran */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Rasio Ukuran:
+              Rasio Ukuran Desain:
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -448,33 +353,19 @@ export default function AIImageGenerator() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                <span>Sedang Merancang Desain Poster Resolusi Tinggi...</span>
+                <span>Google Gemini Sedang Merancang Desain Poster...</span>
               </>
             ) : (
-              <span>Rancang Poster &amp; Brosur Sekarang ⚡</span>
+              <span>Rancang Poster dengan Google Gemini ⚡</span>
             )}
           </button>
         </form>
 
         {/* Notifikasi Pesan Error */}
         {errorMessage && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex flex-col gap-2">
-            <div className="flex items-start gap-2">
-              <span>⚠️</span>
-              <span className="font-semibold">{errorMessage}</span>
-            </div>
-            {mode === 'ai' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('canvas');
-                  setErrorMessage('');
-                }}
-                className="self-start text-[11px] font-bold text-indigo-700 underline cursor-pointer"
-              >
-                ➔ Alihkan ke "Studio Desain Grafis" (Gratis &amp; Langsung Jadi)
-              </button>
-            )}
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+            <span>⚠️</span>
+            <span className="font-semibold">{errorMessage}</span>
           </div>
         )}
       </div>

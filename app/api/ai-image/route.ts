@@ -8,11 +8,11 @@ export async function POST(request: Request) {
       request.headers.get('cf-connecting-ip') ||
       'anonymous';
 
-    // Proteksi DDoS & Rate Limiting: Maksimal 20 request per menit
-    const { allowed } = checkRateLimit(ip, 20, 60000);
+    // Proteksi DDoS & Rate Limiting: Maksimal 25 request per menit
+    const { allowed } = checkRateLimit(ip, 25, 60000);
     if (!allowed) {
       return NextResponse.json(
-        { success: false, message: 'Batas frekuensi tercapai. Harap tunggu 1 menit demi kenyamanan server.' },
+        { success: false, message: 'Batas frekuensi tercapai. Harap tunggu 1 menit demi keamanan server.' },
         { status: 429 }
       );
     }
@@ -20,81 +20,111 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const {
       prompt = '',
-      action = 'generate', // 'generate' (Poster/Brosur) atau 'adjust' (Enhancer)
+      action = 'generate',
       enhancementType = 'clarity',
       apiKey: clientApiKey = '',
     } = body;
 
     const cleanPrompt = sanitizeInput(String(prompt), 600);
 
-    // Validasi input prompt kosong untuk aksi generate
     if (action === 'generate' && !cleanPrompt.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Deskripsi prompt poster/brosur tidak boleh kosong.' },
+        { success: false, message: 'Deskripsi konsep poster/brosur tidak boleh kosong.' },
         { status: 400 }
       );
     }
 
-    // 1. FITUR GENERATE DENGAN OPENAI DALL-E 3 RESMI
+    const geminiKey = clientApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+
+    // 1. FITUR GENERATE DENGAN GOOGLE GEMINI AI STUDIO
     if (action === 'generate') {
-      const openAiKey = clientApiKey?.trim() || process.env.OPENAI_API_KEY?.trim();
+      if (geminiKey) {
+        try {
+          // Gunakan Gemini 1.5 Flash untuk analisis materi dan copywriting poster profesional
+          const geminiPrompt = `Anda adalah Creative Art Director & Desainer Grafis kelas dunia. Buatkan rancangan desain poster/brosur komersial dalam Bahasa Indonesia berdasarkan permintaan pengguna: "${cleanPrompt}".
 
-      // Jika Kunci API OpenAI belum ada
-      if (!openAiKey) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              'Kunci API OpenAI DALL-E 3 belum dimasukkan. Silakan masukkan kunci API OpenAI Anda (sk-...) pada kolom yang disediakan, atau gunakan tab "Studio Desain Grafis" yang 100% gratis dan instan.',
-          },
-          { status: 400 }
-        );
-      }
+Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) dengan struktur berikut:
+{
+  "headline": "Judul Utama Poster (Singkat, Padat, Maksimal 5 kata, Huruf Kapital)",
+  "badge": "Teks Badge Promosi (Contoh: PROMO SPESIAL 50% atau KOPI NIKMAT)",
+  "subheadline": "Kalimat deskripsi persuasif iklan yang menggugah minat (1-2 kalimat)",
+  "bulletPoints": [
+    "Poin keunggulan 1",
+    "Poin keunggulan 2",
+    "Poin keunggulan 3"
+  ],
+  "callToAction": "Teks Ajakan Bertindak (Contoh: PESAN SEKARANG VIA WA ⚡)",
+  "colorPalette": "amber",
+  "iconEmoji": "☕"
+}
+Catatan untuk colorPalette: pilih salah satu dari: "amber" (kopi/makanan hangat), "indigo" (bisnis/teknologi), "rose" (kuliner/promo diskon besar), "emerald" (sehat/organik/alami), atau "dark" (mewah/eksklusif).`;
 
-      // Panggil OpenAI DALL-E 3 Image Generation API
-      const enhancedPrompt = `Professional marketing poster design, promotional flyer brochure, ultra sharp typography and aesthetics for: ${cleanPrompt}`;
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: geminiPrompt }] }],
+                generationConfig: { responseMimeType: 'application/json' },
+              }),
+            }
+          );
 
-      try {
-        const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${openAiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: enhancedPrompt,
-            n: 1,
-            size: '1024x1024',
-            quality: 'standard',
-          }),
-        });
+          const geminiData = await geminiRes.json();
 
-        const openAiData = await openAiRes.json();
-
-        if (openAiRes.ok && openAiData.data?.[0]?.url) {
-          return NextResponse.json({
-            success: true,
-            imageUrl: openAiData.data[0].url,
-            provider: 'OpenAI DALL-E 3 Resmi',
-            prompt: cleanPrompt,
-          });
-        } else {
-          const errDetail =
-            openAiData.error?.message ||
-            'OpenAI menolak permintaan pembuatan gambar. Pastikan kuota saldo akun OpenAI Anda aktif.';
+          if (geminiRes.ok && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const parsedDesign = JSON.parse(geminiData.candidates[0].content.parts[0].text);
+            return NextResponse.json({
+              success: true,
+              designData: parsedDesign,
+              provider: 'Google Gemini AI Studio',
+              prompt: cleanPrompt,
+            });
+          } else {
+            const errDetail = geminiData.error?.message || 'Google Gemini menolak permintaan.';
+            return NextResponse.json(
+              { success: false, message: `Google Gemini API Error: ${errDetail}` },
+              { status: 400 }
+            );
+          }
+        } catch (err: any) {
+          console.error('Gemini API fetch error:', err);
           return NextResponse.json(
-            { success: false, message: `OpenAI DALL-E 3 Error: ${errDetail}` },
-            { status: 400 }
+            { success: false, message: 'Gagal terhubung ke Google Gemini API. Periksa kunci API Anda.' },
+            { status: 502 }
           );
         }
-      } catch (err: any) {
-        console.error('OpenAI fetch error:', err);
-        return NextResponse.json(
-          { success: false, message: 'Gagal terhubung ke server OpenAI. Periksa jaringan internet atau kevalidan kunci API Anda.' },
-          { status: 502 }
-        );
       }
+
+      // Jika Kunci API Gemini belum dimasukkan, berikan template cerdas otomatis
+      const lower = cleanPrompt.toLowerCase();
+      const isCoffee = lower.includes('kopi') || lower.includes('coffee') || lower.includes('cafe');
+      const isFood = lower.includes('makan') || lower.includes('kuliner') || lower.includes('restoran');
+      const isSeminar = lower.includes('seminar') || lower.includes('bisnis') || lower.includes('digital');
+
+      const fallbackDesign = {
+        headline: isCoffee ? 'CITA RASA KOPI TERBAIK' : isFood ? 'KULINER SPESIAL LEZAT' : isSeminar ? 'SEMINAR BISNIS DIGITAL' : 'PROMO SPESIAL HARI INI',
+        badge: isCoffee ? '☕ KOPI PILIHAN NIKMAT' : '🔥 PENAWARAN TERBATAS',
+        subheadline: isCoffee 
+          ? 'Nikmati kelezatan biji kopi pilihan dengan racikan barista profesional dan suasana menyenangkan.' 
+          : 'Dapatkan penawaran istimewa dengan kualitas terbaik khusus untuk Anda hari ini.',
+        bulletPoints: [
+          'Kualitas Bahan Terjamin & Higienis',
+          'Pelayanan Ramah & Proses Cepat',
+          'Garansi Kepuasan Pelanggan 100%',
+        ],
+        callToAction: 'PESAN SEKARANG & DAPATKAN DISKON ⚡',
+        colorPalette: isCoffee ? 'amber' : isFood ? 'rose' : 'indigo',
+        iconEmoji: isCoffee ? '☕' : isFood ? '🍽️' : '🚀',
+      };
+
+      return NextResponse.json({
+        success: true,
+        designData: fallbackDesign,
+        provider: 'Studio Desain Grafis KompresKilat',
+        prompt: cleanPrompt,
+      });
     }
 
     // 2. FITUR PENDUKUNG: PARAMETER IMAGE ENHANCER
