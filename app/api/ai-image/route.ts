@@ -1,13 +1,30 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit, sanitizeInput } from '@/lib/security';
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('cf-connecting-ip') || 
+               'anonymous';
+
+    // Proteksi DDoS & Rate Limiting: Maksimal 20 request per menit
+    const { allowed } = checkRateLimit(ip, 20, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Batas frekuensi tercapai. Harap tunggu 1 menit.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { prompt = '', enhancementType = 'clarity' } = body;
 
+    const cleanPrompt = sanitizeInput(String(prompt), 300);
+    const cleanType = sanitizeInput(String(enhancementType), 30);
+
     const geminiKey = process.env.GEMINI_API_KEY;
 
-    if (geminiKey && prompt) {
+    if (geminiKey && cleanPrompt) {
       try {
         const geminiRes = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
@@ -17,7 +34,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               contents: [{
                 parts: [{
-                  text: `Analisis kebutuhan enhancement foto untuk permintaan: "${prompt}". Berikan rekomendasi teknis parameter gambar dalam format JSON: { "contrast": 1.2, "brightness": 1.05, "sharpness": 1.5, "saturation": 1.1, "summary": "Deskripsi singkat hasil" }`
+                  text: `Analisis kebutuhan enhancement foto untuk permintaan: "${cleanPrompt}". Berikan rekomendasi teknis parameter gambar dalam format JSON: { "contrast": 1.2, "brightness": 1.05, "sharpness": 1.5, "saturation": 1.1, "summary": "Deskripsi singkat hasil" }`
                 }]
               }],
               generationConfig: { responseMimeType: 'application/json' }
@@ -44,7 +61,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      aiAdjustment: presets[enhancementType] || presets.clarity,
+      aiAdjustment: presets[cleanType] || presets.clarity,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -53,3 +70,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

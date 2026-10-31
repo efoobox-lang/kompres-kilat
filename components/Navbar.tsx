@@ -3,18 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { href: '/', label: 'Beranda' },
-    { href: '/tools/image', label: 'Kompres' },
-    { href: '/ai-image-tools', label: '✨ AI Image' },
-    { href: '/ai-presentation-maker', label: '📊 AI Slide' },
-    { href: '/tools/tracking', label: 'Lacak Resi' },
-    { href: '/blog', label: 'Blog' },
+    { href: '/', label: t('nav_home') },
+    { href: '/tools/image', label: t('nav_compress') },
+    { href: '/ai-image-tools', label: t('nav_ai_image') },
+    { href: '/ai-presentation-maker', label: t('nav_ai_slide') },
+    { href: '/tools/tracking', label: t('nav_track') },
+    { href: '/blog', label: t('nav_blog') },
   ];
 
   const isActive = (href: string) => {
@@ -35,24 +38,28 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-xs sm:text-sm font-semibold">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-xl transition ${
-                isActive(link.href)
-                  ? 'bg-indigo-50 text-indigo-600 font-bold'
-                  : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="hidden md:flex items-center space-x-3">
+          <nav className="flex items-center space-x-1 lg:space-x-2 text-xs sm:text-sm font-semibold">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-3 py-1.5 rounded-xl transition ${
+                  isActive(link.href)
+                    ? 'bg-indigo-50 text-indigo-600 font-bold'
+                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <LanguageToggle />
+        </div>
 
         {/* Mobile Quick Action & Hamburger Toggle */}
         <div className="flex md:hidden items-center gap-2">
+          <LanguageToggle />
           <Link
             href="/blog"
             className="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 transition whitespace-nowrap"

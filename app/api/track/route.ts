@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit, isValidAwb, sanitizeInput } from '@/lib/security';
 
 export interface TrackingHistoryItem {
   date: string;
@@ -56,15 +57,35 @@ const BINDERBYTE_COURIER_MAP: Record<string, string> = {
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('cf-connecting-ip') || 
+               'anonymous';
+
+    // Proteksi DDoS & Rate Limiting: Maksimal 25 request per menit
+    const { allowed } = checkRateLimit(ip, 25, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Batas frekuensi tercapai. Harap tunggu 1 menit demi keamanan server.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { courier = 'shopeexpress', awb = '' } = body;
 
-    const trimmedAwb = String(awb).trim().toUpperCase();
-    const cleanCourier = String(courier).trim().toLowerCase();
+    const trimmedAwb = sanitizeInput(String(awb), 45).toUpperCase();
+    const cleanCourier = sanitizeInput(String(courier), 20).toLowerCase();
 
     if (!trimmedAwb) {
       return NextResponse.json(
         { success: false, message: 'Nomor resi (AWB) tidak boleh kosong.' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidAwb(trimmedAwb)) {
+      return NextResponse.json(
+        { success: false, message: 'Format nomor resi tidak valid. Pastikan hanya alfanumerik.' },
         { status: 400 }
       );
     }

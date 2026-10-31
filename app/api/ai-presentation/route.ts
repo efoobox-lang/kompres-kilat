@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit, sanitizeInput } from '@/lib/security';
 
 export interface SlideData {
   slideNumber: number;
@@ -17,10 +18,26 @@ export interface PresentationResponse {
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('cf-connecting-ip') || 
+               'anonymous';
+
+    // Proteksi DDoS & Rate Limiting: Maksimal 15 request per menit
+    const { allowed } = checkRateLimit(ip, 15, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Batas frekuensi pembuatan slide tercapai. Harap tunggu 1 menit.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { topic = '', slideCount = 5, theme = 'corporate', audience = 'general' } = body;
 
-    const cleanTopic = String(topic).trim();
+    const cleanTopic = sanitizeInput(String(topic), 400);
+    const cleanTheme = sanitizeInput(String(theme), 30);
+    const cleanAudience = sanitizeInput(String(audience), 50);
+
     if (!cleanTopic) {
       return NextResponse.json(
         { success: false, message: 'Topik presentasi tidak boleh kosong.' },
@@ -177,3 +194,4 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
     );
   }
 }
+

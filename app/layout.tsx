@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import StickyAd from '@/components/StickyAd';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -90,9 +91,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-800">
-        {children}
-        {/* Sticky Mobile Anchor Banner Iklan */}
-        <StickyAd />
+        <LanguageProvider>
+          {children}
+          {/* Sticky Mobile Anchor Banner Iklan */}
+          <StickyAd />
+        </LanguageProvider>
       </body>
     </html>
   );

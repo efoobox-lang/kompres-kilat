@@ -1,6 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-white border-t border-slate-200 mt-20 pt-12 pb-16 text-slate-600 text-xs">
       <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
@@ -10,16 +16,19 @@ export default function Footer() {
             <span className="text-xl font-black text-indigo-600">⚡ KompresKilat</span>
           </div>
           <p className="text-slate-500 leading-relaxed text-[11px]">
-            Platform online gratis untuk kompresi berkas gambar, optimasi dokumen PDF, arsip ZIP, dan pelacakan resi ekspedisi se-Indonesia dengan prioritas privasi data pengguna.
+            {t('footer_desc')}
           </p>
           <p className="text-[10px] text-slate-400">
-            File diproses langsung di memori browser Anda tanpa diunggah ke server database.
+            {t('footer_privacy_note')}
           </p>
+          <div className="pt-2">
+            <LanguageToggle />
+          </div>
         </div>
 
         {/* Kolom 2: Alat Online Utama */}
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Alat Populer</h4>
+          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">{t('footer_popular_tools')}</h4>
           <ul className="space-y-1.5">
             <li>
               <Link href="/ai-image-tools" className="hover:text-indigo-600 transition font-medium text-indigo-700">✨ AI Photo Enhancer &amp; Upscaler</Link>
@@ -59,7 +68,7 @@ export default function Footer() {
 
         {/* Kolom 3: Edukasi & Blog */}
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Panduan & Edukasi</h4>
+          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">{t('footer_guides')}</h4>
           <ul className="space-y-1.5">
             <li>
               <Link href="/blog" className="hover:text-indigo-600 transition">Semua Artikel Blog</Link>
@@ -81,7 +90,7 @@ export default function Footer() {
 
         {/* Kolom 4: Legalitas & Kepatuhan AdSense */}
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Kebijakan & Informasi</h4>
+          <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">{t('footer_policies')}</h4>
           <ul className="space-y-1.5">
             <li>
               <Link href="/privacy-policy" className="hover:text-indigo-600 transition">Kebijakan Privasi (Privacy Policy)</Link>
@@ -100,7 +109,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-3">
-        <p>&copy; 2026 KompresKilat. Hak Cipta Dilindungi.</p>
+        <p>&copy; 2026 KompresKilat. {t('footer_rights')}</p>
         <p className="text-center sm:text-right text-[10px]">
           Disclaimer: KompresKilat adalah portal utilitas independen dan tidak berafiliasi resmi dengan ekspedisi manapun.
         </p>
