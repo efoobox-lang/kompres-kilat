@@ -31,6 +31,18 @@ export default function Home() {
             <p className="text-xs text-slate-500 leading-relaxed">Kecilkan JPG, PNG, atau WebP untuk syarat pendaftaran CPNS &amp; lamaran kerja.</p>
           </Link>
 
+          <Link href="/tools/remove-bg" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🎨</div>
+            <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">Ganti Background Pas Foto</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">Ubah warna latar ke Merah (Ganjil), Biru (Genap) CPNS, atau Transparan PNG.</p>
+          </Link>
+
+          <Link href="/tools/object-eraser" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🪄</div>
+            <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">Hapus Objek di Foto</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">Hilangkan orang lewat, tulisan, tanggal, atau watermark dengan kuas cerdas.</p>
+          </Link>
+
           <Link href="/tools/pdf" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
             <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📄</div>
             <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">Kompres Dokumen PDF</h2>

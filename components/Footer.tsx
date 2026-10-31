@@ -25,6 +25,12 @@ export default function Footer() {
               <Link href="/tools/image" className="hover:text-indigo-600 transition">Kompres Gambar KTP / CPNS</Link>
             </li>
             <li>
+              <Link href="/tools/remove-bg" className="hover:text-indigo-600 transition">Ganti Background Pas Foto</Link>
+            </li>
+            <li>
+              <Link href="/tools/object-eraser" className="hover:text-indigo-600 transition">Hapus Objek &amp; Watermark</Link>
+            </li>
+            <li>
               <Link href="/tools/pdf" className="hover:text-indigo-600 transition">Kompres Dokumen PDF</Link>
             </li>
             <li>

@@ -11,9 +11,10 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Beranda' },
     { href: '/tools/image', label: 'Kompres Gambar' },
-    { href: '/tools/pdf', label: 'Kompres PDF' },
+    { href: '/tools/remove-bg', label: 'Ganti Background' },
+    { href: '/tools/object-eraser', label: 'Hapus Objek' },
     { href: '/tools/tracking', label: 'Lacak Resi' },
-    { href: '/blog', label: 'Blog & Panduan' },
+    { href: '/blog', label: 'Blog' },
   ];
 
   const isActive = (href: string) => {
@@ -96,6 +97,24 @@ export default function Navbar() {
             }`}
           >
             🖼️ Kompres Gambar (KTP/CPNS)
+          </Link>
+          <Link
+            href="/tools/remove-bg"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/remove-bg') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            🎨 Ganti Background (Merah/Biru)
+          </Link>
+          <Link
+            href="/tools/object-eraser"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/object-eraser') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            🪄 Hapus Objek / Watermark
           </Link>
           <Link
             href="/tools/pdf"
