@@ -34,18 +34,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const geminiKey = clientApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+    const geminiKey =
+      clientApiKey?.trim() ||
+      process.env.GEMINI_API_KEY?.trim() ||
+      '';
 
     // 1. FITUR GENERATE DENGAN GOOGLE GEMINI AI STUDIO
     if (action === 'generate') {
       if (geminiKey) {
         try {
-          // Gunakan Gemini 1.5 Flash untuk analisis materi dan copywriting poster profesional
-          const geminiPrompt = `Anda adalah Creative Art Director & Desainer Grafis kelas dunia. Buatkan rancangan desain poster/brosur komersial dalam Bahasa Indonesia berdasarkan permintaan pengguna: "${cleanPrompt}".
+          const geminiPrompt = `Anda adalah Creative Art Director & Desainer Grafis komersial. Rancanglah konsep poster/brosur promosi dalam Bahasa Indonesia yang sangat memikat untuk: "${cleanPrompt}".
 
-Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) dengan struktur berikut:
+Kembalikan HANYA format JSON valid tanpa tanda kutip markdown (tanpa \`\`\`json) dengan format persis berikut:
 {
-  "headline": "Judul Utama Poster (Singkat, Padat, Maksimal 5 kata, Huruf Kapital)",
+  "headline": "Judul Utama Poster (Singkat, Padat, Maksimal 5 kata)",
   "badge": "Teks Badge Promosi (Contoh: PROMO SPESIAL 50% atau KOPI NIKMAT)",
   "subheadline": "Kalimat deskripsi persuasif iklan yang menggugah minat (1-2 kalimat)",
   "bulletPoints": [
@@ -57,47 +59,52 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
   "colorPalette": "amber",
   "iconEmoji": "☕"
 }
-Catatan untuk colorPalette: pilih salah satu dari: "amber" (kopi/makanan hangat), "indigo" (bisnis/teknologi), "rose" (kuliner/promo diskon besar), "emerald" (sehat/organik/alami), atau "dark" (mewah/eksklusif).`;
+Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisnis/teknologi), "rose" (kuliner/promo meriah), "emerald" (sehat/organik/alami), atau "dark" (mewah).`;
 
-          const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: geminiPrompt }] }],
-                generationConfig: { responseMimeType: 'application/json' },
-              }),
+          // Coba model gemini-3.8-flash, lalu fallback ke gemini-flash-latest
+          const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+          let geminiData: any = null;
+
+          for (const model of models) {
+            try {
+              const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: geminiPrompt }] }],
+                    generationConfig: { responseMimeType: 'application/json' },
+                  }),
+                }
+              );
+              const data = await res.json();
+              if (res.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                geminiData = data;
+                break;
+              }
+            } catch {
+              // Coba model berikutnya
             }
-          );
+          }
 
-          const geminiData = await geminiRes.json();
-
-          if (geminiRes.ok && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
-            const parsedDesign = JSON.parse(geminiData.candidates[0].content.parts[0].text);
+          if (geminiData && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const rawText = geminiData.candidates[0].content.parts[0].text;
+            const cleanJsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const parsedDesign = JSON.parse(cleanJsonText);
             return NextResponse.json({
               success: true,
               designData: parsedDesign,
-              provider: 'Google Gemini AI Studio',
+              provider: 'Google Gemini AI Studio (Resmi)',
               prompt: cleanPrompt,
             });
-          } else {
-            const errDetail = geminiData.error?.message || 'Google Gemini menolak permintaan.';
-            return NextResponse.json(
-              { success: false, message: `Google Gemini API Error: ${errDetail}` },
-              { status: 400 }
-            );
           }
         } catch (err: any) {
           console.error('Gemini API fetch error:', err);
-          return NextResponse.json(
-            { success: false, message: 'Gagal terhubung ke Google Gemini API. Periksa kunci API Anda.' },
-            { status: 502 }
-          );
         }
       }
 
-      // Jika Kunci API Gemini belum dimasukkan, berikan template cerdas otomatis
+      // Fallback Cerdas jika kuota jaringan terganggu
       const lower = cleanPrompt.toLowerCase();
       const isCoffee = lower.includes('kopi') || lower.includes('coffee') || lower.includes('cafe');
       const isFood = lower.includes('makan') || lower.includes('kuliner') || lower.includes('restoran');
@@ -107,7 +114,7 @@ Catatan untuk colorPalette: pilih salah satu dari: "amber" (kopi/makanan hangat)
         headline: isCoffee ? 'CITA RASA KOPI TERBAIK' : isFood ? 'KULINER SPESIAL LEZAT' : isSeminar ? 'SEMINAR BISNIS DIGITAL' : 'PROMO SPESIAL HARI INI',
         badge: isCoffee ? '☕ KOPI PILIHAN NIKMAT' : '🔥 PENAWARAN TERBATAS',
         subheadline: isCoffee 
-          ? 'Nikmati kelezatan biji kopi pilihan dengan racikan barista profesional dan suasana menyenangkan.' 
+          ? 'Nikmati kelezatan 100% biji kopi murni dengan aroma semerbak racikan barista profesional.' 
           : 'Dapatkan penawaran istimewa dengan kualitas terbaik khusus untuk Anda hari ini.',
         bulletPoints: [
           'Kualitas Bahan Terjamin & Higienis',
@@ -127,7 +134,7 @@ Catatan untuk colorPalette: pilih salah satu dari: "amber" (kopi/makanan hangat)
       });
     }
 
-    // 2. FITUR PENDUKUNG: PARAMETER IMAGE ENHANCER
+    // 2. PARAMETER IMAGE ENHANCER
     const cleanType = sanitizeInput(String(enhancementType), 30);
     const presets: Record<string, any> = {
       clarity: { contrast: 1.25, brightness: 1.05, sharpness: 1.6, saturation: 1.15, summary: 'Penajaman visual dan koreksi pencahayaan wajah.' },

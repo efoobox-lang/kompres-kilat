@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const count = Math.min(Math.max(Number(slideCount) || 5, 3), 12);
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY?.trim() || '';
 
     // Jika user menghubungkan GEMINI_API_KEY, gunakan model Gemini untuk sintesis teks
     if (geminiKey) {
@@ -72,20 +72,34 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
   ]
 }`;
 
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: 'application/json' },
-            }),
-          }
-        );
+        // Mencoba gemini-3.8-flash terlebih dahulu, fallback ke gemini-flash-latest
+        const targetModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+        let rawJsonText: string | null = null;
 
-        const geminiData = await geminiRes.json();
-        const rawJsonText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+        for (const model of targetModels) {
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: 'application/json' },
+                }),
+              }
+            );
+
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              rawJsonText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (rawJsonText) break;
+            }
+          } catch {
+            // Coba model berikutnya
+          }
+        }
+
         if (rawJsonText) {
           const parsed = JSON.parse(rawJsonText);
           return NextResponse.json({ success: true, data: parsed });
