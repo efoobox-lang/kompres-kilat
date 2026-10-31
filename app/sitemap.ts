@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog-data';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompres-kilat.vercel.app';
 
   const posts = getAllPosts();
 
