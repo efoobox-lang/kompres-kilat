@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompres-kilat.vercel.app';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
