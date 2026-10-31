@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Petir Kuning Besar & Tebal untuk Favicon Tab Browser (Edge-to-edge) -->
+  <path 
+    d="M18.5 1.5 L4.5 17.5 H14.5 L10.5 30.5 L27.5 14.5 H17.5 L20.5 1.5 Z" 
+    fill="#FFCC00" 
+    stroke="#18181B" 
+    stroke-width="2.6" 
+    stroke-linejoin="round" 
+    stroke-linecap="round"
+  />
+</svg>

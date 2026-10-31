@@ -37,8 +37,11 @@ export const metadata: Metadata = {
   creator: 'KompresKilat',
   publisher: 'KompresKilat',
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: '/icon.svg',
     apple: '/icon.png',
   },
   alternates: {
