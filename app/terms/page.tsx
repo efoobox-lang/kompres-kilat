@@ -54,7 +54,7 @@ export default function TermsPage() {
 
           <h2 className="text-base sm:text-lg font-bold text-slate-900 pt-2">5. Hubungi Kami</h2>
           <p>
-            Pertanyaan seputar Syarat dan Ketentuan ini dapat disampaikan melalui halaman <Link href="/contact" className="text-indigo-600 underline font-semibold">Kontak Kami</Link>.
+            Pertanyaan seputar Syarat dan Ketentuan ini dapat disampaikan melalui email <b><a href="mailto:info.kompreskilat@gmail.com" className="text-indigo-600 underline">info.kompreskilat@gmail.com</a></b> atau melalui halaman <Link href="/contact" className="text-indigo-600 underline font-semibold">Kontak Kami</Link>.
           </p>
         </div>
       </section>

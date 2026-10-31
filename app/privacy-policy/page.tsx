@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
 
           <h2 className="text-base sm:text-lg font-bold text-slate-900 pt-2">7. Hubungi Kami</h2>
           <p>
-            Jika Anda memiliki pertanyaan lebih lanjut atau memerlukan informasi lebih banyak tentang Kebijakan Privasi kami, jangan ragu untuk menghubungi kami melalui halaman <Link href="/contact" className="text-indigo-600 underline font-semibold">Kontak Kami</Link>.
+            Jika Anda memiliki pertanyaan lebih lanjut atau memerlukan informasi lebih banyak tentang Kebijakan Privasi kami, jangan ragu untuk menghubungi kami melalui email resmi <b><a href="mailto:info.kompreskilat@gmail.com" className="text-indigo-600 underline">info.kompreskilat@gmail.com</a></b> atau melalui halaman <Link href="/contact" className="text-indigo-600 underline font-semibold">Kontak Kami</Link>.
           </p>
         </div>
       </section>

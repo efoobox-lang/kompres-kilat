@@ -37,8 +37,8 @@ export default function ContactPage() {
             <div className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3 sm:space-y-4 text-xs">
               <div>
                 <span className="text-slate-400 block font-medium">Email Dukungan &amp; Iklan:</span>
-                <a href="mailto:support@kompreskilat.com" className="font-bold text-indigo-600 hover:underline break-all">
-                  support@kompreskilat.com
+                <a href="mailto:info.kompreskilat@gmail.com" className="font-bold text-indigo-600 hover:underline break-all">
+                  info.kompreskilat@gmail.com
                 </a>
               </div>
               <div>
