@@ -22,7 +22,6 @@ export async function POST(request: Request) {
       prompt = '',
       action = 'generate', // 'generate' (Poster/Brosur) atau 'adjust' (Enhancer)
       enhancementType = 'clarity',
-      aspectRatio = 'square', // 'square' (1:1), 'portrait' (9:16), 'landscape' (16:9)
       apiKey: clientApiKey = '',
     } = body;
 
@@ -36,69 +35,66 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. FITUR UTAMA: GENERATE GAMBAR POSTER / BROSUR DENGAN OPENAI DALL-E 3
+    // 1. FITUR GENERATE DENGAN OPENAI DALL-E 3 RESMI
     if (action === 'generate') {
-      const openAiKey = clientApiKey || process.env.OPENAI_API_KEY;
+      const openAiKey = clientApiKey?.trim() || process.env.OPENAI_API_KEY?.trim();
 
-      const enhancedPrompt = `Professional commercial marketing poster design, promotional flyer brochure, ultra sharp typography, aesthetic composition, high resolution for: ${cleanPrompt}`;
-
-      // A. Jika OPENAI_API_KEY tersedia (dari Environment Variable atau Input Pengguna)
-      if (openAiKey) {
-        try {
-          const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${openAiKey.trim()}`,
-            },
-            body: JSON.stringify({
-              model: 'dall-e-3',
-              prompt: enhancedPrompt,
-              n: 1,
-              size: '1024x1024',
-              quality: 'standard',
-            }),
-          });
-
-          const openAiData = await openAiRes.json();
-
-          if (openAiRes.ok && openAiData.data?.[0]?.url) {
-            return NextResponse.json({
-              success: true,
-              imageUrl: openAiData.data[0].url,
-              provider: 'OpenAI DALL-E 3',
-              prompt: cleanPrompt,
-            });
-          } else {
-            // Beritahukan error resmi OpenAI (misal kuota habis atau key salah)
-            const errDetail = openAiData.error?.message || 'OpenAI API menolak permintaan generate.';
-            return NextResponse.json(
-              { success: false, message: `OpenAI DALL-E 3 Error: ${errDetail}` },
-              { status: 400 }
-            );
-          }
-        } catch (err: any) {
-          console.error('OpenAI fetch error:', err);
-          return NextResponse.json(
-            { success: false, message: 'Gagal menghubungi server OpenAI DALL-E 3. Periksa koneksi atau kunci API Anda.' },
-            { status: 502 }
-          );
-        }
+      // Jika Kunci API OpenAI belum ada
+      if (!openAiKey) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'Kunci API OpenAI DALL-E 3 belum dimasukkan. Silakan masukkan kunci API OpenAI Anda (sk-...) pada kolom yang disediakan, atau gunakan tab "Studio Desain Grafis" yang 100% gratis dan instan.',
+          },
+          { status: 400 }
+        );
       }
 
-      // B. Alternatif Generatif Bebas-Limit (Direct High-Speed AI Engine)
-      // Menghindari shared IP limit pollinations dengan menyertakan token acak unik
-      const randomSeed = Math.floor(Math.random() * 1000000);
-      const cleanKeyword = encodeURIComponent(cleanPrompt.slice(0, 150));
-      const directImageUrl = `https://pollinations.ai/p/${cleanKeyword}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
+      // Panggil OpenAI DALL-E 3 Image Generation API
+      const enhancedPrompt = `Professional marketing poster design, promotional flyer brochure, ultra sharp typography and aesthetics for: ${cleanPrompt}`;
 
-      return NextResponse.json({
-        success: true,
-        imageUrl: directImageUrl,
-        provider: 'AI Visual Engine (Flux)',
-        prompt: cleanPrompt,
-        notice: 'Menggunakan visual engine. Untuk hasil komersial DALL-E 3 resmi, masukkan OPENAI_API_KEY Anda.',
-      });
+      try {
+        const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${openAiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: enhancedPrompt,
+            n: 1,
+            size: '1024x1024',
+            quality: 'standard',
+          }),
+        });
+
+        const openAiData = await openAiRes.json();
+
+        if (openAiRes.ok && openAiData.data?.[0]?.url) {
+          return NextResponse.json({
+            success: true,
+            imageUrl: openAiData.data[0].url,
+            provider: 'OpenAI DALL-E 3 Resmi',
+            prompt: cleanPrompt,
+          });
+        } else {
+          const errDetail =
+            openAiData.error?.message ||
+            'OpenAI menolak permintaan pembuatan gambar. Pastikan kuota saldo akun OpenAI Anda aktif.';
+          return NextResponse.json(
+            { success: false, message: `OpenAI DALL-E 3 Error: ${errDetail}` },
+            { status: 400 }
+          );
+        }
+      } catch (err: any) {
+        console.error('OpenAI fetch error:', err);
+        return NextResponse.json(
+          { success: false, message: 'Gagal terhubung ke server OpenAI. Periksa jaringan internet atau kevalidan kunci API Anda.' },
+          { status: 502 }
+        );
+      }
     }
 
     // 2. FITUR PENDUKUNG: PARAMETER IMAGE ENHANCER
