@@ -6,12 +6,45 @@ import Footer from '@/components/Footer';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
-    setIsSubmitted(true);
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      const res = await fetch('https://formspree.io/f/myeedvkk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject || 'Pesan Kontak KompresKilat',
+          message: formData.message,
+        }),
+      });
+
+      if (res.ok) {
+        setIsSubmitted(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(
+          data?.errors?.[0]?.message || 'Gagal mengirim pesan. Silakan coba lagi atau hubungi via email langsung.'
+        );
+      }
+    } catch {
+      setErrorMessage('Terjadi kendala jaringan saat mengirim pesan. Harap periksa koneksi internet Anda.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,10 +109,18 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 text-xs">
+                  {errorMessage && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-start gap-2">
+                      <span>⚠️</span>
+                      <span className="font-semibold">{errorMessage}</span>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap:</label>
                     <input
                       type="text"
+                      name="name"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -89,9 +130,10 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Alamat Email:</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Alamat Email Anda:</label>
                     <input
                       type="email"
+                      name="email"
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -103,6 +145,7 @@ export default function ContactPage() {
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">Subjek / Kategori Pesan:</label>
                     <select
+                      name="subject"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
@@ -118,6 +161,7 @@ export default function ContactPage() {
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">Isi Pesan:</label>
                     <textarea
+                      name="message"
                       required
                       rows={4}
                       value={formData.message}
@@ -129,9 +173,20 @@ export default function ContactPage() {
 
                   <button
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm cursor-pointer text-xs sm:text-sm"
+                    disabled={isSubmitting}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
                   >
-                    Kirim Pesan Sekarang 🚀
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span>Mengirim Pesan...</span>
+                      </>
+                    ) : (
+                      <span>Kirim Pesan Sekarang 🚀</span>
+                    )}
                   </button>
                 </form>
               )}
