@@ -36,6 +36,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'Tim KompresKilat' }],
   creator: 'KompresKilat',
   publisher: 'KompresKilat',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
   alternates: {
     canonical: siteUrl,
   },
