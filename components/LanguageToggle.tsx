@@ -22,3 +22,4 @@ export default function LanguageToggle({ className = '' }: { className?: string 
     </button>
   );
 }
+

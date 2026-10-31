@@ -64,3 +64,4 @@ export function isValidAwb(awb: string): boolean {
   // Resi kurir di Indonesia umumnya 4-40 karakter alfanumerik, dash, underscore
   return /^[A-Za-z0-9\-_]{4,45}$/.test(clean);
 }
+

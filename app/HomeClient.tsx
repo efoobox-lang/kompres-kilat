@@ -138,3 +138,4 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
     </section>
   );
 }
+
