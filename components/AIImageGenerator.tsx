@@ -21,9 +21,7 @@ interface DesignData {
 
 export default function AIImageGenerator() {
   const [prompt, setPrompt] = useState('buatkan brosur jualan kopi desainnya lebih meriah');
-  const [mode, setMode] = useState<'gemini' | 'canvas'>('gemini');
   const [aspectRatio, setAspectRatio] = useState<'square' | 'portrait'>('square');
-  const [geminiKey, setGeminiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [providerInfo, setProviderInfo] = useState<string>('');
@@ -180,7 +178,7 @@ export default function AIImageGenerator() {
 
     const dataUrl = canvas.toDataURL('image/png', 0.95);
     setGeneratedImageUrl(dataUrl);
-    setProviderInfo('Google Gemini AI Studio + KompresKilat Visual Canvas');
+    setProviderInfo('KompresKilat AI Visual Studio (1080p HD)');
     setIsLoading(false);
   };
 
@@ -204,7 +202,6 @@ export default function AIImageGenerator() {
         body: JSON.stringify({
           prompt: cleanPrompt,
           action: 'generate',
-          apiKey: geminiKey.trim() || undefined,
         }),
       });
 
@@ -247,7 +244,7 @@ export default function AIImageGenerator() {
           <span className="text-2xl">🎨</span>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-              AI Poster &amp; Brosur Studio (Google Gemini)
+              AI Poster &amp; Brosur Studio
             </h2>
             <p className="text-xs text-slate-500">
               Rancang materi promosi, flyer diskon, dan pamflet bisnis beresolusi tinggi (1080p) siap cetak dan siap posting.
@@ -256,15 +253,16 @@ export default function AIImageGenerator() {
         </div>
 
         {/* Tab Mesin */}
-        <div className="p-1.5 bg-slate-100 rounded-xl mb-5 flex items-center justify-between">
+        <div className="p-2 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-800 ml-2">
-              ✨ Ditenagai oleh: <b>Google Gemini AI Studio</b>
+            <span className="text-xs font-semibold text-slate-800 ml-1">
+              ⚡ <b>AI Visual Studio Engine</b>
             </span>
-            <span className="text-[10px] bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
-              Resmi Bebas Limit
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">
+              Siap Cetak 1080p HD
             </span>
           </div>
+          <span className="text-[11px] text-slate-500 hidden sm:inline">100% Gratis &amp; Siap Pakai</span>
         </div>
 
         <form onSubmit={handleGenerate} className="space-y-4">
@@ -283,32 +281,6 @@ export default function AIImageGenerator() {
               className="w-full px-4 py-3 text-xs sm:text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
               required
             />
-          </div>
-
-          {/* Kotak Input Kunci API Google Gemini */}
-          <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <label className="font-bold text-indigo-950 flex items-center gap-1.5">
-                <span>🔑</span>
-                <span>Kunci API Google Gemini (AI Studio):</span>
-              </label>
-              <span className="text-[10px] text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-200">
-                Google AI Studio
-              </span>
-            </div>
-            <input
-              type="password"
-              placeholder="Tempelkan Kunci API Gemini Anda di sini..."
-              value={geminiKey}
-              onChange={(e) => {
-                setGeminiKey(e.target.value);
-                if (errorMessage) setErrorMessage('');
-              }}
-              className="w-full px-3 py-2 text-xs border border-indigo-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <p className="text-[11px] text-indigo-700 leading-relaxed">
-              Kunci API dari <b>aistudio.google.com</b>. Kunci tersimpan aman di browser Anda dan langsung memproses konsep poster secara cerdas.
-            </p>
           </div>
 
           {/* Format Ukuran */}
@@ -353,10 +325,10 @@ export default function AIImageGenerator() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                <span>Google Gemini Sedang Merancang Desain Poster...</span>
+                <span>AI Sedang Merancang Tata Letak &amp; Desain Brosur...</span>
               </>
             ) : (
-              <span>Rancang Poster dengan Google Gemini ⚡</span>
+              <span>Rancang Poster &amp; Brosur Sekarang ⚡</span>
             )}
           </button>
         </form>
