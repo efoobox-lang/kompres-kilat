@@ -47,6 +47,7 @@ const COURIER_OPTIONS = [
   { value: 'wahana', label: 'Wahana Logistik' },
   { value: 'ninja', label: 'Ninja Xpress' },
   { value: 'idexpress', label: 'ID Express' },
+  { value: 'lion', label: 'Lion Parcel' },
 ];
 
 export default function TrackingPage() {

@@ -24,6 +24,7 @@ export interface TrackingResponseData {
 
 const COURIER_NAMES: Record<string, string> = {
   shopeexpress: 'Shopee Xpress (SPX)',
+  spx: 'Shopee Xpress (SPX)',
   jne: 'JNE Express',
   jnt: 'J&T Express',
   sicepat: 'SiCepat Ekspres',
@@ -33,6 +34,24 @@ const COURIER_NAMES: Record<string, string> = {
   wahana: 'Wahana Prestasi Logistik',
   ninja: 'Ninja Xpress',
   idexpress: 'ID Express',
+  ide: 'ID Express',
+  lion: 'Lion Parcel',
+};
+
+const BINDERBYTE_COURIER_MAP: Record<string, string> = {
+  shopeexpress: 'spx',
+  spx: 'spx',
+  jne: 'jne',
+  jnt: 'jnt',
+  sicepat: 'sicepat',
+  anteraja: 'anteraja',
+  pos: 'pos',
+  tiki: 'tiki',
+  wahana: 'wahana',
+  ninja: 'ninja',
+  idexpress: 'ide',
+  ide: 'ide',
+  lion: 'lion',
 };
 
 export async function POST(request: Request) {
@@ -50,13 +69,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.BINDERBYTE_API_KEY;
+    const apiKey = process.env.BINDERBYTE_API_KEY || 'sk_ozijeynnyr94qppk7izsojhfk90xhq5aymtda2wuvravh6iokkrumsrn9k6f9wui';
+    const mappedCourier = BINDERBYTE_COURIER_MAP[cleanCourier] || cleanCourier;
 
-    // Jika user sudah menambahkan API KEY di .env.local, panggil API Binderbyte sungguhan
+    // Panggil API Binderbyte live data
     if (apiKey) {
       try {
-        const externalUrl = `https://api.binderbyte.com/v1/track?api_key=${apiKey}&courier=${cleanCourier}&awb=${trimmedAwb}`;
-        const externalRes = await fetch(externalUrl, { next: { revalidate: 60 } });
+        const externalUrl = `https://api.binderbyte.com/v1/track?api_key=${apiKey}&courier=${mappedCourier}&awb=${trimmedAwb}`;
+        const externalRes = await fetch(externalUrl, { cache: 'no-store' });
         const externalData = await externalRes.json();
 
         if (externalData.status === 200 && externalData.data) {
@@ -79,22 +99,22 @@ export async function POST(request: Request) {
             receiver: d.detail?.receiver || 'Penerima Terdaftar',
             lastUpdate: d.summary?.date || new Date().toLocaleString('id-ID'),
             history: historyItems,
-            isDemo: false,
           };
 
           return NextResponse.json({ success: true, data: responseData });
-        } else {
+        } else if (externalData.status === 400 || externalData.status === 404) {
           return NextResponse.json(
             { 
               success: false, 
-              message: externalData.message || 'Nomor resi tidak ditemukan di sistem ekspedisi. Pastikan nomor resi dan kurir sudah sesuai.' 
+              message: externalData.message === 'Data not found'
+                ? 'Nomor resi tidak ditemukan di server ekspedisi. Pastikan nomor resi dan kurir yang dipilih sudah benar.'
+                : (externalData.message || 'Nomor resi tidak ditemukan di sistem ekspedisi.')
             },
             { status: 404 }
           );
         }
       } catch (err: any) {
         console.error('Error fetching live courier API:', err);
-        // Fallback to simulated response if network fails
       }
     }
 
