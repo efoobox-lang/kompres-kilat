@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompres-kilat.vercel.app';
 
   return {
     title: `${post.title} - KompresKilat`,
@@ -54,7 +54,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompres-kilat.vercel.app';
 
   const articleSchema = {
     '@context': 'https://schema.org',
