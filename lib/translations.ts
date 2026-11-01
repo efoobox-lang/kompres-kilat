@@ -69,6 +69,15 @@ export const translations = {
     blog_heading_badge: 'Artikel & Edukasi',
     blog_heading_title: 'Panduan & Tips Terpopuler',
     blog_see_all: 'Lihat Semua →',
+    blog_page_badge: 'Pusat Pengetahuan & Solusi',
+    blog_page_title: '📚 Blog & Panduan File Digital',
+    blog_page_desc: 'Temukan panduan praktis, tips lolos validasi berkas instansi, hingga trik memantau paket belanja online.',
+    blog_search_placeholder: 'Cari artikel, panduan file, atau tips...',
+    blog_category_all: 'Semua',
+    blog_back_to_all: '← Kembali ke Semua Artikel',
+    blog_read_article_in: 'Bahasa Artikel:',
+    blog_lang_id: '🇮🇩 Bahasa Indonesia',
+    blog_lang_en: '🇬🇧 English',
 
     // Footer & Common Links
     footer_desc: 'Platform online gratis untuk kompresi berkas gambar, optimasi dokumen PDF, arsip ZIP, dan utilitas AI dengan prioritas privasi data pengguna.',
@@ -162,6 +171,15 @@ export const translations = {
     blog_heading_badge: 'Articles & Tutorials',
     blog_heading_title: 'Popular Guides & Resources',
     blog_see_all: 'View All →',
+    blog_page_badge: 'Knowledge & Solution Center',
+    blog_page_title: '📚 Digital File Guides & Tech Blog',
+    blog_page_desc: 'Discover actionable guides, document compliance tips, file conversions, and digital productivity insights.',
+    blog_search_placeholder: 'Search articles, file guides, or tutorials...',
+    blog_category_all: 'All',
+    blog_back_to_all: '← Back to All Articles',
+    blog_read_article_in: 'Article Language:',
+    blog_lang_id: '🇮🇩 Indonesian',
+    blog_lang_en: '🇬🇧 English',
 
     // Footer & Common Links
     footer_desc: 'Free privacy-first online suite for image compression, PDF optimization, ZIP archives, and AI productivity tools.',

@@ -1,5 +1,6 @@
 import { getAllPosts } from '@/lib/blog-data';
 import BlogListClient from './BlogListClient';
+import BlogHeaderClient from './BlogHeaderClient';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -18,17 +19,7 @@ export default function BlogPage() {
 
       {/* Konten Blog */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-10 text-center">
-          <span className="inline-block bg-indigo-100 text-indigo-700 text-xs px-3 py-1 rounded-full font-semibold mb-2">
-            Pusat Pengetahuan & Solusi
-          </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
-            📚 Blog & Panduan File Digital
-          </h1>
-          <p className="text-sm text-slate-600 max-w-lg mx-auto">
-            Temukan panduan praktis, tips lolos validasi berkas instansi, hingga trik memantau paket kiriman belanja online.
-          </p>
-        </div>
+        <BlogHeaderClient />
 
         {/* Client Component untuk Search & Filter */}
         <BlogListClient initialPosts={posts} />

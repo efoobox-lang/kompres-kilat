@@ -2,7 +2,7 @@ export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel' | 'Kecerdasan Buatan (AI)';
+  category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel' | 'Kecerdasan Buatan (AI)' | 'Keamanan Data' | 'Bisnis & UMKM';
   date: string;
   readTime: string;
   author: string;
@@ -13,6 +13,19 @@ export interface BlogPost {
     url: string;
     icon: string;
     buttonText: string;
+  };
+  en?: {
+    title: string;
+    excerpt: string;
+    category: string;
+    date: string;
+    readTime: string;
+    content: string;
+    relatedTool?: {
+      title: string;
+      description: string;
+      buttonText: string;
+    };
   };
 }
 
@@ -743,6 +756,406 @@ Untuk memberikan kenyamanan maksimal bagi pengguna, KompresKilat menyediakan [Fi
       url: '/tools/tracking',
       icon: '📦',
       buttonText: 'Lacak Resi Paket 🔍',
+    },
+    en: {
+      title: 'How to Track JNE, J&T, SiCepat, and Shopee Express Packages on One Screen',
+      excerpt: 'Practical guide to real-time tracking across major logistics couriers in Indonesia with multi-package history.',
+      category: 'Ekspedisi & Resi',
+      date: 'October 31, 2026',
+      readTime: '4 min',
+      content: `
+### Unified Tracking Across Multiple Couriers
+When shopping across e-commerce marketplaces (Shopee, Tokopedia, Lazada, or TikTok Shop), sellers assign various shipping couriers: JNE today, SiCepat tomorrow, or J&T Express.
+
+Checking individual carrier websites takes unnecessary time and exposes you to sluggish pages filled with pop-up ads.
+
+---
+
+### Centralized Package Tracking on KompresKilat:
+KompresKilat provides a direct [Multi-Courier Package Tracker](/tools/tracking) integrated into logistics gateways:
+1. **Multi-Carrier Coverage**: Tracks JNE, J&T Express, SiCepat, and Shopee Xpress (SPX).
+2. **Detailed Waypoint Timelines**: Displays every checkpoint from origin drop points to transit hubs and courier out-for-delivery status.
+3. **Local Search History**: Saves tracking numbers in your browser memory so you never need to retype long tracking codes.
+
+---
+
+### Tips When Your Package Appears "Stuck":
+- **National Holiday Schedules**: Hubs often adjust overnight inter-island logistics routes during public holidays.
+- **System Scan Delays**: Physical shipping containers move between sorting hubs before barcode manifests sync online (typically 4–6 hour windows).
+- **Escalation Window**: If a parcel remains stationary at a transit hub for over 72 hours, record your tracking ID and contact the official courier helpline.
+      `,
+      relatedTool: {
+        title: 'Track Your Package Now',
+        description: 'Check real-time package status across JNE, J&T, SiCepat, and SPX instantly.',
+        buttonText: 'Track Package 🔍',
+      },
+    },
+  },
+  {
+    slug: 'cara-sensor-dan-blur-ktp-online-aman-tanpa-server',
+    title: 'Cara Sensor & Blur Foto KTP Online 100% Aman Tanpa Takut Data Bocor',
+    excerpt: 'Panduan menutupi NIK, alamat, dan tanda tangan pada foto KTP secara permanen di browser sebelum diunggah ke internet demi mencegah penyalahgunaan pinjol.',
+    category: 'Keamanan Data',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Bahaya Mengunggah Foto KTP Polos Tanpa Disensor
+Dalam berbagai urusan digital—seperti melamar pekerjaan lepas, registrasi akun freelance, sewa kendaraan, atau verifikasi hotel—kita sering diminta melampirkan foto e-KTP.
+
+Sayangnya, ribuan kasus kejahatan siber terjadi akibat foto KTP polos bocor di internet dan disalahgunakan oleh sindikat pinjaman online (pinjol) ilegal atau pembobolan rekening bank.
+
+---
+
+### Bagian KTP yang Wajib Anda Sensor / Tutup:
+1. **Nomor Induk Kependudukan (NIK)**: Terdiri dari 16 digit yang menjadi kunci utama data kependudukan perbankan.
+2. **Tanda Tangan Digital**: Wajib disensor agar tidak dipalsukan pada dokumen kontrak fiktif.
+3. **Alamat Rumah Lengkap & RT/RW**: Cukup tampilkan Kota/Provinsi saja untuk melindungi privasi tempat tinggal keluarga Anda.
+
+---
+
+### Mengapa Harus Menggunakan Sensor KTP KompresKilat?
+Banyak aplikasi web pihak ketiga mengklaim "mengedit gambar", namun kenyataannya foto KTP Anda diunggah ke server cloud mereka. Jika server mereka diretas, identitas Anda ikut bocor.
+
+Di KompresKilat, fitur [Sensor & Blur KTP](/tools/censor-ktp) berjalan **100% di peramban (client-side HTML5 Canvas)**:
+- **Nol Upload ke Server**: Berkas foto KTP Anda tidak pernah dikirimkan melalui jaringan internet.
+- **Pilihan Sensor Fleksibel**: Anda bisa memilih sensor kotak hitam pekat (*solid blackout*) atau efek blur mozaik pikselasi.
+- **Kuas Interaktif**: Cukup usap jari di layar sentuh HP atau klik-drag mouse di PC pada bagian NIK dan tanda tangan.
+- **Permanen**: Bagian yang disensor digantikan langsung pada level piksel, sehingga tidak dapat dikembalikan (*un-blur*) oleh pihak manapun.
+    `,
+    relatedTool: {
+      title: 'Sensor Foto KTP Anda Sekarang',
+      description: 'Tutup NIK dan tanda tangan secara permanen dengan kuas blur atau kotak hitam 100% aman di peramban Anda.',
+      url: '/tools/censor-ktp',
+      icon: '🔒',
+      buttonText: 'Buka Alat Sensor KTP 🛡️',
+    },
+    en: {
+      title: 'How to Censor & Blur ID Cards Online Safely with Zero Server Uploads',
+      excerpt: 'Step-by-step guide to permanently redact your National ID (NIK), signature, and home address in your browser before sharing online.',
+      category: 'Keamanan Data',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### The Dangers of Uploading Raw ID Cards Online
+When applying for freelance gigs, car rentals, hotel bookings, or job portals, users are routinely required to provide photo copies of their National ID cards or passports.
+
+Unfortunately, thousands of identity theft incidents occur when unredacted identity documents leak and get exploited for unauthorized loans or fraudulent financial registrations.
+
+---
+
+### Sensitive ID Fields You Must Always Redact:
+1. **National ID Number (NIK/SSN)**: The master identification key linked to civil registries and banking records.
+2. **Personal Signature**: Must be permanently obscured to prevent signature forgery on rogue contracts.
+3. **Exact Street Address**: Keep only city/province visible to protect personal physical privacy.
+
+---
+
+### Why Client-Side In-Browser Redaction Matters:
+Most editing websites upload your confidential images to remote cloud servers for rendering. If those databases suffer a breach, your identity is compromised.
+
+At KompresKilat, the [Censor & Blur ID Tool](/tools/censor-ktp) executes **100% locally in your browser memory via HTML5 Canvas**:
+- **Zero Server Uploads**: Your sensitive documents never leave your physical device.
+- **Dual Redaction Modes**: Choose between solid black redaction bars or privacy pixelation blur.
+- **Interactive Touch & Mouse Brush**: Seamlessly wipe across NIK numbers and signatures on your smartphone or desktop.
+- **Irreversible Protection**: Redacted pixels are permanently overwritten and cannot be reversed or unblurred by third parties.
+      `,
+      relatedTool: {
+        title: 'Censor Your ID Card Now',
+        description: 'Permanently blackout or pixelate sensitive ID fields with zero server uploads in your browser.',
+        buttonText: 'Open ID Redaction Tool 🛡️',
+      },
+    },
+  },
+  {
+    slug: 'cara-kunci-dan-hapus-password-pdf-online',
+    title: 'Cara Mengunci File PDF dengan Password AES-256 dan Cara Membukanya Kembali',
+    excerpt: 'Panduan lengkap memberi proteksi kata sandi pada dokumen PDF rahasia serta cara menghapus password secara permanen tanpa software tambahan.',
+    category: 'Dokumen PDF',
+    date: '1 November 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kapan Anda Wajib Memberi Password pada File PDF?
+Dokumen seperti slip gaji bulanan, laporan SPT pajak, rekap mutasi rekening bank, dan draf kontrak perjanjian kerja sama mengandung informasi finansial yang sangat sensitif.
+
+Jika berkas PDF tersebut dikirimkan melalui email atau WhatsApp tanpa enkripsi, siapa saja yang memegang tautan atau perangkat penerima dapat membacanya.
+
+---
+
+### Standar Enkripsi AES-256 di Browser
+KompresKilat menghadirkan [Fitur Kunci & Buka Password PDF](/tools/pdf-password) yang menggunakan standar enkripsi militer **AES-256**:
+- **Kunci PDF (Encrypt)**: Tambahkan kata sandi pemilik (*Owner Password*) dan kata sandi pengguna (*User Password*) sehingga file tidak bisa dibuka tanpa izin.
+- **Buka PDF (Decrypt)**: Jika Anda memiliki dokumen PDF terlindungi dan ingin menghilangkan kebutuhan mengetik password setiap kali dibuka, masukkan password yang benar dan unduh versi PDF yang sudah didekripsi permanen.
+- **Privasi Maksimal**: Seluruh proses enkripsi dan dekripsi dikerjakan oleh mesin komputasi browser lokal Anda tanpa diunggah ke server database.
+    `,
+    relatedTool: {
+      title: 'Proteksi Dokumen PDF Anda',
+      description: 'Kunci PDF dengan password AES-256 atau hapus password PDF yang Anda miliki secara instan.',
+      url: '/tools/pdf-password',
+      icon: '🔐',
+      buttonText: 'Buka Alat Password PDF 🔑',
+    },
+    en: {
+      title: 'How to Password-Protect and Unlock PDF Documents with AES-256 Encryption',
+      excerpt: 'Comprehensive tutorial on securing sensitive PDF files with bank-grade AES-256 encryption or permanently removing passwords in-browser.',
+      category: 'Dokumen PDF',
+      date: 'November 1, 2026',
+      readTime: '3 min',
+      content: `
+### Why Sensitive PDF Documents Require Password Protection
+Corporate salary slips, annual tax declarations, bank statements, and commercial contracts contain sensitive financial intelligence.
+
+Transmitting these PDF files via email attachments or messaging apps without encryption exposes confidential records to unauthorized recipients.
+
+---
+
+### Bank-Grade AES-256 In-Browser Encryption
+KompresKilat offers the [PDF Password & Security Tool](/tools/pdf-password) powered by industry-standard **AES-256 encryption**:
+- **Protect PDF (Encrypt)**: Add user passwords and restriction locks so no viewer can open the document without explicit authorization.
+- **Unlock PDF (Decrypt)**: If you possess the valid password and wish to remove the prompt permanently, decrypt and download the unlocked version in one click.
+- **Client-Side Processing**: Cryptographic calculations run purely in your browser's WebAssembly sandbox with zero data transmission to external servers.
+      `,
+      relatedTool: {
+        title: 'Protect Your PDF Documents',
+        description: 'Encrypt PDFs with AES-256 passwords or permanently remove passwords in your browser.',
+        buttonText: 'Open PDF Security Tool 🔑',
+      },
+    },
+  },
+  {
+    slug: 'cara-hitung-margin-keuntungan-diskon-dan-pajak-umkm',
+    title: 'Rumus Hitung Margin Keuntungan, Diskon Bertingkat (50%+20%), dan Pajak UMKM 0.5%',
+    excerpt: 'Pelajari perbedaan markup vs margin, cara menghitung diskon ganda toko retail, serta simulasi pajak PPh Final 0.5% bagi pelaku usaha mikro dan UMKM.',
+    category: 'Bisnis & UMKM',
+    date: '1 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kesalahan Fatal UMKM: Mengira Markup Sama dengan Margin
+Banyak pebisnis pemula menetapkan harga jual dengan rumus sederhana: modal Rp100.000 ingin untung 30%, maka dijual seharga Rp130.000. 
+
+Padahal keuntungan Rp30.000 dari harga jual Rp130.000 menghasilkan **Margin Profit hanya 23%**, bukan 30%! Kesalahan perhitungan ini sering membuat kas bisnis boncos saat mengadakan promosi diskon.
+
+---
+
+### Rumus Margin Keuntungan yang Benar:
+\`\`\`
+Harga Jual = Modal Pokok / (1 - (Persentase Margin / 100))
+\`\`\`
+Jika Modal = Rp100.000 dan Target Margin = 30%, maka:
+\`Harga Jual = 100.000 / 0.7 = Rp142.857\` (dibulatkan Rp143.000).
+
+---
+
+### Cara Menghitung Diskon Bertingkat (Contoh: 50% + 20%):
+Diskon 50% + 20% **bukanlah diskon 70%**!
+1. Potongan pertama: Harga awal dikurangi 50%.
+2. Potongan kedua: Sisa harga setelah potongan pertama dikurangi 20%.
+Contoh baju seharga Rp200.000:
+- Diskon 50% = Rp100.000 (sisa Rp100.000).
+- Diskon tambahan 20% dari Rp100.000 = Rp20.000.
+- Harga akhir yang dibayar konsumen = **Rp80.000** (total diskon efektif 60%).
+
+---
+
+### Pajak UMKM Final 0.5% (PP 23/2018):
+Bagi pelaku usaha perorangan atau badan dengan omzet di bawah Rp4.8 miliar setahun, tarif pajak yang dikenakan adalah **0.5% dari omzet kotor per bulan**.
+Gunakan [Kalkulator Bisnis & UMKM KompresKilat](/tools/kalkulator-umkm) untuk menghitung margin, simulasi diskon, dan estimasi pajak secara otomatis dan instan!
+    `,
+    relatedTool: {
+      title: 'Hitung Margin & Pajak UMKM Sekarang',
+      description: 'Simulasi harga jual, diskon bertingkat, dan pajak final 0.5% secara live dengan format Rupiah rapi.',
+      url: '/tools/kalkulator-umkm',
+      icon: '🧮',
+      buttonText: 'Buka Kalkulator UMKM 📊',
+    },
+    en: {
+      title: 'Profit Margin Formulas, Tiered Discounts (50%+20%), and 0.5% SME Tax Calculations',
+      excerpt: 'Learn the vital difference between markup and margin, how dual retail discounts work, and how to calculate Indonesian 0.5% SME final tax.',
+      category: 'Bisnis & UMKM',
+      date: 'November 1, 2026',
+      readTime: '5 min',
+      content: `
+### The Costly Mistake: Confusing Markup with Margin
+Many new entrepreneurs compute retail prices incorrectly: Cost is \$100, they want a 30% profit, so they charge \$130.
+
+However, a \$30 profit on a \$130 sales price is only a **23% profit margin**, not 30%! This discrepancy causes severe cash flow shortages when offering seasonal promotional discounts.
+
+---
+
+### The Correct Profit Margin Formula:
+\`\`\`
+Selling Price = Cost / (1 - (Desired Margin % / 100))
+\`\`\`
+If Cost = \$100 and Target Margin = 30%:
+\`Selling Price = 100 / 0.7 = \$142.86\`.
+
+---
+
+### How Tiered Cascading Discounts Work (e.g. 50% + 20%):
+A 50% + 20% promo is **NOT equal to a 70% flat discount**!
+1. Primary discount: The initial price is slashed by 50%.
+2. Secondary discount: The remaining subtotal is reduced by 20%.
+For an item tagged at \$200:
+- First 50% discount = \$100 (remaining: \$100).
+- Second 20% discount on \$100 = \$20.
+- Final checkout price = **\$80** (representing a 60% effective discount).
+
+---
+
+### Indonesian 0.5% SME Final Tax (PP 23/2018):
+Eligible small enterprises with gross annual revenue under IDR 4.8 Billion enjoy a simplified 0.5% monthly gross turnover tax rate. Use the [KompresKilat Business Calculator](/tools/kalkulator-umkm) for instant profit and discount simulations!
+      `,
+      relatedTool: {
+        title: 'Calculate Business Profits & Taxes',
+        description: 'Simulate selling prices, cascading discounts, and turnover taxes with live currency formatting.',
+        buttonText: 'Open SME Calculator 📊',
+      },
+    },
+  },
+  {
+    slug: 'cara-ubah-foto-heic-iphone-ke-jpg-dan-bikin-qr-code-hd',
+    title: 'Cara Mengubah Foto HEIC iPhone ke JPG Massal & Membuat QR Code Kustom HD',
+    excerpt: 'Solusi mudah mengatasi foto HEIC Apple yang tidak bisa dibuka di laptop Windows serta cara membuat barcode QR resolusi tinggi untuk WhatsApp & WiFi.',
+    category: 'Gambar & Foto',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kenapa Foto Kamera iPhone Berformat HEIC?
+Sejak peluncuran iOS 11, perangkat iPhone secara *default* menyimpan foto dalam format **High Efficiency Image Container (HEIC)**. Format ini sangat efisien dalam menghemat penyimpanan internal smartphone.
+
+Namun masalah besar muncul ketika foto tersebut dipindahkan ke laptop Windows, dikirim ke percetakan, atau diunggah ke portal pendaftaran CPNS, BUMN, dan universitas: **foto tidak bisa dibuka atau format berkas ditolak**.
+
+---
+
+### Solusi Konversi HEIC ke JPG Massal di KompresKilat:
+Dengan tool [Konverter HEIC & Utilitas File](/tools/file-utility), Anda dapat:
+1. **Konversi Sekaligus Puluhan Foto**: Unggah beberapa file HEIC dari galeri iPhone Anda.
+2. **Ubah ke Format Populer**: Konversi ke JPG tajam atau PNG transparan.
+3. **Cepat & Hemat Kuota**: Pemrosesan terjadi secara lokal di browser komputer Anda tanpa perlu mengunggah bergiga-giga foto ke server asing.
+
+---
+
+### Bonus: Membuat QR Code Kustom Resolusi Tinggi (HD):
+Di halaman yang sama, Anda juga bisa membuat kode QR untuk berbagai kebutuhan:
+- **Tautan Website / Portofolio**: Buat QR code langsung ke profil LinkedIn atau website toko online.
+- **WhatsApp Chat Langsung**: Cukup masukkan nomor telepon, pelanggan dapat langsung scan dan memulai chat.
+- **Kustomisasi Warna & Unduh PNG**: Atur warna depan (*foreground*) dan warna latar (*background*), lalu unduh sebagai gambar PNG jernih siap cetak pada brosur, kartu nama, atau banner pameran.
+    `,
+    relatedTool: {
+      title: 'Konversi HEIC & Buat QR Code Sekarang',
+      description: 'Ubah format foto HEIC ke JPG massal dan ciptakan QR code kustom resolusi tinggi gratis.',
+      url: '/tools/file-utility',
+      icon: '🔄',
+      buttonText: 'Buka Utilitas File & QR 🚀',
+    },
+    en: {
+      title: 'How to Batch Convert iPhone HEIC Photos to JPG and Generate High-Res QR Codes',
+      excerpt: 'Seamlessly solve Apple HEIC compatibility on Windows PCs and generate custom high-resolution QR codes for websites and WhatsApp.',
+      category: 'Gambar & Foto',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### Why iPhone Cameras Default to HEIC Format
+Starting with iOS 11, Apple smartphones save captured photos in the **High Efficiency Image Container (HEIC)** format to reduce storage consumption by up to 50% compared to JPG.
+
+However, incompatibility emerges when transferring files to Windows PCs, print labs, or official job application portals: the files fail to open or are rejected outright.
+
+---
+
+### Batch Convert HEIC to JPG in Your Browser:
+Using the [KompresKilat File Utility](/tools/file-utility), you can:
+1. **Batch Process Multiple Files**: Select dozens of iPhone HEIC files simultaneously.
+2. **Convert to Universal Formats**: Export clean JPG or lossless PNG images.
+3. **Bandwidth-Friendly & Private**: Image decoding occurs within your browser memory without uploading gigabytes of private photos to remote servers.
+
+---
+
+### Bonus: Custom High-Resolution (HD) QR Code Generator:
+On the same page, create tailored QR codes for diverse operational needs:
+- **Website & Portfolio Links**: Generate instant QR codes directing to your business website or digital portfolio.
+- **Direct WhatsApp Messaging**: Pre-format your phone number so clients scan and initiate conversations immediately.
+- **Color Customization & Print Export**: Choose foreground and background colors, then download crisp high-resolution PNGs ready for business cards, flyers, and banners.
+      `,
+      relatedTool: {
+        title: 'Convert HEIC & Generate QR Codes',
+        description: 'Batch convert Apple HEIC files to JPG and create custom print-ready QR codes for free.',
+        buttonText: 'Open File & QR Utilities 🚀',
+      },
+    },
+  },
+  {
+    slug: 'cara-cek-skor-ats-cv-dan-resume-lolos-screening-hrd',
+    title: 'Cara Cek Skor ATS Resume & CV Lamaran Kerja Agar Lolos Seleksi Berkas HRD',
+    excerpt: 'Ketahui standar sistem Applicant Tracking System (ATS), cara mendeteksi kata kunci yang hilang, dan trik memformat CV agar lolos tahap screening otomatis.',
+    category: 'Kecerdasan Buatan (AI)',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Fakta Pahit: Lebih dari 75% CV Ditolak Sebelum Dilihat Manusia
+Perusahaan multinasional, BUMN, perbankan, dan startup teknologi menerima ratusan hingga ribuan pelamar setiap harinya. Untuk menghemat waktu, tim rekrutmen menggunakan sistem **Applicant Tracking System (ATS)**.
+
+ATS adalah robot penyortir otomatis yang memindai teks pada CV Anda. Jika CV Anda berformat dua kolom rumit, dipenuhi grafik/ikon grafik yang tidak terbaca mesin, atau tidak memuat kata kunci penting dari deskripsi pekerjaan (*job description*), CV Anda akan langsung tereliminasi dengan skor rendah.
+
+---
+
+### 4 Tips Agar CV Anda Mendapat Skor ATS Tinggi (80+):
+1. **Gunakan Format Standar Satu Kolom**: Hindari tabel tersembunyi, text box bertumpuk, atau layout grafis berlebihan yang membingungkan parser ATS.
+2. **Sertakan Kata Kunci Relevan**: Jika lowongan mencantumkan *"Digital Marketing, Meta Ads, Google Analytics"*, pastikan ketiga istilah tersebut tertulis jelas di bagian pengalaman kerja Anda.
+3. **Gunakan Kata Kerja Berdampak (*Action Verbs*)**: Daripada menulis *"Bertanggung jawab mengelola media sosial"*, tulis *"Meningkatkan impresi media sosial sebesar 140% dalam 6 bulan melalui konten berbasis tren"*.
+4. **Simpan dalam Format PDF Standar**: Pastikan teks di dalam file PDF dapat disorot (*highlightable*) dan bukan hasil scan gambar raster.
+
+---
+
+### Analisis Skor ATS CV Anda dengan AI KompresKilat:
+Gunakan fitur [AI Resume & ATS Reviewer](/tools/ats-resume) kami untuk:
+- Mengukur skor kecocokan CV Anda terhadap standar ATS industri.
+- Mendapatkan rekomendasi perbaikan poin pengalaman kerja secara otomatis.
+- Mengetahui kata kunci (*keywords*) penting yang terlewatkan agar lamaran Anda segera dipanggil wawancara!
+    `,
+    relatedTool: {
+      title: 'Review CV Anda dengan AI',
+      description: 'Periksa skor ATS resume Anda, temukan kata kunci yang hilang, dan perbaiki poin CV agar lolos HRD.',
+      url: '/tools/ats-resume',
+      icon: '📄',
+      buttonText: 'Cek Skor ATS Resume 🎯',
+    },
+    en: {
+      title: 'How to Check Your Resume ATS Score and Pass Company HR Screening',
+      excerpt: 'Understand Applicant Tracking System (ATS) benchmarks, discover missing keywords, and format your CV to pass automated screenings.',
+      category: 'Kecerdasan Buatan (AI)',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### The Hard Truth: Over 75% of Resumes are Filtered Out by Bots
+Multinational companies, banks, and tech firms receive thousands of applicants for every role. To streamline recruitment, talent acquisition teams rely on **Applicant Tracking Systems (ATS)**.
+
+An ATS is an automated parsing engine that scans resume text. If your CV uses multi-column tables, complex graphics, unparsable icons, or lacks relevant keywords from the job description, it gets discarded before a human recruiter ever sees it.
+
+---
+
+### 4 Rules to Score 80+ on ATS Screening:
+1. **Adopt a Single-Column Layout**: Avoid nested text boxes, sidebars, and graphics that disrupt parsing order.
+2. **Integrate Exact Job Keywords**: If a posting emphasizes *"Digital Marketing, Meta Ads, Google Analytics"*, embed those explicit phrases within your experience section.
+3. **Lead with High-Impact Action Verbs & Metrics**: Instead of *"Responsible for social media"*, write *"Accelerated social media reach by 140% in 6 months through data-backed content strategies"*.
+4. **Export Clean Vector PDFs**: Ensure text within the PDF file is highlightable and selectable, not an unsearchable raster image scan.
+
+---
+
+### Audit Your Resume with KompresKilat AI:
+Launch the [AI Resume & ATS Reviewer](/tools/ats-resume) to:
+- Instantly evaluate your resume's compatibility against recruitment ATS standards.
+- Receive tailored suggestions to optimize action bullet points.
+- Identify missing industry keywords so your application advances to the interview stage!
+      `,
+      relatedTool: {
+        title: 'Review Your Resume with AI',
+        description: 'Audit your CV for ATS compatibility, uncover missing keywords, and optimize bullet points.',
+        buttonText: 'Check Resume ATS Score 🎯',
+      },
     },
   },
 ];

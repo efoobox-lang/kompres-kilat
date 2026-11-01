@@ -3,26 +3,35 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BlogListClient({ initialPosts }: { initialPosts: BlogPost[] }) {
+  const { lang, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
+  const isEn = lang === 'en';
+
   const categories = useMemo(() => {
-    const list = Array.from(new Set(initialPosts.map((p) => p.category)));
-    return ['Semua', ...list];
-  }, [initialPosts]);
+    const list = Array.from(new Set(initialPosts.map((p) => (isEn && p.en?.category ? p.en.category : p.category))));
+    return [isEn ? 'All' : 'Semua', ...list];
+  }, [initialPosts, isEn]);
 
   const filteredPosts = useMemo(() => {
     return initialPosts.filter((post) => {
-      const matchCategory = selectedCategory === 'Semua' || post.category === selectedCategory;
-      const matchSearch =
-        searchQuery.trim() === '' ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCategory && matchSearch;
+      const postCat = isEn && post.en?.category ? post.en.category : post.category;
+      const allKey = isEn ? 'All' : 'Semua';
+      const matchCategory = selectedCategory === allKey || selectedCategory === 'Semua' || postCat === selectedCategory || post.category === selectedCategory;
+      
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return matchCategory;
+
+      const titleMatch = post.title.toLowerCase().includes(q) || (post.en?.title.toLowerCase().includes(q) ?? false);
+      const excerptMatch = post.excerpt.toLowerCase().includes(q) || (post.en?.excerpt.toLowerCase().includes(q) ?? false);
+
+      return matchCategory && (titleMatch || excerptMatch);
     });
-  }, [initialPosts, searchQuery, selectedCategory]);
+  }, [initialPosts, searchQuery, selectedCategory, isEn]);
 
   return (
     <div>
@@ -31,7 +40,7 @@ export default function BlogListClient({ initialPosts }: { initialPosts: BlogPos
         <div className="max-w-md mx-auto relative">
           <input
             type="text"
-            placeholder="Cari artikel, tutorial, atau panduan resi..."
+            placeholder={t('blog_search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2.5 pl-10 text-xs md:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
@@ -55,7 +64,7 @@ export default function BlogListClient({ initialPosts }: { initialPosts: BlogPos
               onClick={() => setSelectedCategory(cat)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-indigo-600 text-white shadow-sm font-semibold'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
               }`}
             >
@@ -67,55 +76,65 @@ export default function BlogListClient({ initialPosts }: { initialPosts: BlogPos
 
       {/* Grid Artikel */}
       {filteredPosts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredPosts.map((art) => (
-            <Link
-              key={art.slug}
-              href={`/blog/${art.slug}`}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md font-semibold border border-indigo-100">
-                    {art.category}
-                  </span>
-                  <div className="text-[11px] text-slate-400 space-x-1">
-                    <span>{art.date}</span>
-                    <span>•</span>
-                    <span>{art.readTime}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+          {filteredPosts.map((art) => {
+            const hasEn = isEn && Boolean(art.en);
+            const title = hasEn ? art.en!.title : art.title;
+            const excerpt = hasEn ? art.en!.excerpt : art.excerpt;
+            const category = hasEn ? art.en!.category : art.category;
+            const date = hasEn ? art.en!.date : art.date;
+            const readTime = hasEn ? art.en!.readTime : art.readTime;
+
+            return (
+              <Link
+                key={art.slug}
+                href={`/blog/${art.slug}`}
+                className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md font-semibold border border-indigo-100/70">
+                      {category}
+                    </span>
+                    <div className="text-[11px] text-slate-400 space-x-1">
+                      <span>{date}</span>
+                      <span>•</span>
+                      <span>{readTime}</span>
+                    </div>
                   </div>
+
+                  <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-2 leading-snug">
+                    {title}
+                  </h2>
+                  <p className="text-xs text-slate-500 line-clamp-3 mb-4 leading-relaxed">
+                    {excerpt}
+                  </p>
                 </div>
 
-                <h2 className="font-bold text-base text-slate-900 group-hover:text-indigo-600 mb-2 leading-snug">
-                  {art.title}
-                </h2>
-                <p className="text-xs text-slate-500 line-clamp-3 mb-4 leading-relaxed">
-                  {art.excerpt}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-semibold group-hover:underline">
-                <span>Baca Selengkapnya</span>
-                <span>→</span>
-              </div>
-            </Link>
-          ))}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-semibold group-hover:underline">
+                  <span>{isEn ? 'Read Full Guide' : 'Baca Selengkapnya'}</span>
+                  <span>→</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-          <p className="text-sm font-semibold text-slate-700">Tidak ada artikel yang cocok dengan pencarian Anda.</p>
+        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
+          <p className="text-sm font-semibold text-slate-700">
+            {isEn ? 'No articles match your search criteria.' : 'Tidak ada artikel yang cocok dengan pencarian Anda.'}
+          </p>
           <button
             onClick={() => {
               setSearchQuery('');
-              setSelectedCategory('Semua');
+              setSelectedCategory(isEn ? 'All' : 'Semua');
             }}
-            className="mt-3 text-xs text-indigo-600 hover:underline font-medium"
+            className="mt-3 text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
           >
-            Reset Pencarian
+            {isEn ? 'Reset Search & Filters' : 'Reset Pencarian & Filter'}
           </button>
         </div>
       )}
     </div>
   );
 }
-
