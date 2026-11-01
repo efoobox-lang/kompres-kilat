@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool, Edit3 } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool, Edit3, Percent } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -199,6 +199,15 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-amber-600 mb-1">{t('tool_kalkulator_umkm_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_kalkulator_umkm_desc')}</p>
+        </Link>
+
+        {/* 10b. Kalkulator Finansial & Satuan */}
+        <Link href="/tools/kalkulator-finansial" className="bg-gradient-to-br from-emerald-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-emerald-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-emerald-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Percent className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-emerald-600 mb-1">Kalkulator Finansial &amp; Konverter</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">Hitung diskon bertingkat 50%+20%, simulasi PPh 21, zakat mal 85g emas, dan konversi satuan.</p>
         </Link>
 
         {/* 11. Smart Scan & Fotocopy Dokumen */}
