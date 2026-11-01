@@ -66,6 +66,8 @@ export const translations = {
     tool_kalkulator_umkm_desc: 'Hitung margin harga jual, simulasi diskon bertingkat (50%+20%), dan estimasi pajak PPh Final 0.5%.',
     tool_smart_scan_title: 'Smart Scan & Fotocopy Dokumen',
     tool_smart_scan_desc: 'Scan foto ijazah/rapor, bersihkan kertas jadi putih bersih ala fotocopy, dan ekspor ke PDF A4/F4 instan.',
+    tool_pro_editor_title: 'Pro Photo & Document Editor',
+    tool_pro_editor_desc: 'Editor pas foto & dokumen: filter fotocopy/vivid, kuas hapus noda kertas, dan watermark keamanan diagonal.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -170,6 +172,8 @@ export const translations = {
     tool_kalkulator_umkm_desc: 'Calculate profit margins, tiered discounts (50%+20%), and Indonesian 0.5% SME final tax.',
     tool_smart_scan_title: 'Smart Document Scanner & Digital Copy',
     tool_smart_scan_desc: 'Scan paper documents, whiten shaded backgrounds into crisp photocopy B/W or Magic Color, and export to PDF.',
+    tool_pro_editor_title: 'Pro Photo & Document Editor',
+    tool_pro_editor_desc: 'Edit passport photos & IDs: photocopy/vivid filters, spot cleanup eraser brush, and repeating security watermark.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',

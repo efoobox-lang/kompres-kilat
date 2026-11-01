@@ -66,6 +66,9 @@ export default function Footer() {
                 <Link href="/tools/scan-dokumen" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_smart_scan_title')}>🖨️ {t('tool_smart_scan_title')}</Link>
               </li>
               <li>
+                <Link href="/tools/pro-editor" className="hover:text-purple-600 transition font-medium text-purple-700 truncate block" title={t('tool_pro_editor_title')}>🎨 {t('tool_pro_editor_title')}</Link>
+              </li>
+              <li>
                 <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_pdf_password_title')}>🔐 {t('tool_pdf_password_title')}</Link>
               </li>
               <li>

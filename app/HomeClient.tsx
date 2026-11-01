@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -202,6 +202,15 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_smart_scan_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_smart_scan_desc')}</p>
+        </Link>
+
+        {/* 12. Pro Photo & Document Editor */}
+        <Link href="/tools/pro-editor" className="bg-gradient-to-br from-purple-50/40 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-purple-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Sliders className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-purple-600 mb-1">{t('tool_pro_editor_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pro_editor_desc')}</p>
         </Link>
       </div>
 
