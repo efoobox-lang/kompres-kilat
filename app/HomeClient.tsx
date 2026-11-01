@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool, Edit3 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -231,6 +231,16 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-emerald-600 mb-1">{t('tool_signature_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_signature_desc')}</p>
+        </Link>
+
+        {/* 15. Direct PDF Text Editor */}
+        <Link href="/tools/pdf-editor" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+          <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BARU</span>
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Edit3 className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_editor_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_editor_desc')}</p>
         </Link>
       </div>
 

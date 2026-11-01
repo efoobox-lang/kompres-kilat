@@ -75,6 +75,9 @@ export default function Footer() {
                 <Link href="/tools/tanda-tangan" className="hover:text-emerald-600 transition font-medium text-emerald-700 truncate block" title={t('tool_signature_title')}>✍️ {t('tool_signature_title')}</Link>
               </li>
               <li>
+                <Link href="/tools/pdf-editor" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_pdf_editor_title')}>📝 {t('tool_pdf_editor_title')}</Link>
+              </li>
+              <li>
                 <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_pdf_password_title')}>🔐 {t('tool_pdf_password_title')}</Link>
               </li>
               <li>

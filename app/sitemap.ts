@@ -183,6 +183,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/tools/pdf-editor`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
       url: `${baseUrl}/tools/pdf-password`,
       lastModified: new Date(),
       changeFrequency: 'weekly',

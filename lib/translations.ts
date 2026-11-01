@@ -72,6 +72,8 @@ export const translations = {
     tool_meme_desc: 'Buat meme lucu, teks sindiran, atau kutipan visual viral secara instan langsung di browser dengan kualitas gambar tinggi.',
     tool_signature_title: 'Tanda Tangan Digital Transparan',
     tool_signature_desc: 'Buat tanda tangan digital (e-sign) transparan PNG siap tempel di dokumen PDF & Word secara instan.',
+    tool_pdf_editor_title: 'Direct PDF Text Editor',
+    tool_pdf_editor_desc: 'Edit, ubah kalimat, perbaiki typo, atau tambahkan teks baru langsung di dalam dokumen PDF secara instan di browser.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -182,6 +184,8 @@ export const translations = {
     tool_meme_desc: 'Create hilarious memes, custom image captions, and viral visuals instantly with classic Impact text styling.',
     tool_signature_title: 'Transparent Digital Signature Generator',
     tool_signature_desc: 'Create professional transparent PNG e-signatures ready to stamp on PDF and Word documents in seconds.',
+    tool_pdf_editor_title: 'Direct PDF Text Editor',
+    tool_pdf_editor_desc: 'Edit, replace sentences, fix typos, or insert custom text directly into PDF documents 100% in-browser.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',

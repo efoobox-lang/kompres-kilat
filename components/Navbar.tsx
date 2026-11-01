@@ -160,6 +160,15 @@ export default function Navbar() {
             ✍️ {t('tool_signature_title')}
           </Link>
           <Link
+            href="/tools/pdf-editor"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/pdf-editor') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            📝 {t('tool_pdf_editor_title')}
+          </Link>
+          <Link
             href="/tools/pdf"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${

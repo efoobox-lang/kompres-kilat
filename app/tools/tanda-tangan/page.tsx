@@ -59,17 +59,7 @@ export default function SignatureGeneratorPage() {
   const [signerName, setSignerName] = useState<string>('Budi Santoso, S.Kom.');
   const [signerRole, setSignerRole] = useState<string>('Direktur Utama');
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
-  const [currentDateStr, setCurrentDateStr] = useState<string>('1 November 2026');
-
-  useEffect(() => {
-    try {
-      setCurrentDateStr(
-        new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-      );
-    } catch {
-      // fallback
-    }
-  }, []);
+  const currentDateStr = '1 November 2026';
 
   // Status Ekspor
   const [isCopied, setIsCopied] = useState<boolean>(false);
