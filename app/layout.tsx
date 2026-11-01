@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import StickyAd from '@/components/StickyAd';
@@ -96,6 +97,26 @@ export default function RootLayout({
           {/* Sticky Mobile Anchor Banner Iklan */}
           <StickyAd />
         </LanguageProvider>
+
+        {/* Universal Full-Website Translation Engine */}
+        <div id="google_translate_element" style={{ display: 'none' }} />
+        <Script id="google-translate-init" strategy="afterInteractive">
+          {`
+            function googleTranslateElementInit() {
+              if (window.google && window.google.translate) {
+                new window.google.translate.TranslateElement({
+                  pageLanguage: 'id',
+                  includedLanguages: 'id,en',
+                  autoDisplay: false
+                }, 'google_translate_element');
+              }
+            }
+          `}
+        </Script>
+        <Script
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

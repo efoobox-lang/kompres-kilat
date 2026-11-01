@@ -48,29 +48,29 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
         </Link>
 
         {/* In-Article Bilingual Language Switcher */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[11px] font-semibold">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
           <Globe className="w-3.5 h-3.5 text-slate-500 ml-1.5 mr-0.5" />
           <button
             type="button"
             onClick={() => setLang('id')}
-            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+            className={`px-3 py-1 rounded-lg transition cursor-pointer ${
               lang === 'id'
                 ? 'bg-white text-indigo-700 shadow-sm font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            🇮🇩 ID
+            Bahasa Indonesia
           </button>
           <button
             type="button"
             onClick={() => setLang('en')}
-            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+            className={`px-3 py-1 rounded-lg transition cursor-pointer ${
               lang === 'en'
                 ? 'bg-white text-indigo-700 shadow-sm font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            🇬🇧 EN {post.en ? '' : '(ID)'}
+            English
           </button>
         </div>
       </div>
@@ -197,3 +197,4 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
     </article>
   );
 }
+
