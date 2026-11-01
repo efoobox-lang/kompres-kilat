@@ -87,6 +87,9 @@ export default function Footer() {
             <li>
               <Link href="/tools/document-summarizer" className="hover:text-purple-600 transition font-medium text-purple-700">📚 AI Document Summarizer</Link>
             </li>
+            <li>
+              <Link href="/tools/file-utility" className="hover:text-indigo-600 transition font-medium text-indigo-700">🔄 Utilitas File &amp; Konverter HEIC</Link>
+            </li>
           </ul>
         </div>
 

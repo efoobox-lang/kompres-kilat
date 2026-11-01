@@ -56,6 +56,8 @@ export const translations = {
     tool_ats_resume_desc: 'Cek skor ATS CV, deteksi kata kunci yang hilang, dan optimasi draf resume agar lolos HRD.',
     tool_summarizer_title: 'AI Document Summarizer',
     tool_summarizer_desc: 'Rangkum laporan kerja, bab buku, dan dokumen PDF panjang menjadi intisari ringkas dalam 5 detik.',
+    tool_file_utility_title: 'Konverter HEIC & Utilitas File',
+    tool_file_utility_desc: 'Konversi massal foto HEIC Apple & WebP ke JPG/PNG, serta buat QR Code resolusi tinggi siap cetak.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -129,6 +131,8 @@ export const translations = {
     tool_ats_resume_desc: 'Analyze your CV for ATS compatibility score, identify missing keywords, and get action-driven bullet points.',
     tool_summarizer_title: 'AI Document Summarizer',
     tool_summarizer_desc: 'Summarize lengthy reports, research papers, and PDF documents into concise executive takeaways in seconds.',
+    tool_file_utility_title: 'HEIC Converter & File Utilities',
+    tool_file_utility_desc: 'Batch convert iPhone HEIC & WebP images to JPG/PNG, and generate print-ready HD custom QR codes.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
