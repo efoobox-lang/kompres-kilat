@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -221,6 +221,16 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-amber-600 mb-1">{t('tool_meme_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_meme_desc')}</p>
+        </Link>
+
+        {/* 14. Tanda Tangan Digital Transparan */}
+        <Link href="/tools/tanda-tangan" className="bg-gradient-to-br from-emerald-50/50 to-white p-4 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group relative">
+          <span className="absolute top-4 right-4 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">E-SIGN</span>
+          <div className="mb-2 sm:mb-3 text-emerald-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <PenTool className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-emerald-600 mb-1">{t('tool_signature_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_signature_desc')}</p>
         </Link>
       </div>
 

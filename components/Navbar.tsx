@@ -151,6 +151,15 @@ export default function Navbar() {
             😂 {t('tool_meme_title')}
           </Link>
           <Link
+            href="/tools/tanda-tangan"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/tanda-tangan') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            ✍️ {t('tool_signature_title')}
+          </Link>
+          <Link
             href="/tools/pdf"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${

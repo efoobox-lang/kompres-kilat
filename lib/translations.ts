@@ -70,6 +70,8 @@ export const translations = {
     tool_pro_editor_desc: 'Editor pas foto & dokumen: filter fotocopy/vivid, kuas hapus noda kertas, dan watermark keamanan diagonal.',
     tool_meme_title: 'Meme & Image Caption Generator',
     tool_meme_desc: 'Buat meme lucu, teks sindiran, atau kutipan visual viral secara instan langsung di browser dengan kualitas gambar tinggi.',
+    tool_signature_title: 'Tanda Tangan Digital Transparan',
+    tool_signature_desc: 'Buat tanda tangan digital (e-sign) transparan PNG siap tempel di dokumen PDF & Word secara instan.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -178,6 +180,8 @@ export const translations = {
     tool_pro_editor_desc: 'Edit passport photos & IDs: photocopy/vivid filters, spot cleanup eraser brush, and repeating security watermark.',
     tool_meme_title: 'Meme & Image Caption Generator',
     tool_meme_desc: 'Create hilarious memes, custom image captions, and viral visuals instantly with classic Impact text styling.',
+    tool_signature_title: 'Transparent Digital Signature Generator',
+    tool_signature_desc: 'Create professional transparent PNG e-signatures ready to stamp on PDF and Word documents in seconds.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
