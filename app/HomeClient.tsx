@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
+import { Camera, ShieldCheck, QrCode, Archive } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -100,6 +101,42 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🗜️</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_zip_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_zip_desc')}</p>
+        </Link>
+
+        {/* 1. Resize Pas Foto & Tanda Tangan */}
+        <Link href="/tools/resize-pasfoto" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Camera className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_resize_pasfoto_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_resize_pasfoto_desc')}</p>
+        </Link>
+
+        {/* 2. Watermark Dokumen & KTP */}
+        <Link href="/tools/watermark" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_watermark_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_watermark_desc')}</p>
+        </Link>
+
+        {/* 3. QR Code Generator */}
+        <Link href="/tools/qr-generator" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <QrCode className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_qr_generator_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_qr_generator_desc')}</p>
+        </Link>
+
+        {/* 4. Batch Kompres & ZIP */}
+        <Link href="/tools/batch-compress" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Archive className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_batch_compress_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_batch_compress_desc')}</p>
         </Link>
       </div>
 

@@ -44,6 +44,14 @@ export const translations = {
     tool_csv_excel_desc: 'Ubah file CSV terpisah tanda baca menjadi spreadsheet Microsoft Excel rapi.',
     tool_zip_title: 'Arsip ZIP Multi-File',
     tool_zip_desc: 'Gabungkan banyak file sekaligus menjadi satu berkas arsip ZIP siap kirim.',
+    tool_resize_pasfoto_title: 'Resize Pas Foto & Tanda Tangan',
+    tool_resize_pasfoto_desc: 'Ubah pas foto ke ukuran resmi 2x3, 3x4, 4x6 cm atau tanda tangan digital siap upload.',
+    tool_watermark_title: 'Watermark Dokumen & KTP',
+    tool_watermark_desc: 'Bubuhkan cap teks transparan atau proteksi hak cipta pada gambar dan berkas penting.',
+    tool_qr_generator_title: 'QR Code Generator',
+    tool_qr_generator_desc: 'Buat barcode QR kustom untuk tautan website, chat WhatsApp, dan WiFi secara instan.',
+    tool_batch_compress_title: 'Batch Kompres & ZIP',
+    tool_batch_compress_desc: 'Kecilkan banyak foto sekaligus secara massal dan satukan ke dalam satu berkas ZIP.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -105,6 +113,14 @@ export const translations = {
     tool_csv_excel_desc: 'Cleanly convert raw delimiter-separated CSV files into formatted Excel spreadsheets.',
     tool_zip_title: 'Multi-File ZIP Archiver',
     tool_zip_desc: 'Package and compress multiple files into a single downloadable .zip archive.',
+    tool_resize_pasfoto_title: 'Passport Photo & Signature Resize',
+    tool_resize_pasfoto_desc: 'Resize passport photos to 2x3, 3x4, 4x6 cm or crop digital signatures below 200KB.',
+    tool_watermark_title: 'Document & ID Watermark',
+    tool_watermark_desc: 'Add transparent text watermarks and copyright stamps to your sensitive images and documents.',
+    tool_qr_generator_title: 'Custom QR Code Generator',
+    tool_qr_generator_desc: 'Generate custom QR codes for websites, WhatsApp direct messages, and Wi-Fi networks.',
+    tool_batch_compress_title: 'Batch Compress & ZIP Archive',
+    tool_batch_compress_desc: 'Compress dozens of images and documents in bulk and bundle them into a single ZIP archive.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',

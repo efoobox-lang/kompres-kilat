@@ -69,6 +69,18 @@ export default function Footer() {
             <li>
               <Link href="/tools/pdf-to-word" className="hover:text-indigo-600 transition">Konverter PDF ke Word</Link>
             </li>
+            <li>
+              <Link href="/tools/resize-pasfoto" className="hover:text-indigo-600 transition">Resize Pas Foto &amp; Tanda Tangan</Link>
+            </li>
+            <li>
+              <Link href="/tools/watermark" className="hover:text-indigo-600 transition">Watermark Dokumen &amp; KTP</Link>
+            </li>
+            <li>
+              <Link href="/tools/qr-generator" className="hover:text-indigo-600 transition">QR Code Generator</Link>
+            </li>
+            <li>
+              <Link href="/tools/batch-compress" className="hover:text-indigo-600 transition">Batch Kompres &amp; ZIP</Link>
+            </li>
           </ul>
         </div>
 
