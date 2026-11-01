@@ -61,6 +61,12 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_desc')}</p>
         </Link>
 
+        <Link href="/tools/pdf-merge" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+          <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🗂️</div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">Penggabung Berkas PDF</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">Satukan banyak file PDF seperti CV, sertifikat, dan transkrip nilai jadi 1 dokumen.</p>
+        </Link>
+
         <Link href="/tools/tracking" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📦</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_track_title')}</h2>

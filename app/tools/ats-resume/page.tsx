@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { extractTextFromPdf } from '@/lib/pdf-text-extractor';
+import CvTemplatePreview, { CvTemplateType } from '@/components/CvTemplatePreview';
 import {
   FileText,
   Sparkles,
@@ -22,7 +23,8 @@ import {
   Layers,
   HelpCircle,
   ChevronDown,
-  Info
+  Info,
+  Palette
 } from 'lucide-react';
 
 interface AtsResult {
@@ -52,6 +54,8 @@ export default function AtsResumePage() {
   const [extractionPercent, setExtractionPercent] = useState<number>(0);
   const [pdfMeta, setPdfMeta] = useState<PdfMetaInfo | null>(null);
   const [isPasswordProtected, setIsPasswordProtected] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'template'>('editor');
+  const [selectedTemplate, setSelectedTemplate] = useState<CvTemplateType>('ats');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<AtsResult | null>(null);
@@ -268,8 +272,52 @@ KEAHLIAN & TOOLS
           </p>
         </div>
 
-        {/* Form Input CV & Upload */}
-        <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mb-6 space-y-4">
+        {/* Mode Switch Tabs: Editor Teks & Audit ATS vs Pilihan Template CV */}
+        <div className="flex items-center justify-center gap-2 mb-6 p-1.5 bg-slate-200/80 rounded-2xl max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('editor')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === 'editor'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Editor &amp; Audit ATS</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('template')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+              activeTab === 'template'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Pilihan Template CV</span>
+            <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">3 Layout</span>
+          </button>
+        </div>
+
+        {/* Tab 2: Pilihan Template CV (Live Preview 3 Layout) */}
+        {activeTab === 'template' && (
+          <div className="mb-8">
+            <CvTemplatePreview
+              cvText={cvText}
+              template={selectedTemplate}
+              onTemplateChange={setSelectedTemplate}
+              onLoadSample={handleLoadSampleCv}
+            />
+          </div>
+        )}
+
+        {/* Tab 1: Editor Teks & Analisis Skor ATS */}
+        {activeTab === 'editor' && (
+          <>
+            {/* Form Input CV & Upload */}
+            <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mb-6 space-y-4">
           <form onSubmit={handleAnalyze} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -584,6 +632,29 @@ KEAHLIAN & TOOLS
             )}
           </div>
         )}
+          </>
+        )}
+
+        {/* Banner Pintasan Penggabung Berkas PDF (PDF Merger) */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🗂️</span>
+            <div>
+              <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                Ingin Menggabungkan CV dengan Berkas Sertifikat &amp; Ijazah?
+              </h4>
+              <p className="text-xs text-slate-600">
+                Gunakan Penggabung Berkas PDF (PDF Merger) untuk menyatukan banyak file dokumen menjadi satu berkas siap kirim ke portal HRD / BUMN.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/tools/pdf-merge"
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs whitespace-nowrap shadow-xs transition"
+          >
+            Buka Penggabung PDF ⚡
+          </Link>
+        </div>
 
         {/* Informasi Edukatif Panduan Standar ATS */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
