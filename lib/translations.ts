@@ -58,6 +58,8 @@ export const translations = {
     tool_summarizer_desc: 'Rangkum laporan kerja, bab buku, dan dokumen PDF panjang menjadi intisari ringkas dalam 5 detik.',
     tool_file_utility_title: 'Konverter HEIC & Utilitas File',
     tool_file_utility_desc: 'Konversi massal foto HEIC Apple & WebP ke JPG/PNG, serta buat QR Code resolusi tinggi siap cetak.',
+    tool_censor_ktp_title: 'Sensor & Blur KTP / Dokumen',
+    tool_censor_ktp_desc: 'Tutup NIK, tanda tangan, dan alamat rahasia dengan kotak hitam atau blur mozaik 100% aman di browser.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -133,6 +135,8 @@ export const translations = {
     tool_summarizer_desc: 'Summarize lengthy reports, research papers, and PDF documents into concise executive takeaways in seconds.',
     tool_file_utility_title: 'HEIC Converter & File Utilities',
     tool_file_utility_desc: 'Batch convert iPhone HEIC & WebP images to JPG/PNG, and generate print-ready HD custom QR codes.',
+    tool_censor_ktp_title: 'Censor & Blur ID / Documents',
+    tool_censor_ktp_desc: 'Blackout or pixelate National ID (NIK), signatures, and sensitive text locally in your browser memory.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
