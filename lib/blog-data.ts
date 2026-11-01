@@ -31,6 +31,317 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'cara-edit-teks-pdf-langsung-di-browser-online',
+    title: 'Cara Edit Teks PDF Langsung di Browser Gratis, Cepat & Tanpa Upload ke Server',
+    excerpt: 'Panduan mudah mengedit kalimat typo, menghapus teks rahasia, menambah paragraf baru, dan menggeser posisi teks dokumen PDF langsung di browser tanpa instalasi software.',
+    category: 'Dokumen PDF',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Mengapa Mengedit Teks Dokumen PDF Seringkali Merepotkan?
+Format PDF (*Portable Document Format*) awalnya diciptakan untuk mengunci tata letak visual agar sebuah dokumen tampil identik di semua komputer dan mesin cetak. Akibatnya, mengedit satu kata yang salah ketik (*typo*) pada PDF sering mengharuskan pengguna membeli software berlangganan mahal atau mengonversinya ke Word yang kerap membuat tata letak formulir menjadi berantakan.
+
+Solusi alternatif yang beredar di internet umumnya meminta Anda mengunggah (*upload*) dokumen ke server asing. Bagi berkas penting seperti **surat perjanjian, surat keputusan (SK), ijazah, atau kontrak kerja**, mengunggah dokumen ke server pihak ketiga memiliki risiko kebocoran privasi yang fatal.
+
+---
+
+### Fitur Direct PDF Text Editor di KompresKilat:
+Untuk menjawab kebutuhan tersebut, KompresKilat menghadirkan alat **[Direct PDF Text Editor](/tools/pdf-editor)** yang memproses dokumen langsung di peramban (*client-side*):
+1. **Deteksi Teks Otomatis**: Mesin PDF.js membaca posisi setiap karakter dan kata secara akurat pada halaman PDF Anda.
+2. **Koreksi Teks Seketika**: Klik pada teks yang ingin disunting, ketik kata penggantinya, serta sesuaikan ukuran dan warna font.
+3. **Geser Posisi Bebas (Drag & Drop)**: Anda dapat menggeser posisi teks ke mana pun menggunakan mouse maupun sentuhan jari di HP agar pas dengan garis isian formulir.
+4. **Hapus Teks Aman (Redaction Whiteout)**: Hapus bagian teks sensitif (seperti nomor rekening atau nilai nominal); sistem akan menutupi teks lama dengan blok putih bersih sebelum diekspor.
+5. **Tambah Paragraf Baru (+)**: Sisipkan teks tambahan baru di koordinat mana saja pada halaman yang sedang aktif.
+
+---
+
+### Langkah Demi Langkah Mengedit Teks PDF di Browser:
+1. **Buka Tool**: Akses [Direct PDF Text Editor](/tools/pdf-editor).
+2. **Unggah File PDF**: Pilih berkas PDF dari komputer atau smartphone Anda (maksimal 50MB). File langsung diproses di memori RAM perangkat tanpa dikirim ke server luar.
+3. **Klik Teks yang Ingin Diubah**: Sorot teks yang memiliki typo. Panel kontrol di samping kanan akan menampilkan teks tersebut.
+4. **Ketik Ulang & Terapkan**: Ubah kalimatnya lalu klik tombol **"Terapkan Teks Ini"**. Anda juga dapat menyeret teks untuk mengatur posisinya.
+5. **Simpan Dokumen**: Tekan tombol **"Simpan & Unduh PDF"**. Dalam hitungan detik, dokumen PDF baru yang sudah rapi siap diunduh!
+    `,
+    relatedTool: {
+      title: 'Buka Direct PDF Text Editor',
+      description: 'Edit kata, hapus teks sensitif, dan geser posisi kalimat di dalam dokumen PDF secara presisi 100% aman di browser.',
+      url: '/tools/pdf-editor',
+      icon: '📝',
+      buttonText: 'Edit PDF Sekarang 🚀',
+    },
+    en: {
+      title: 'How to Edit PDF Text Directly in Your Browser for Free (Zero Server Upload)',
+      excerpt: 'Learn how to easily fix typos, redact private sentences, add new paragraphs, and drag-and-drop text positions inside any PDF document right in your web browser.',
+      category: 'PDF Documents',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### Why Editing PDF Text is Normally a Headache
+PDF (*Portable Document Format*) was engineered to preserve fixed visual layouts across devices. Unfortunately, correcting a single misspelled name or typo often required expensive desktop software or converting the file into Word—which invariably scrambled tables and line breaks.
+
+Many online editors require uploading your confidential PDFs to their remote servers. For sensitive files like **employment contracts, diplomas, bank statements, or NDAs**, server uploads represent a major security risk.
+
+---
+
+### Key Capabilities of KompresKilat Direct PDF Text Editor:
+1. **Automated Typography Detection**: PDF.js parses character coordinates across pages instantly.
+2. **Inline Text Correction**: Click any detected sentence, type the corrected words, and adjust font size or color.
+3. **Interactive Drag-and-Drop**: Reposition any text block via intuitive mouse or touch dragging so it lines up with signature fields or lines.
+4. **Clean Redaction Whiteout**: Delete sensitive data; the engine paints an exact whiteout mask over the original text before rendering replacements.
+5. **Insert New Text Blocks (+)**: Place floating custom text boxes anywhere on active pages.
+6. **100% Client-Side Privacy**: Your files never leave your browser memory.
+      `,
+      relatedTool: {
+        title: 'Launch Direct PDF Text Editor',
+        description: 'Edit words, redact confidential phrases, and reposition text with interactive drag-and-drop 100% in your browser.',
+        buttonText: 'Edit PDF Now 🚀',
+      },
+    },
+  },
+  {
+    slug: 'cara-scan-dan-fotocopy-dokumen-hp-ke-pdf-bersih',
+    title: 'Cara Scan dan Fotocopy Dokumen Lewat HP: Hasil Bersih Teks Tajam Siap Cetak A4/F4',
+    excerpt: 'Solusi praktis mengubah foto kamera HP ijazah, rapor, atau sertifikat menjadi dokumen fotocopy hitam putih kontras tinggi atau Magic Color siap cetak dan ekspor PDF.',
+    category: 'Dokumen PDF',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Masalah Foto Dokumen Menggunakan Kamera Smartphone
+Seringkali saat melamar pekerjaan atau verifikasi administrasi kampus, kita diminta mengirimkan salinan scan dokumen fisik seperti **ijazah, rapor sekolah, akta kelahiran, atau sertifikat pelatihan**.
+
+Memotret dokumen dengan kamera HP biasanya menghasilkan bayangan gelap dari tangan/ponsel, kertas yang terlihat menguning karena pencahayaan ruangan, serta sudut kertas yang miring. Ketika dicetak, hasil foto seperti ini tampak kotor dan menghabiskan banyak tinta printer.
+
+---
+
+### Rahasia Filter Fotocopy Digital KompresKilat:
+Dengan tool **[Smart Scan & Fotocopy Digital Dokumen](/tools/scan-dokumen)**, Anda dapat mengubah hasil jepretan kamera biasa menjadi berkas fotocopy profesional:
+1. **Mode Fotocopy (B/W Kontras Tinggi)**: Algoritma binarisasi citra di HTML5 Canvas otomatis memutihkan latar belakang kertas yang kusam dan menegaskan teks menjadi hitam pekat ala mesin fotocopy perkantoran.
+2. **Magic Color**: Meningkatkan saturasi warna stempel, logo emas sertifikat, dan nilai rapor tanpa membuat kertas di sekelilingnya ikut kotor.
+3. **Grayscale Lembut**: Mode hitam putih abu-abu bergradasi halus untuk berkas arsip resmi instansi.
+4. **Pilihan Ukuran Cetak Standar (A4 & F4/Folio)**: Otomatis menyeimbangkan rasio kertas agar saat dicetak tidak terpotong.
+5. **Ekspor Instan ke PDF atau Gambar**: Unduh dalam satu klik tanpa watermark pihak ketiga.
+
+---
+
+### Cara Praktis Menggunakannya:
+1. Buka [Smart Scan & Fotocopy Dokumen](/tools/scan-dokumen).
+2. Ambil foto dokumen menggunakan kamera HP atau unggah foto yang sudah ada di galeri.
+3. Pilih filter **"Mode Fotocopy (B/W)"** untuk teks dokumen resmi, atau **"Magic Color"** untuk dokumen berstempel/berwarna.
+4. Tentukan ukuran kertas target (**A4** untuk dokumen umum, atau **F4/Folio** untuk ijazah/akta).
+5. Klik **"Unduh File PDF"** untuk mendapatkan berkas siap kirim ke HRD atau instansi.
+    `,
+    relatedTool: {
+      title: 'Mulai Smart Scan & Fotocopy Digital',
+      description: 'Bersihkan bayangan kuning kertas kamera HP menjadi dokumen fotocopy hitam putih tajam atau warna cerah berformat PDF siap cetak.',
+      url: '/tools/scan-dokumen',
+      icon: '🖨️',
+      buttonText: 'Scan Dokumen Sekarang 🖨️',
+    },
+    en: {
+      title: 'How to Digitize & Scan Paper Documents on Mobile into Clean Print-Ready PDFs',
+      excerpt: 'Turn noisy smartphone document photos into crisp black-and-white photocopies or vibrant Magic Color scans optimized for standard A4 and F4 printer sheets.',
+      category: 'PDF Documents',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### Overcoming Smartphone Document Photography Flaws
+Capturing physical diplomas, transcripts, and certificates using smartphone cameras usually introduces ambient yellow tints, unwanted shadows from fingers, and poor contrast that look unprofessional when submitted to HR.
+
+---
+
+### The KompresKilat Smart Scan Advantage:
+1. **High-Contrast B/W Photocopy Filter**: Canvas-powered thresholding bleaches gray and yellowish paper backings into clean white while sharpening text characters into deep black.
+2. **Magic Color Optimization**: Intensifies colored stamps and seals while isolating and cleaning the background.
+3. **Standard Sheet Ratios (A4 & F4 Folio)**: Prevents accidental cropping when printing out the generated documents.
+4. **Direct PDF or Image Export**: Download clean PDFs ready for official administrative workflows.
+      `,
+      relatedTool: {
+        title: 'Open Smart Scan & Document Photocopy',
+        description: 'Digitize your smartphone photos into crystal-clear photocopies with Magic Color or high-contrast B/W filters.',
+        buttonText: 'Scan Document Now 🖨️',
+      },
+    },
+  },
+  {
+    slug: 'cara-buat-tanda-tangan-digital-transparan-png-dokumen',
+    title: 'Cara Membuat Tanda Tangan Digital Transparan (PNG) untuk Dokumen PDF & Surat Resmi',
+    excerpt: 'Buat coretan tanda tangan profesional langsung dari layar sentuh HP atau mouse tanpa background putih, siap disisipkan pada berkas PDF, Word, atau kontrak kerja.',
+    category: 'Dokumen PDF',
+    date: '1 November 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Mengapa Tanda Tangan Berlatar Belakang Putih Merusak Kerapian Dokumen?
+Ketika Anda menandatangani kertas fisik lalu memotretnya untuk ditempelkan ke file Word atau PDF, foto tanda tangan tersebut membawa kotak putih di belakangnya. Saat diletakkan di atas garis titik-titik tanda tangan atau materai, kotak putih itu akan menutupi teks dokumen dan terlihat sangat tidak profesional.
+
+Untuk menghasilkan dokumen yang rapi dan sah secara estetika perkantoran, Anda membutuhkan file **PNG dengan latar belakang transparan (*alpha channel*)**.
+
+---
+
+### Solusi SignPad Canvas di KompresKilat:
+Alat **[Tanda Tangan Digital Transparan](/tools/tanda-tangan)** memudahkan siapa saja menggambar tanda tangan digital secara instan:
+1. **Sensitif Sentuhan & Mouse**: Mendukung layar sentuh smartphone, tablet/stylus pen, maupun klik-dan-seret mouse komputer.
+2. **Pilihan Warna Tinta Resmi**:
+   - **Hitam Klasik**: Standar dokumen hukum, ijazah, dan surat kuasa.
+   - **Biru Profesional**: Warna paling direkomendasikan perbankan untuk membedakan tanda tangan asli dari fotocopy.
+   - **Merah Tegas**: Untuk paraf koreksi atau stempel otorisasi.
+3. **Ketebalan Garis Presisi**: Geser slider untuk menyesuaikan ketebalan coretan seperti pulpen gel atau pena bulu.
+4. **Pratinjau di Atas Surat Resmi**: Lihat simulasi langsung bagaimana bentuk tanda tangan Anda saat menempel di atas surat penawaran kerja.
+5. **Ekspor PNG Transparan Asli**: Saat diunduh, sistem secara otomatis menghapus latar kanvas sehingga hasil unduhan 100% transparan siap pakai.
+    `,
+    relatedTool: {
+      title: 'Buat Tanda Tangan Digital Sekarang',
+      description: 'Gambar tanda tangan dengan pilihan tinta hitam, biru, atau merah lalu unduh file PNG transparan beresolusi tinggi.',
+      url: '/tools/tanda-tangan',
+      icon: '✍️',
+      buttonText: 'Buka SignPad Generator ✍️',
+    },
+    en: {
+      title: 'How to Create Transparent Digital Signatures (PNG) for PDFs & Legal Documents',
+      excerpt: 'Draw professional e-signatures directly on your mobile touchscreen or desktop mouse with transparent backgrounds ready to paste into PDF and Word contracts.',
+      category: 'PDF Documents',
+      date: 'November 1, 2026',
+      readTime: '3 min',
+      content: `
+### Say Goodbye to Ugly White Boxes on Your Signed Documents
+Photographing pen signatures on paper results in stubborn white square backgrounds that hide underlying contract lines and look clumsy.
+
+Our **[Transparent Digital Signature Generator](/tools/tanda-tangan)** creates pure alpha-transparent PNG signatures that overlay cleanly atop PDF contracts, offer letters, and invoices.
+
+---
+
+### Key Highlights:
+1. **Responsive Touch & Stylus Canvas**: Fluid curves with zero lag on smartphones, tablets, and trackpads.
+2. **Professional Ink Palettes**: Instant switching between Classic Black, Executive Blue, and Crisp Red.
+3. **Simulated Document Preview**: Live mock preview atop a business document template before saving.
+4. **Zero-Server Processing**: Your signature never leaves your local browser memory.
+      `,
+      relatedTool: {
+        title: 'Create Transparent E-Signature',
+        description: 'Draw your signature on touchscreen or mouse and export clean transparent PNG files for your official papers.',
+        buttonText: 'Open SignPad Now ✍️',
+      },
+    },
+  },
+  {
+    slug: 'cara-edit-foto-dokumen-ktp-watermark-keamanan',
+    title: 'Cara Edit Pas Foto & Berkas Dokumen Penting Plus Watermark Salinan Keamanan',
+    excerpt: 'Trik mudah membersihkan noda debu pada dokumen penting, mengatur kontras pas foto, dan menambahkan watermark proteksi diagonal berulang agar KTP tidak disalahgunakan.',
+    category: 'Keamanan Data',
+    date: '1 November 2026',
+    readTime: '4 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Bahaya Mengirimkan Salinan Foto KTP Tanpa Proteksi
+Di era digital, proses verifikasi data pribadi seperti pembukaan rekening, sewa kendaraan, atau lamaran kerja seringkali meminta unggahan foto KTP atau SIM. Sayangnya, data foto KTP yang polos tanpa pengaman sangat rentan dicuri oknum tidak bertanggung jawab untuk pengajuan pinjaman online (pinjol) ilegal atau penipuan perbankan.
+
+Kementerian Komunikasi dan Informatika (Kominfo) secara resmi mengimbau masyarakat untuk **selalu memberikan watermark tujuan penggunaan** pada setiap salinan foto KTP yang dikirimkan.
+
+---
+
+### Solusi All-in-One di Pro Photo & Document Editor:
+Tool **[Pro Photo & Document Editor](/tools/pro-editor)** dirancang khusus untuk memoles berkas identitas sekaligus mengamankannya:
+1. **Watermark Salinan Keamanan Diagonal**: Tuliskan tujuan penggunaan kustom (misal: *"UNTUK VERIFIKASI REKENING BANK BCA TANGGAL 01-11-2026"*) secara berulang dengan transparansi yang pas sehingga data tetap bisa dibaca verifikator resmi namun tidak dapat disalahgunakan pihak lain.
+2. **Kuas Pembersih Noda (Cleanup Brush)**: Hapus noda kopi, debu pemindai, atau bayangan ujung jari yang tidak sengaja tertangkap kamera.
+3. **Filter Preset Instan**: Pilihan filter *Vivid*, *Sepia*, *Grayscale*, dan *Dokumen B/W Kontras Tinggi* untuk menyesuaikan standar dokumen instansi.
+4. **Pengatur Kecerahan & Kontras Manual**: Slider interaktif untuk mencerahkan pas foto yang agak gelap saat difoto di dalam ruangan.
+5. **Privasi Absolut**: File KTP atau Ijazah Anda tidak pernah diunggah ke server mana pun; seluruh penyuntingan berlangsung di peramban lokal perangkat Anda.
+    `,
+    relatedTool: {
+      title: 'Buka Pro Photo & Document Editor',
+      description: 'Edit saturasi pas foto, hapus noda jari dengan kuas manual, dan beri watermark proteksi salinan dokumen 100% di browser.',
+      url: '/tools/pro-editor',
+      icon: '🎨',
+      buttonText: 'Edit Foto Dokumen Sekarang 🛡️',
+    },
+    en: {
+      title: 'How to Edit ID Photos, Clean Documents & Apply Security Watermarks to Prevent Fraud',
+      excerpt: 'Learn how to touch up ID photos, erase background smudges with a brush, and apply diagonal security watermarks to protect your ID cards from illicit identity theft.',
+      category: 'Data Security',
+      date: 'November 1, 2026',
+      readTime: '4 min',
+      content: `
+### Protecting Your Identification Documents from Identity Theft
+Unprotected ID photos sent via chat or email can easily be intercepted and exploited for fraudulent loans or illegal account registrations.
+
+Adding a dedicated, purpose-specific watermark—such as *"FOR BANK VERIFICATION ONLY 2026"*—is the single most effective deterrent against identity misuse.
+
+---
+
+### Capabilities of Pro Photo & Document Editor:
+1. **Diagonal Security Watermark**: Generates repeated diagonal watermarks with customizable opacity across your documents.
+2. **Spot Cleanup Eraser**: Brush away lens dust, paper creases, or thumb shadows from scans.
+3. **Lighting & Contrast Sliders**: Fine-tune exposure and clarity for dim indoor headshots.
+4. **100% Client-Side Privacy**: Operates entirely in browser memory so private identity files are never uploaded to remote clouds.
+      `,
+      relatedTool: {
+        title: 'Launch Pro Document Editor',
+        description: 'Edit ID photos, erase smudges, and apply recurring diagonal protection watermarks directly in your browser.',
+        buttonText: 'Secure Documents Now 🛡️',
+      },
+    },
+  },
+  {
+    slug: 'cara-bikin-meme-lucu-dan-caption-gambar-online',
+    title: 'Cara Bikin Meme Lucu & Caption Gambar Keren Online Cepat Tanpa Watermark',
+    excerpt: 'Panduan praktis membuat meme viral dengan font Impact tebal beroutline hitam, input teks atas-bawah real-time, dan unduh hasil resolusi tinggi tanpa watermark.',
+    category: 'Gambar & Foto',
+    date: '1 November 2026',
+    readTime: '3 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kekuatan Meme untuk Hiburan & Promosi Media Sosial
+Meme bukan sekadar candaan di media sosial; bagi pelaku bisnis, UMKM, dan kreator konten, meme humor yang tepat sasaran terbukti mampu meningkatkan interaksi (*engagement*) akun hingga berlipat ganda dibanding postingan promosi yang kaku.
+
+Namun banyak website generator meme di internet menempelkan watermark besar yang mengganggu atau mewajibkan pendaftaran akun yang rumit.
+
+---
+
+### Fitur Meme & Image Caption Generator KompresKilat:
+Dengan alat **[Meme & Image Caption Generator](/tools/meme-generator)**, Anda bebas berkreasi tanpa batas:
+1. **Unggah Gambar Apa Saja**: Gunakan foto kustom dari galeri HP atau tangkapan layar momen lucu Anda.
+2. **Tipografi Khas Meme Viral**: Menggunakan tipografi klasik berhuruf kapital dengan garis tepi (*stroke*) hitam tebal yang terbaca jelas di atas warna latar apa pun.
+3. **Kontrol Teks Atas & Bawah Real-Time**: Ketik teks caption di form input; tulisan akan langsung ter-render di atas kanvas secara otomatis di posisi tengah (*center alignment*).
+4. **Kustomisasi Warna & Ukuran**: Pilih warna teks (Putih klasik, Kuning cerah, Merah mencolok, atau Hitam) dan geser ukuran font sesuai panjang kalimat.
+5. **Unduh Kualitas Tinggi Tanpa Watermark**: Simpan hasil gambar dalam format PNG atau JPG jernih siap dibagikan ke WhatsApp, Instagram, TikTok, atau X.
+    `,
+    relatedTool: {
+      title: 'Bikin Meme Lucu Sendiri',
+      description: 'Unggah gambar lucu Anda, tambahkan teks atas & bawah dengan efek outline khas meme, dan simpan hasilnya secara instan.',
+      url: '/tools/meme-generator',
+      icon: '😂',
+      buttonText: 'Buka Meme Generator 😂',
+    },
+    en: {
+      title: 'How to Create Viral Memes & Image Captions Online for Free Without Watermarks',
+      excerpt: 'Craft hilarious memes with classic bold Impact text, heavy black stroke outlines, and real-time canvas preview with zero third-party branding watermarks.',
+      category: 'Images & Photos',
+      date: 'November 1, 2026',
+      readTime: '3 min',
+      content: `
+### Leveraging Humor for Viral Social Media Engagement
+Memes are one of the most effective tools for social content creators and small businesses to captivate audiences and build relatable branding.
+
+Our **[Meme & Image Caption Generator](/tools/meme-generator)** lets you design crisp memes in seconds with zero watermark branding and no account sign-up.
+
+---
+
+### Key Features:
+1. **Classic Meme Stroke Typography**: High-contrast text with bold black stroke outlines that stay readable over any busy photo background.
+2. **Top & Bottom Caption Control**: Dynamic dual input with real-time center alignment.
+3. **Custom Text Colors & Font Sizing**: Seamless adjustments to fit punchy one-liners.
+4. **Instant HD Download**: Export crisp PNG or JPG graphics ready for WhatsApp status, Instagram stories, or Twitter posts.
+      `,
+      relatedTool: {
+        title: 'Start Creating Memes',
+        description: 'Upload your funny photo, add top and bottom text with crisp outline effects, and download with zero watermark.',
+        buttonText: 'Open Meme Generator 😂',
+      },
+    },
+  },
+  {
     slug: 'cara-kompres-foto-ktp-kurang-dari-500kb',
     title: 'Cara Kompres Foto KTP Kurang dari 500KB untuk Syarat CPNS & BUMN',
     excerpt: 'Panduan lengkap memperkecil ukuran foto KTP dan dokumen identitas lainnya agar pas dengan batas maksimal unggah tanpa buram.',

@@ -142,6 +142,24 @@ export default function Navbar() {
             🪄 {t('tool_eraser_title')}
           </Link>
           <Link
+            href="/tools/scan-dokumen"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/scan-dokumen') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            🖨️ {t('tool_smart_scan_title')}
+          </Link>
+          <Link
+            href="/tools/pro-editor"
+            onClick={() => setIsOpen(false)}
+            className={`block px-3 py-2.5 rounded-xl transition ${
+              pathname.startsWith('/tools/pro-editor') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            🎨 {t('tool_pro_editor_title')}
+          </Link>
+          <Link
             href="/tools/meme-generator"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
