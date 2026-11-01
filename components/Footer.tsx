@@ -28,7 +28,7 @@ export default function Footer() {
               <LanguageToggle />
             </div>
             <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-700">
-              <ThemeToggle showLabel={true} />
+              <ThemeToggle />
             </div>
           </div>
         </div>

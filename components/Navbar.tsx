@@ -63,7 +63,6 @@ export default function Navbar() {
 
         {/* Mobile Quick Action & Hamburger Toggle */}
         <div className="flex md:hidden items-center gap-1.5">
-          <ThemeToggle className="px-1.5 py-1 text-[11px]" />
           <LanguageToggle className="px-2 py-0.5 text-[11px]" />
           <Link
             href="/blog"
@@ -94,7 +93,7 @@ export default function Navbar() {
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-lg space-y-1 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="flex items-center justify-between p-2 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
             <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{t('theme_toggle')}</span>
-            <ThemeToggle showLabel={true} />
+            <ThemeToggle compact={true} />
           </div>
           <Link
             href="/"
