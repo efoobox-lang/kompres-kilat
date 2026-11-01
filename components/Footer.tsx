@@ -29,8 +29,8 @@ export default function Footer() {
 
         {/* Kolom 2: Alat Populer (5 Kolom Grid Desktop - 2 Sub-Kolom Sejajar di Semua Layar Termasuk HP) */}
         <div className="space-y-2 lg:col-span-5">
-          <div className="flex items-center gap-2 mb-2">
-            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+          <div className="flex items-center justify-center gap-2 mb-2.5">
+            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-center">
               {t('footer_popular_tools')}
             </h4>
             <span className="text-[10px] text-indigo-600 bg-indigo-50 font-semibold px-2 py-0.5 rounded-full border border-indigo-100">
