@@ -68,6 +68,8 @@ export const translations = {
     tool_smart_scan_desc: 'Scan foto ijazah/rapor, bersihkan kertas jadi putih bersih ala fotocopy, dan ekspor ke PDF A4/F4 instan.',
     tool_pro_editor_title: 'Pro Photo & Document Editor',
     tool_pro_editor_desc: 'Editor pas foto & dokumen: filter fotocopy/vivid, kuas hapus noda kertas, dan watermark keamanan diagonal.',
+    tool_meme_title: 'Meme & Image Caption Generator',
+    tool_meme_desc: 'Buat meme lucu, teks sindiran, atau kutipan visual viral secara instan langsung di browser dengan kualitas gambar tinggi.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -174,6 +176,8 @@ export const translations = {
     tool_smart_scan_desc: 'Scan paper documents, whiten shaded backgrounds into crisp photocopy B/W or Magic Color, and export to PDF.',
     tool_pro_editor_title: 'Pro Photo & Document Editor',
     tool_pro_editor_desc: 'Edit passport photos & IDs: photocopy/vivid filters, spot cleanup eraser brush, and repeating security watermark.',
+    tool_meme_title: 'Meme & Image Caption Generator',
+    tool_meme_desc: 'Create hilarious memes, custom image captions, and viral visuals instantly with classic Impact text styling.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
