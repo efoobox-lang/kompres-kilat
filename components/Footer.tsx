@@ -63,6 +63,9 @@ export default function Footer() {
                 <Link href="/tools/censor-ktp" className="hover:text-emerald-600 transition font-medium text-emerald-700 truncate block" title={t('tool_censor_ktp_title')}>🔒 {t('tool_censor_ktp_title')}</Link>
               </li>
               <li>
+                <Link href="/tools/scan-dokumen" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_smart_scan_title')}>🖨️ {t('tool_smart_scan_title')}</Link>
+              </li>
+              <li>
                 <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block" title={t('tool_pdf_password_title')}>🔐 {t('tool_pdf_password_title')}</Link>
               </li>
               <li>

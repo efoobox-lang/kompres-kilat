@@ -64,6 +64,8 @@ export const translations = {
     tool_pdf_password_desc: 'Proteksi dokumen PDF dengan enkripsi AES-256 atau hilangkan kata sandi PDF secara instan.',
     tool_kalkulator_umkm_title: 'Kalkulator Bisnis & UMKM',
     tool_kalkulator_umkm_desc: 'Hitung margin harga jual, simulasi diskon bertingkat (50%+20%), dan estimasi pajak PPh Final 0.5%.',
+    tool_smart_scan_title: 'Smart Scan & Fotocopy Dokumen',
+    tool_smart_scan_desc: 'Scan foto ijazah/rapor, bersihkan kertas jadi putih bersih ala fotocopy, dan ekspor ke PDF A4/F4 instan.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -166,6 +168,8 @@ export const translations = {
     tool_pdf_password_desc: 'Encrypt PDF documents with bank-grade AES-256 or permanently remove PDF passwords in browser.',
     tool_kalkulator_umkm_title: 'Business & Profit Calculator',
     tool_kalkulator_umkm_desc: 'Calculate profit margins, tiered discounts (50%+20%), and Indonesian 0.5% SME final tax.',
+    tool_smart_scan_title: 'Smart Document Scanner & Digital Copy',
+    tool_smart_scan_desc: 'Scan paper documents, whiten shaded backgrounds into crisp photocopy B/W or Magic Color, and export to PDF.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
