@@ -17,22 +17,28 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Layers
+  Layers,
+  Move
 } from 'lucide-react';
 
-interface DetectedTextItem {
+interface TextEditItem {
   id: string;
   pageNum: number;
   originalText: string;
   currentText: string;
+  // Posisi asli teks pada PDF
+  origPdfX: number;
+  origPdfY: number;
+  origPdfWidth: number;
+  origPdfHeight: number;
+  // Posisi saat ini (dapat digeser / drag-and-drop)
   pdfX: number;
   pdfY: number;
-  pdfWidth: number;
-  pdfHeight: number;
   fontSize: number;
   fontFamily: string;
   color: string;
-  isCustomAdd?: boolean;
+  isDeleted: boolean; // Jika true, teks lama ditutup putih (redacted/dihapus)
+  isCustomAdd?: boolean; // Jika true, teks baru yang disisipkan pengguna
 }
 
 const COLOR_OPTIONS = [
@@ -40,6 +46,7 @@ const COLOR_OPTIONS = [
   { name: 'Biru Dokumen', value: '#1D4ED8', rgb: [0.11, 0.31, 0.85] },
   { name: 'Merah Koreksi', value: '#DC2626', rgb: [0.86, 0.15, 0.15] },
   { name: 'Abu-abu Netral', value: '#475569', rgb: [0.28, 0.33, 0.41] },
+  { name: 'Hijau Resmi', value: '#059669', rgb: [0.02, 0.59, 0.41] },
 ];
 
 export default function DirectPdfEditorPage() {
@@ -52,15 +59,18 @@ export default function DirectPdfEditorPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
 
-  // Mode Interaksi: 'select' (klik teks yang ada) atau 'add' (tambah teks baru)
-  const [editorMode, setEditorMode] = useState<'select' | 'add'>('select');
+  // Dimensi Halaman PDF Aktif
+  const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number }>({
+    width: 595,
+    height: 842,
+  });
 
-  // Daftar Item Teks Terdeteksi & Yang Diedit
-  const [pageDetectedItems, setPageDetectedItems] = useState<DetectedTextItem[]>([]);
-  const [editedItems, setEditedItems] = useState<DetectedTextItem[]>([]);
+  // Item Teks Terdeteksi di Halaman Aktif & Seluruh Perubahan Pengguna
+  const [pageDetectedItems, setPageDetectedItems] = useState<TextEditItem[]>([]);
+  const [editedItems, setEditedItems] = useState<TextEditItem[]>([]);
   const [activeEditingId, setActiveEditingId] = useState<string | null>(null);
 
-  // Form Input Modal / Popover Edit
+  // Form Input Edit Aktif
   const [editTextValue, setEditTextValue] = useState<string>('');
   const [editTextColor, setEditTextColor] = useState<string>('#000000');
   const [editTextSize, setEditTextSize] = useState<number>(12);
@@ -69,27 +79,26 @@ export default function DirectPdfEditorPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // References & State Dimensi Halaman PDF
+  // References
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pdfJsDocRef = useRef<unknown>(null);
-  const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number }>({ width: 595, height: 842 });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 1. Inisialisasi & Muat PDF.js secara Dinamis
+  // 1. Inisialisasi & Muat PDF.js secara Dinamis (Menggunakan Worker Lokal)
   const loadPdfJs = async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version || '4.10.38'}/build/pdf.worker.min.mjs`;
+    if (typeof window !== 'undefined') {
+      pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
     }
     return pdfjs;
   };
 
-  // 2. Render Halaman PDF saat Ganti Halaman atau File
+  // 2. Render Halaman PDF ke Canvas
   const renderPdfPage = useCallback(
     async (doc: unknown, pageNum: number, currentScale: number) => {
       if (!doc || !canvasRef.current) return;
@@ -102,10 +111,9 @@ export default function DirectPdfEditorPage() {
         const page = await pdf.getPage(pageNum);
         const viewport = page.getViewport({ scale: currentScale });
 
-        setPdfPageDimensions({
-          width: page.view[2] - page.view[0],
-          height: page.view[3] - page.view[1],
-        });
+        const pageW = page.view[2] - page.view[0];
+        const pageH = page.view[3] - page.view[1];
+        setPdfPageDimensions({ width: pageW, height: pageH });
 
         const canvas = canvasRef.current;
         canvas.width = viewport.width;
@@ -120,15 +128,14 @@ export default function DirectPdfEditorPage() {
         };
         await page.render(renderContext).promise;
 
-        // Ekstraksi posisi teks asli di halaman
+        // Ekstraksi posisi teks asli di halaman menggunakan PDF.js
         const textContent = await page.getTextContent();
-        const detected: DetectedTextItem[] = [];
+        const detected: TextEditItem[] = [];
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         textContent.items.forEach((item: any, idx: number) => {
           if (!item.str || !item.str.trim()) return;
 
-          // Hitung koordinat PDF asli (titik 0,0 berada di kiri-bawah)
           const transX = item.transform[4];
           const transY = item.transform[5];
           const itemHeight = Math.abs(item.transform[0] || item.height || 12);
@@ -139,13 +146,16 @@ export default function DirectPdfEditorPage() {
             pageNum,
             originalText: item.str,
             currentText: item.str,
+            origPdfX: transX,
+            origPdfY: transY,
+            origPdfWidth: itemWidth,
+            origPdfHeight: itemHeight,
             pdfX: transX,
             pdfY: transY,
-            pdfWidth: itemWidth,
-            pdfHeight: itemHeight,
             fontSize: Math.round(itemHeight),
             fontFamily: item.fontName || 'Helvetica',
             color: '#000000',
+            isDeleted: false,
           });
         });
 
@@ -180,12 +190,7 @@ export default function DirectPdfEditorPage() {
       setOriginalBytes(bytes);
 
       const pdfjs = await loadPdfJs();
-      const loadingTask = pdfjs.getDocument({
-        data: bytes,
-        cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/',
-        cMapPacked: true,
-      });
-
+      const loadingTask = pdfjs.getDocument({ data: bytes });
       const pdfDoc = await loadingTask.promise;
       pdfJsDocRef.current = pdfDoc;
       setTotalPages(pdfDoc.numPages);
@@ -195,7 +200,7 @@ export default function DirectPdfEditorPage() {
       showToast(`Dokumen "${file.name}" siap diedit!`);
     } catch (err) {
       console.error('Gagal membuka PDF:', err);
-      alert('Gagal memuat dokumen PDF. Pastikan file tidak terenkripsi kata sandi.');
+      alert('Gagal memuat dokumen PDF. Pastikan file tidak terkunci kata sandi.');
     } finally {
       setIsLoading(false);
     }
@@ -237,7 +242,7 @@ export default function DirectPdfEditorPage() {
 
       page.drawText('Beralamat di Jalan Merdeka No. 45, Jakarta Pusat.', {
         x: 60,
-        y: 660,
+        y: 655,
         size: 12,
         font: fontRegular,
         color: rgb(0.2, 0.2, 0.2),
@@ -251,7 +256,7 @@ export default function DirectPdfEditorPage() {
         color: rgb(0.08, 0.4, 0.2),
       });
 
-      page.drawText('Tanggal Pelaksanaan Dimulai: 01 Desember 2026', {
+      page.drawText('Tanggal Pelaksanaan: 01 Desember 2026', {
         x: 60,
         y: 570,
         size: 12,
@@ -259,7 +264,7 @@ export default function DirectPdfEditorPage() {
         color: rgb(0.2, 0.2, 0.2),
       });
 
-      page.drawText('Catatan: Klik kalimat mana saja di atas untuk langsung mengedit teksnya!', {
+      page.drawText('Catatan: Klik kalimat mana saja untuk edit, hapus, atau geser posisinya!', {
         x: 60,
         y: 520,
         size: 11,
@@ -269,7 +274,9 @@ export default function DirectPdfEditorPage() {
 
       const bytes = await samplePdf.save();
       setOriginalBytes(bytes);
-      const fakeFile = new File([bytes as unknown as BlobPart], 'contoh_surat_perjanjian.pdf', { type: 'application/pdf' });
+      const fakeFile = new File([bytes as unknown as BlobPart], 'contoh_surat_perjanjian.pdf', {
+        type: 'application/pdf',
+      });
       setSelectedFile(fakeFile);
       setEditedItems([]);
       setActiveEditingId(null);
@@ -282,7 +289,7 @@ export default function DirectPdfEditorPage() {
       setCurrentPage(1);
 
       await renderPdfPage(pdfDoc, 1, scale);
-      showToast('Contoh dokumen berhasil dimuat! Silakan klik teks untuk mengedit.');
+      showToast('Contoh dokumen berhasil dimuat! Silakan klik teks untuk mengedit atau menggeser.');
     } catch (err) {
       console.error('Gagal membuat contoh PDF:', err);
     } finally {
@@ -308,15 +315,15 @@ export default function DirectPdfEditorPage() {
   };
 
   // Klik Item Teks untuk Mulai Edit
-  const handleSelectItemToEdit = (item: DetectedTextItem) => {
-    const alreadyEdited = editedItems.find((e) => e.id === item.id);
+  const handleSelectItemToEdit = (item: TextEditItem) => {
+    const existing = editedItems.find((e) => e.id === item.id);
     setActiveEditingId(item.id);
-    setEditTextValue(alreadyEdited ? alreadyEdited.currentText : item.originalText);
-    setEditTextColor(alreadyEdited ? alreadyEdited.color : item.color);
-    setEditTextSize(alreadyEdited ? alreadyEdited.fontSize : item.fontSize);
+    setEditTextValue(existing ? existing.currentText : item.originalText);
+    setEditTextColor(existing ? existing.color : item.color);
+    setEditTextSize(existing ? existing.fontSize : item.fontSize);
   };
 
-  // Simpan Perubahan Teks Sementara di Sisi Klien
+  // Simpan Perubahan Teks
   const handleApplyTextEdit = () => {
     if (!activeEditingId) return;
 
@@ -326,11 +333,16 @@ export default function DirectPdfEditorPage() {
 
     if (!baseItem) return;
 
-    const updatedItem: DetectedTextItem = {
+    const existing = editedItems.find((e) => e.id === activeEditingId);
+
+    const updatedItem: TextEditItem = {
       ...baseItem,
+      pdfX: existing ? existing.pdfX : baseItem.pdfX,
+      pdfY: existing ? existing.pdfY : baseItem.pdfY,
       currentText: editTextValue,
       color: editTextColor,
       fontSize: editTextSize,
+      isDeleted: false,
     };
 
     setEditedItems((prev) => {
@@ -342,53 +354,130 @@ export default function DirectPdfEditorPage() {
     showToast('Teks berhasil diperbarui!');
   };
 
-  // Hapus / Batalkan Edit Teks Tertentu
-  const handleRevertTextEdit = (itemId: string) => {
-    setEditedItems((prev) => prev.filter((i) => i.id !== itemId));
+  // Hapus Teks (Redact / Tutup Putih pada Dokumen)
+  const handleDeleteTextItem = (itemId: string) => {
+    const baseItem =
+      pageDetectedItems.find((i) => i.id === itemId) ||
+      editedItems.find((i) => i.id === itemId);
+
+    if (!baseItem) return;
+
+    // Jika ini adalah teks yang baru dibuat pengguna (bukan teks asli PDF), langsung buang dari state
+    if (baseItem.isCustomAdd) {
+      setEditedItems((prev) => prev.filter((i) => i.id !== itemId));
+    } else {
+      // Jika teks asli PDF: tandai sebagai isDeleted agar ditutup patch putih saat diekspor
+      const deletedItem: TextEditItem = {
+        ...baseItem,
+        isDeleted: true,
+        currentText: '',
+      };
+      setEditedItems((prev) => {
+        const filtered = prev.filter((i) => i.id !== itemId);
+        return [...filtered, deletedItem];
+      });
+    }
+
     if (activeEditingId === itemId) {
       setActiveEditingId(null);
     }
-    showToast('Perubahan teks dibatalkan.');
+    showToast('Teks berhasil dihapus (ditutup putih).');
   };
 
-  // Tambahkan Teks Kustom Baru di sembarang posisi saat mode 'add'
-  const handleCanvasClickToAddText = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (editorMode !== 'add' || !canvasRef.current) return;
+  // Batalkan Hapus / Kembalikan Teks Asli
+  const handleRestoreTextItem = (itemId: string) => {
+    setEditedItems((prev) => prev.filter((i) => i.id !== itemId));
+    showToast('Teks asli dikembalikan.');
+  };
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-
-    // Konversi koordinat Viewport Canvas ke Koordinat PDF
+  // Tambahkan Teks Baru di Tengah Halaman saat tombol diklik
+  const handleAddNewTextBlock = () => {
     const pdfPageH = pdfPageDimensions.height;
-    const pdfX = clickX / scale;
-    const pdfY = pdfPageH - clickY / scale;
+    const initialPdfX = 60;
+    const initialPdfY = Math.round(pdfPageH * 0.5);
 
-    const newCustomItem: DetectedTextItem = {
+    const newCustomItem: TextEditItem = {
       id: `custom_${Date.now()}`,
       pageNum: currentPage,
       originalText: '',
-      currentText: 'Teks Baru Ditambahkan',
-      pdfX,
-      pdfY,
-      pdfWidth: 160,
-      pdfHeight: 14,
+      currentText: 'Ketik Teks Baru di Sini',
+      origPdfX: initialPdfX,
+      origPdfY: initialPdfY,
+      origPdfWidth: 180,
+      origPdfHeight: 16,
+      pdfX: initialPdfX,
+      pdfY: initialPdfY,
       fontSize: 14,
       fontFamily: 'Helvetica',
       color: '#000000',
+      isDeleted: false,
       isCustomAdd: true,
     };
 
     setEditedItems((prev) => [...prev, newCustomItem]);
     setActiveEditingId(newCustomItem.id);
-    setEditTextValue('Teks Baru Ditambahkan');
+    setEditTextValue('Ketik Teks Baru di Sini');
     setEditTextColor('#000000');
     setEditTextSize(14);
-    setEditorMode('select');
-    showToast('Teks baru disisipkan. Silakan ubah kalimatnya!');
+    showToast('Kotak teks baru ditambahkan! Anda dapat menggeser posisinya.');
   };
 
-  // 5. Simpan & Ekspor File PDF Menggunakan pdf-lib
+  // 5. Fitur Geser Teks (Drag & Drop Repositioning)
+  const handleStartDrag = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+    itemId: string
+  ) => {
+    e.stopPropagation();
+
+    const isTouch = 'touches' in e;
+    const startClientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const startClientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    // Cari item di editedItems atau dari pageDetectedItems
+    const existing = editedItems.find((i) => i.id === itemId);
+    const base = pageDetectedItems.find((i) => i.id === itemId);
+    const targetItem = existing || base;
+    if (!targetItem) return;
+
+    const initialPdfX = targetItem.pdfX;
+    const initialPdfY = targetItem.pdfY;
+
+    // Pastikan item terdaftar di editedItems saat mulai digeser
+    if (!existing && base) {
+      setEditedItems((prev) => [...prev, { ...base }]);
+    }
+
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveClientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const moveClientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+      const deltaX = (moveClientX - startClientX) / scale;
+      const deltaY = (moveClientY - startClientY) / scale;
+
+      // Pada koordinat PDF, Y berawal dari bawah; sehingga pergerakan ke bawah di layar mengurangi nilai Y
+      const newPdfX = Math.round(initialPdfX + deltaX);
+      const newPdfY = Math.round(initialPdfY - deltaY);
+
+      setEditedItems((prev) =>
+        prev.map((it) => (it.id === itemId ? { ...it, pdfX: newPdfX, pdfY: newPdfY } : it))
+      );
+    };
+
+    const onEnd = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      showToast('Posisi teks berhasil dipindahkan!');
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  };
+
+  // 6. Simpan & Ekspor File PDF Menggunakan pdf-lib
   const handleSaveAndDownloadPdf = async () => {
     if (!originalBytes) {
       alert('Belum ada dokumen PDF yang dimuat.');
@@ -396,7 +485,7 @@ export default function DirectPdfEditorPage() {
     }
 
     if (editedItems.length === 0) {
-      alert('Belum ada teks yang diubah. Silakan klik kalimat yang ingin diedit terlebih dahulu.');
+      alert('Belum ada teks yang diubah, dihapus, atau ditambahkan.');
       return;
     }
 
@@ -404,43 +493,40 @@ export default function DirectPdfEditorPage() {
     setStatusMessage('Menyematkan modifikasi teks langsung ke struktur PDF...');
 
     try {
-      // Muat dokumen PDF asli dengan pdf-lib
       const pdfDoc = await PDFDocument.load(originalBytes);
       const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Iterasi seluruh teks yang dimodifikasi
       for (const item of editedItems) {
         const pageIndex = item.pageNum - 1;
         if (pageIndex < 0 || pageIndex >= pdfDoc.getPageCount()) continue;
 
         const page = pdfDoc.getPage(pageIndex);
 
-        // Jika ini pengeditan teks asli (bukan teks baru): Tutup teks lama dengan blok putih
-        if (!item.isCustomAdd && item.pdfWidth > 0 && item.pdfHeight > 0) {
+        // 1. Jika ini teks asli PDF: Tutup lokasi aslinya dengan blok putih bersih
+        if (!item.isCustomAdd && item.origPdfWidth > 0 && item.origPdfHeight > 0) {
           page.drawRectangle({
-            x: Math.max(0, item.pdfX - 1.5),
-            y: Math.max(0, item.pdfY - 1.5),
-            width: item.pdfWidth + 3,
-            height: item.pdfHeight + 3,
-            color: rgb(1, 1, 1), // Putih murni untuk menutup teks lama
+            x: Math.max(0, item.origPdfX - 1.5),
+            y: Math.max(0, item.origPdfY - 1.5),
+            width: item.origPdfWidth + 3,
+            height: item.origPdfHeight + 3,
+            color: rgb(1, 1, 1), // Menghapus teks asli secara visual
           });
         }
 
-        // Tulis teks baru di atas posisi yang sama
-        if (item.currentText.trim()) {
+        // 2. Jika tidak dihapus: Tulis teks baru pada koordinat pdfX dan pdfY (posisi hasil geser)
+        if (!item.isDeleted && item.currentText.trim()) {
           const matchedColor = COLOR_OPTIONS.find((c) => c.value === item.color)?.rgb || [0, 0, 0];
           page.drawText(item.currentText, {
-            x: item.pdfX,
-            y: item.pdfY,
-            size: item.fontSize,
+            x: Math.max(0, item.pdfX),
+            y: Math.max(0, item.pdfY),
+            size: Math.max(8, item.fontSize),
             font: item.fontSize >= 15 ? helveticaBold : helvetica,
             color: rgb(matchedColor[0], matchedColor[1], matchedColor[2]),
           });
         }
       }
 
-      // Simpan berkas PDF baru
       const modifiedPdfBytes = await pdfDoc.save();
       const blob = new Blob([modifiedPdfBytes as unknown as BlobPart], { type: 'application/pdf' });
       const downloadUrl = URL.createObjectURL(blob);
@@ -454,10 +540,10 @@ export default function DirectPdfEditorPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(downloadUrl);
 
-      showToast('PDF berhasil diperbarui dan diunduh!');
+      showToast('PDF hasil edit berhasil disimpan dan diunduh!');
     } catch (err) {
       console.error('Gagal menyimpan PDF:', err);
-      alert('Terjadi kendala saat menyematkan teks ke PDF. Pastikan font dokumen didukung.');
+      alert('Terjadi kendala saat menyematkan teks ke PDF.');
     } finally {
       setIsSaving(false);
       setStatusMessage('');
@@ -468,7 +554,7 @@ export default function DirectPdfEditorPage() {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'Direct PDF Text Editor - KompresKilat',
-    description: 'Aplikasi online gratis untuk mengedit kalimat teks PDF langsung di browser tanpa upload ke server, menggunakan teknologi PDF.js dan pdf-lib.',
+    description: 'Aplikasi online gratis untuk edit teks, hapus kalimat, tambah tulisan baru, dan geser posisi teks langsung di dokumen PDF tanpa konversi.',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'All',
   };
@@ -495,14 +581,14 @@ export default function DirectPdfEditorPage() {
             📄 Direct PDF Text Editor (100% Client-Side)
           </span>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">
-            Edit Teks PDF Langsung di Browser
+            Edit, Hapus &amp; Geser Teks PDF di Browser
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Perbaiki typo nama, ganti angka nominal, ubah tanggal, atau sisipkan kalimat baru pada dokumen PDF Anda secara instan tanpa perlu konversi rumit. Dokumen 100% diproses di browser tanpa diunggah ke server luar.
+            Koreksi typo teks asli, hapus kalimat, tambahkan teks baru, dan <b>geser posisinya secara bebas</b> pada dokumen PDF Anda tanpa merusak tata letak. 100% aman di browser tanpa upload server.
           </p>
         </div>
 
-        {/* Toolbar & Status Bar */}
+        {/* Toolbar Utama */}
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
           
           {/* Pilihan File / Upload */}
@@ -546,38 +632,18 @@ export default function DirectPdfEditorPage() {
             )}
           </div>
 
-          {/* Mode Pemilihan & Tombol Tambah Teks */}
+          {/* Aksi Toolbar PDF: Tambah Teks & Simpan */}
           {totalPages > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setEditorMode('select')}
-                  className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-                    editorMode === 'select'
-                      ? 'bg-white text-indigo-700 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Pilih &amp; Ubah Teks</span>
-                </button>
+              <button
+                type="button"
+                onClick={handleAddNewTextBlock}
+                className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Tambah Teks Baru (+)</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => setEditorMode('add')}
-                  className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-                    editorMode === 'add'
-                      ? 'bg-white text-indigo-700 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>Tambah Teks Baru</span>
-                </button>
-              </div>
-
-              {/* Tombol Simpan & Unduh */}
               <button
                 type="button"
                 onClick={handleSaveAndDownloadPdf}
@@ -591,7 +657,7 @@ export default function DirectPdfEditorPage() {
           )}
         </div>
 
-        {/* Notifikasi Status Memuat */}
+        {/* Notifikasi Status Loading */}
         {statusMessage && (
           <div className="p-3 mb-6 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800 font-semibold flex items-center gap-2 animate-pulse">
             <Sparkles className="w-4 h-4 text-indigo-600" />
@@ -599,18 +665,18 @@ export default function DirectPdfEditorPage() {
           </div>
         )}
 
-        {/* Layout Area Editor & Pratinjau */}
+        {/* Layout Area Editor & Pratinjau Interaktif */}
         {totalPages > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mb-12">
             
-            {/* Kolom Kiri: Navigasi & Daftar Perubahan (4 Kolom) */}
+            {/* Kolom Kiri: Navigasi & Panel Edit & Daftar Modifikasi (4 Kolom) */}
             <div className="lg:col-span-4 space-y-4">
               
               {/* Box Navigasi Halaman & Zoom */}
               <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                    Navigasi Dokumen
+                    Navigasi Halaman
                   </span>
                   <span className="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
                     Hal. {currentPage} / {totalPages}
@@ -641,7 +707,7 @@ export default function DirectPdfEditorPage() {
 
                 {/* Kontrol Zoom */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                  <span className="font-semibold text-slate-600">Perbesaran Kanvas:</span>
+                  <span className="font-semibold text-slate-600">Skala Tampilan:</span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -666,7 +732,7 @@ export default function DirectPdfEditorPage() {
                 </div>
               </div>
 
-              {/* Panel Edit Aktif jika ada item yang dipilih */}
+              {/* Panel Edit Aktif jika ada teks yang dipilih */}
               {activeEditingId && (
                 <div className="bg-white p-5 rounded-2xl border-2 border-indigo-500 shadow-md space-y-3.5 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -723,56 +789,107 @@ export default function DirectPdfEditorPage() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleApplyTextEdit}
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs"
-                  >
-                    Terapkan Perubahan Ini ✓
-                  </button>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleApplyTextEdit}
+                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs"
+                    >
+                      Terapkan Teks Ini ✓
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTextItem(activeEditingId)}
+                      className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition cursor-pointer"
+                      title="Hapus / Tutup Teks Ini"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 italic">
+                    💡 Tips: Anda dapat langsung menggeser teks ini di pratinjau kanvas menggunakan mouse atau sentuhan jari.
+                  </p>
                 </div>
               )}
 
-              {/* Daftar Perubahan Teks (History Edit) */}
+              {/* Daftar Perubahan Teks (History Edit & Delete) */}
               <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-indigo-600" /> Daftar Perubahan ({editedItems.length})
+                    <Layers className="w-3.5 h-3.5 text-indigo-600" /> Riwayat Modifikasi ({editedItems.length})
                   </span>
                 </div>
 
                 {editedItems.length === 0 ? (
                   <p className="text-xs text-slate-400 italic">
-                    Belum ada teks yang diedit. Klik kalimat mana pun pada pratinjau PDF di sebelah kanan untuk mengubahnya.
+                    Belum ada teks yang dimodifikasi. Klik kalimat pada halaman PDF di samping untuk mengedit, menghapus, atau menggeser posisinya.
                   </p>
                 ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {editedItems.map((item) => (
                       <div
                         key={item.id}
-                        className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-2 text-xs"
+                        className={`p-2.5 rounded-xl border flex items-start justify-between gap-2 text-xs ${
+                          item.isDeleted
+                            ? 'bg-red-50/60 border-red-200'
+                            : 'bg-slate-50 border-slate-200'
+                        }`}
                       >
                         <div className="min-w-0">
-                          <span className="text-[10px] font-bold text-indigo-600 block">
-                            Hal. {item.pageNum} {item.isCustomAdd ? '• Teks Baru' : '• Edit'}
+                          <span
+                            className={`text-[10px] font-bold block ${
+                              item.isDeleted ? 'text-red-600' : 'text-indigo-600'
+                            }`}
+                          >
+                            Hal. {item.pageNum} •{' '}
+                            {item.isDeleted
+                              ? 'Dihapus (Ditutup Putih)'
+                              : item.isCustomAdd
+                              ? 'Teks Baru'
+                              : 'Diedit / Digeser'}
                           </span>
-                          {!item.isCustomAdd && (
-                            <p className="text-[10px] text-slate-400 line-through truncate max-w-[190px]">
+
+                          {item.isDeleted ? (
+                            <p className="text-[11px] text-slate-400 line-through truncate max-w-[190px]">
                               {item.originalText}
                             </p>
+                          ) : (
+                            <>
+                              {!item.isCustomAdd && (
+                                <p className="text-[10px] text-slate-400 line-through truncate max-w-[190px]">
+                                  {item.originalText}
+                                </p>
+                              )}
+                              <p className="font-semibold text-slate-800 truncate max-w-[190px]">
+                                {item.currentText}
+                              </p>
+                            </>
                           )}
-                          <p className="font-semibold text-slate-800 truncate max-w-[190px]">
-                            {item.currentText}
-                          </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRevertTextEdit(item.id)}
-                          className="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
-                          title="Hapus Perubahan"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {item.isDeleted ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRestoreTextItem(item.id)}
+                              className="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded cursor-pointer"
+                              title="Kembalikan Teks Asli"
+                            >
+                              Kembalikan
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTextItem(item.id)}
+                              className="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -780,44 +897,74 @@ export default function DirectPdfEditorPage() {
               </div>
             </div>
 
-            {/* Kolom Kanan: Area Kanvas & Lapisan Interaktif (8 Kolom) */}
+            {/* Kolom Kanan: Area Kanvas PDF & Lapisan Teks Interaktif yang Bisa Digeser (8 Kolom) */}
             <div className="lg:col-span-8 space-y-3">
               
-              <div className="flex items-center justify-between text-xs text-slate-500 px-1">
-                <span>
-                  {editorMode === 'select'
-                    ? '💡 Arahkan kursor dan klik pada teks berwarna biru untuk mengedit kalimat.'
-                    : '➕ Klik di sembarang area dokumen untuk menyisipkan teks baru.'}
+              <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 px-1 gap-2">
+                <span className="flex items-center gap-1">
+                  <Move className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>
+                    Klik teks untuk mengedit atau <b>seret teks untuk memindahkan posisinya</b>.
+                  </span>
                 </span>
-                <span className="font-semibold text-indigo-600">
-                  {pageDetectedItems.length} Kalimat Terdeteksi
+                <span className="font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  {pageDetectedItems.length} Elemen Teks
                 </span>
               </div>
 
-              {/* Kontainer Kanvas & Lapisan Teks Transparan */}
-              <div
-                className={`relative bg-slate-200 border-2 border-slate-300 rounded-2xl p-2 sm:p-4 flex justify-center items-start overflow-auto max-h-[780px] shadow-inner select-none ${
-                  editorMode === 'add' ? 'cursor-crosshair' : 'cursor-default'
-                }`}
-                onClick={handleCanvasClickToAddText}
-              >
+              {/* Kontainer Kanvas Scrollable */}
+              <div className="relative bg-slate-200 border-2 border-slate-300 rounded-2xl p-2 sm:p-4 flex justify-center items-start overflow-auto max-h-[780px] shadow-inner select-none">
                 <div className="relative shadow-xl bg-white rounded-lg overflow-hidden">
                   
                   {/* Kanvas PDF.js Asli */}
                   <canvas ref={canvasRef} className="block max-w-none" />
 
-                  {/* Lapisan Teks Terdeteksi (Interactive Overlay) */}
+                  {/* Lapisan Interaktif: Deteksi, Edit, Hapus & Geser */}
                   <div className="absolute inset-0 pointer-events-none">
+                    
+                    {/* A. Teks Asli yang Terdeteksi di Halaman */}
                     {pageDetectedItems.map((item) => {
-                      // Hitung posisi relatif di atas kanvas berdasarkan koordinat PDF dan skala
-                      const pdfPageH = pdfPageDimensions.height;
-                      const posX = item.pdfX * scale;
-                      const posY = (pdfPageH - item.pdfY - item.pdfHeight) * scale;
-                      const itemW = Math.max(item.pdfWidth * scale, 30);
-                      const itemH = Math.max(item.pdfHeight * scale, 14);
-
                       const edited = editedItems.find((e) => e.id === item.id);
+                      const isDeleted = edited?.isDeleted;
+
+                      // Posisi teks (gunakan posisi hasil geser jika sudah pernah digeser)
+                      const targetPdfX = edited ? edited.pdfX : item.pdfX;
+                      const targetPdfY = edited ? edited.pdfY : item.pdfY;
+
+                      const posX = targetPdfX * scale;
+                      const posY = (pdfPageDimensions.height - targetPdfY - item.origPdfHeight) * scale;
+                      const itemW = Math.max(item.origPdfWidth * scale, 30);
+                      const itemH = Math.max(item.origPdfHeight * scale, 14);
+
                       const isSelected = activeEditingId === item.id;
+
+                      if (isDeleted) {
+                        // Tampilan saat teks ditandai dihapus (ditutup blok putih transparan)
+                        return (
+                          <div
+                            key={item.id}
+                            style={{
+                              left: `${item.origPdfX * scale}px`,
+                              top: `${(pdfPageDimensions.height - item.origPdfY - item.origPdfHeight) * scale}px`,
+                              width: `${itemW}px`,
+                              height: `${itemH}px`,
+                            }}
+                            className="absolute pointer-events-auto bg-white/90 border border-red-300 text-red-500 rounded-xs flex items-center justify-between px-1 z-10"
+                          >
+                            <span className="text-[9px] font-bold truncate">[Dihapus]</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRestoreTextItem(item.id);
+                              }}
+                              className="text-[9px] text-slate-500 hover:text-slate-800 underline cursor-pointer ml-1"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        );
+                      }
 
                       return (
                         <div
@@ -829,34 +976,52 @@ export default function DirectPdfEditorPage() {
                           style={{
                             left: `${posX}px`,
                             top: `${posY}px`,
-                            width: `${itemW}px`,
-                            height: `${itemH}px`,
+                            width: edited ? 'auto' : `${itemW}px`,
+                            minHeight: `${itemH}px`,
                           }}
-                          title={`Klik untuk edit: "${edited ? edited.currentText : item.originalText}"`}
-                          className={`absolute pointer-events-auto transition-all cursor-pointer rounded-xs ${
+                          className={`absolute pointer-events-auto transition-all cursor-pointer rounded-xs flex items-center group ${
                             isSelected
-                              ? 'ring-2 ring-indigo-600 bg-indigo-500/25 z-20'
+                              ? 'ring-2 ring-indigo-600 bg-indigo-500/25 z-30'
                               : edited
-                              ? 'bg-amber-400/30 border border-amber-500/60 z-10'
+                              ? 'bg-amber-300/40 border border-amber-500 z-20 px-1'
                               : 'hover:bg-indigo-500/15 hover:border hover:border-indigo-400/50'
                           }`}
                         >
-                          {edited && (
-                            <span className="absolute -top-3.5 left-0 text-[9px] bg-amber-500 text-slate-900 font-bold px-1 rounded shadow-xs truncate max-w-[120px]">
+                          {/* Handle untuk Menggeser Teks */}
+                          <div
+                            onMouseDown={(e) => handleStartDrag(e, item.id)}
+                            onTouchStart={(e) => handleStartDrag(e, item.id)}
+                            className="cursor-move p-0.5 mr-0.5 rounded text-slate-700 bg-white/80 hover:bg-indigo-100 hidden group-hover:flex items-center shadow-xs"
+                            title="Klik dan seret untuk memindahkan posisi teks ini"
+                          >
+                            <Move className="w-3 h-3 text-indigo-600" />
+                          </div>
+
+                          {/* Teks Hasil Edit */}
+                          {edited ? (
+                            <span
+                              style={{
+                                color: edited.color,
+                                fontSize: `${edited.fontSize * scale}px`,
+                              }}
+                              className="font-semibold whitespace-nowrap"
+                            >
                               {edited.currentText}
                             </span>
+                          ) : (
+                            <span className="opacity-0">{item.originalText}</span>
                           )}
                         </div>
                       );
                     })}
 
-                    {/* Teks Kustom yang Ditambahkan */}
+                    {/* B. Teks Kustom yang Ditambahkan Pengguna */}
                     {editedItems
-                      .filter((e) => e.pageNum === currentPage && e.isCustomAdd)
+                      .filter((e) => e.pageNum === currentPage && e.isCustomAdd && !e.isDeleted)
                       .map((item) => {
-                        const pdfPageH = pdfPageDimensions.height;
                         const posX = item.pdfX * scale;
-                        const posY = (pdfPageH - item.pdfY) * scale;
+                        const posY = (pdfPageDimensions.height - item.pdfY) * scale;
+                        const isSelected = activeEditingId === item.id;
 
                         return (
                           <div
@@ -869,11 +1034,40 @@ export default function DirectPdfEditorPage() {
                               left: `${posX}px`,
                               top: `${posY}px`,
                             }}
-                            className="absolute pointer-events-auto p-1 bg-white/90 border border-indigo-500 rounded shadow-md cursor-pointer text-xs font-semibold"
+                            className={`absolute pointer-events-auto p-1.5 bg-white/95 border rounded-lg shadow-md cursor-pointer flex items-center gap-1.5 z-25 group ${
+                              isSelected ? 'ring-2 ring-indigo-600 border-indigo-600' : 'border-indigo-400'
+                            }`}
                           >
-                            <span style={{ color: item.color, fontSize: `${item.fontSize * scale}px` }}>
+                            <div
+                              onMouseDown={(e) => handleStartDrag(e, item.id)}
+                              onTouchStart={(e) => handleStartDrag(e, item.id)}
+                              className="cursor-move p-0.5 rounded text-indigo-600 bg-indigo-50 hover:bg-indigo-100 shadow-xs"
+                              title="Seret untuk memindahkan posisi"
+                            >
+                              <Move className="w-3 h-3" />
+                            </div>
+
+                            <span
+                              style={{
+                                color: item.color,
+                                fontSize: `${item.fontSize * scale}px`,
+                              }}
+                              className="font-semibold whitespace-nowrap"
+                            >
                               {item.currentText}
                             </span>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTextItem(item.id);
+                              }}
+                              className="text-slate-400 hover:text-red-600 p-0.5 transition cursor-pointer"
+                              title="Hapus Teks Ini"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                           </div>
                         );
                       })}
@@ -883,17 +1077,17 @@ export default function DirectPdfEditorPage() {
             </div>
           </div>
         ) : (
-          /* Tampilan Dropzone Kosong Awal */
+          /* Dropzone PDF Kosong */
           <div className="bg-white p-8 sm:p-14 rounded-2xl border-2 border-dashed border-slate-300 hover:border-indigo-500 transition text-center space-y-4 mb-12">
             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl">
               📄
             </div>
             <div className="space-y-1">
               <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                Pilih Dokumen PDF yang Ingin Diedit
+                Pilih Berkas PDF yang Ingin Diedit
               </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Unggah dokumen surat, sertifikat, laporan invoice, atau formulir PDF. Seluruh teks akan dideteksi dan dapat diedit langsung di layar.
+                Unggah dokumen surat, sertifikat, laporan invoice, atau formulir PDF. Seluruh teks akan dideteksi dan dapat diedit, dihapus, atau digeser posisinya langsung.
               </p>
             </div>
 
@@ -942,7 +1136,7 @@ export default function DirectPdfEditorPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
               <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🔍</span> 1. Deteksi Koordinat Teks
+                <span>🔍</span> 1. Deteksi &amp; Klik Teks
               </h3>
               <p className="text-xs text-slate-500">
                 Mesin <b>PDF.js</b> membaca matriks tipografi pada dokumen dan memetakan setiap kalimat ke koordinat piksel yang presisi di atas layar browser Anda.
@@ -951,10 +1145,10 @@ export default function DirectPdfEditorPage() {
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
               <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>✏️</span> 2. Modifikasi Teks Presisi
+                <span>🖐️</span> 2. Bebas Geser Posisi
               </h3>
               <p className="text-xs text-slate-500">
-                Saat Anda mengedit kalimat, teknologi <b>pdf-lib</b> menyematkan tambalan putih (*whiteout block*) di bawah teks lama dan mencetak teks baru dengan ukuran dan warna font yang selaras.
+                Teks yang Anda edit atau tambahkan dapat langsung <b>diseret (drag-and-drop)</b> ke koordinat yang diinginkan agar sejajar rapi dengan garis formulir atau tanda tangan.
               </p>
             </div>
 
@@ -971,8 +1165,9 @@ export default function DirectPdfEditorPage() {
           <div className="border-t border-slate-100 pt-5 space-y-2 text-xs">
             <h4 className="font-bold text-slate-800">Tips Penggunaan:</h4>
             <ul className="space-y-1.5 list-disc pl-5 text-slate-500">
-              <li><b>Koreksi Typo Cepat:</b> Klik kalimat yang ingin Anda perbaiki, ganti kata yang salah, lalu klik tombol <b>Terapkan Perubahan</b>.</li>
-              <li><b>Menambahkan Catatan Baru:</b> Gunakan tombol <b>Tambah Teks Baru</b> di toolbar atas, lalu klik di sembarang posisi dokumen untuk menuliskan teks atau catatan tambahan.</li>
+              <li><b>Koreksi Typo Cepat:</b> Klik kalimat yang ingin Anda perbaiki, ganti kata yang salah, lalu klik tombol <b>Terapkan Teks Ini</b>.</li>
+              <li><b>Menghapus Kalimat:</b> Pilih kalimat yang ingin dihilangkan, lalu klik ikon tempat sampah (Hapus) untuk menutup teks lama dengan blok putih rapi.</li>
+              <li><b>Menambahkan &amp; Menggeser Teks:</b> Klik tombol <b>Tambah Teks Baru (+)</b>, kemudian gunakan ikon panah empat arah untuk menggeser teks ke posisi yang Anda kehendaki.</li>
               <li><b>Unduh Hasil Akhir:</b> Klik tombol <b>Simpan &amp; Unduh</b> untuk mengekspor dokumen PDF baru siap kirim.</li>
             </ul>
           </div>
