@@ -35,13 +35,13 @@ export default function AdBanner({
   }, []);
 
   return (
-    <div className={`my-6 text-center overflow-hidden ${className}`}>
-      {/* Label Kepatuhan Resmi Google AdSense */}
-      <span className="block text-[10px] text-slate-400 font-medium tracking-wider mb-1.5 uppercase">
+    <div className={`my-8 sm:my-10 pt-4 pb-2 text-center overflow-hidden ${className}`}>
+      {/* Label Kepatuhan Resmi Google AdSense (Wajib berjarak aman dari tombol aksi) */}
+      <span className="block text-[10px] text-slate-400 font-semibold tracking-wider mb-2 uppercase">
         {label === 'Iklan Sponsor' || label === 'Iklan Sponsor di Artikel' ? 'Iklan' : label}
       </span>
 
-      <div className="min-h-[90px] w-full flex items-center justify-center bg-slate-50/80 border border-slate-200/60 rounded-xl overflow-hidden">
+      <div className="min-h-[90px] w-full flex items-center justify-center bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 rounded-xl overflow-hidden">
         <ins
           className="adsbygoogle block w-full"
           style={{ display: 'block', minHeight: '90px' }}
