@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,21 +55,25 @@ export default function Navbar() {
               </Link>
             ))}
           </nav>
-          <LanguageToggle />
+          <div className="flex items-center gap-2 pl-1">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Mobile Quick Action & Hamburger Toggle */}
         <div className="flex md:hidden items-center gap-1.5">
+          <ThemeToggle className="px-1.5 py-1 text-[11px]" />
           <LanguageToggle className="px-2 py-0.5 text-[11px]" />
           <Link
             href="/blog"
-            className="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 transition whitespace-nowrap"
+            className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 transition whitespace-nowrap"
           >
             {t('nav_blog')}
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-100 focus:outline-none cursor-pointer"
+            className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer"
             aria-label="Buka Menu"
           >
             {isOpen ? (
@@ -86,7 +91,11 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown Accordion */}
       {isOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3 shadow-lg space-y-1 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-lg space-y-1 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center justify-between p-2 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{t('theme_toggle')}</span>
+            <ThemeToggle showLabel={true} />
+          </div>
           <Link
             href="/"
             onClick={() => setIsOpen(false)}

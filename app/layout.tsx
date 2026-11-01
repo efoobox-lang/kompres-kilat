@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import StickyAd from '@/components/StickyAd';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -84,6 +85,22 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
+        {/* Anti-FOUC Theme Initializer */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var d = document.documentElement;
+                var t = localStorage.getItem('kk_theme');
+                if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  d.classList.add('dark');
+                } else {
+                  d.classList.remove('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
         {/* Google AdSense Script */}
         <script
           async
@@ -92,11 +109,13 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-800">
-        <LanguageProvider>
-          {children}
-          {/* Sticky Mobile Anchor Banner Iklan */}
-          <StickyAd />
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            {children}
+            {/* Sticky Mobile Anchor Banner Iklan */}
+            <StickyAd />
+          </LanguageProvider>
+        </ThemeProvider>
 
         {/* Universal Full-Website Translation Engine */}
         <div id="google_translate_element" className="fixed -top-96 -left-96 opacity-0 pointer-events-none" />

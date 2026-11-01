@@ -112,6 +112,9 @@ export const translations = {
     badge_new_ai: 'BARU AI',
     lang_switch: 'Bahasa',
     blog_read_more: 'Baca Selengkapnya →',
+    theme_dark: 'Mode Gelap',
+    theme_light: 'Mode Terang',
+    theme_toggle: 'Ganti Tema Gelap / Terang',
   },
   en: {
     // Nav
@@ -224,6 +227,9 @@ export const translations = {
     badge_new_ai: 'NEW AI',
     lang_switch: 'Language',
     blog_read_more: 'Read More →',
+    theme_dark: 'Dark Mode',
+    theme_light: 'Light Mode',
+    theme_toggle: 'Toggle Dark / Light Mode',
   },
 };
 

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -10,20 +11,25 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-slate-200 mt-16 sm:mt-20 pt-10 sm:pt-12 pb-14 sm:pb-16 text-slate-600 text-xs">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 mb-10">
-        {/* Kolom 1: Profil Brand (3 Kolom Grid Desktop) */}
-        <div className="space-y-3 lg:col-span-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg sm:text-xl font-black text-indigo-600">⚡ KompresKilat</span>
+        {/* Kolom 1: Profil Brand (3 Kolom Grid Desktop - Center pada HP / Mobile) */}
+        <div className="space-y-3 lg:col-span-3 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start space-x-2">
+            <span className="text-lg sm:text-xl font-black text-indigo-600 dark:text-indigo-400">⚡ KompresKilat</span>
           </div>
-          <p className="text-slate-500 leading-relaxed text-[11px]">
+          <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-[11px] max-w-sm mx-auto sm:mx-0">
             {t('footer_desc')}
           </p>
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-sm mx-auto sm:mx-0">
             {t('footer_privacy_note')}
           </p>
-          <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500">
-            <span>{t('lang_switch')}:</span>
-            <LanguageToggle />
+          <div className="flex items-center justify-center sm:justify-start gap-2.5 pt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span>{t('lang_switch')}:</span>
+              <LanguageToggle />
+            </div>
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-700">
+              <ThemeToggle showLabel={true} />
+            </div>
           </div>
         </div>
 
