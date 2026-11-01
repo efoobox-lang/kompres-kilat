@@ -172,28 +172,38 @@ export default function AiImageToolsPage() {
           </p>
         </div>
 
-        {/* Tab Navigasi Cepat Antar Fitur Gambar */}
-        <div className="flex justify-center gap-2 mb-6">
+        {/* Tab Navigasi Cepat Antar Fitur Gambar (Presisi & Responsif Mobile & Desktop) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mb-6 sm:mb-8">
           <Link
             href="/tools/image"
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600 transition shadow-xs text-center"
           >
-            🖼️ Kompres Gambar
+            <span className="text-sm">🖼️</span>
+            <span className="truncate">Kompres Gambar</span>
           </Link>
-          <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 text-white shadow-sm">
-            ✨ AI Enhancer &amp; Upscale
-          </span>
+
+          <div
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1 text-center"
+          >
+            <span className="text-sm">✨</span>
+            <span className="truncate">AI Enhancer</span>
+            <span className="hidden sm:inline text-[9px] bg-indigo-500/80 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ml-0.5">Aktif</span>
+          </div>
+
           <Link
             href="/tools/remove-bg"
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600 transition shadow-xs text-center"
           >
-            🎨 Ganti Background Pas Foto
+            <span className="text-sm">🎨</span>
+            <span className="truncate">Ganti Background</span>
           </Link>
+
           <Link
             href="/tools/object-eraser"
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600 transition shadow-xs text-center"
           >
-            🪄 Hapus Objek &amp; Watermark
+            <span className="text-sm">🪄</span>
+            <span className="truncate">Hapus Objek Foto</span>
           </Link>
         </div>
 
