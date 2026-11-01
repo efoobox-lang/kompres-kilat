@@ -22,14 +22,45 @@ interface DesignData {
 export default function AIImageGenerator() {
   const [prompt, setPrompt] = useState('buatkan brosur jualan kopi desainnya lebih meriah');
   const [aspectRatio, setAspectRatio] = useState<'square' | 'portrait'>('square');
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [providerInfo, setProviderInfo] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Unggah foto atau logo produk kustom
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Harap unggah berkas gambar yang valid (PNG, JPG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Ukuran gambar maksimal 5 MB.');
+      return;
+    }
+
+    setErrorMessage('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadedImage(reader.result as string);
+      setUploadedFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setUploadedFileName('');
+  };
+
   // Render Poster Grafis Resolusi Tinggi (1080x1080 atau 1080x1350) di Browser
-  const renderPosterCanvas = (design: DesignData) => {
+  const renderPosterCanvas = async (design: DesignData, customImgSrc?: string | null) => {
     const width = 1080;
     const height = aspectRatio === 'square' ? 1080 : 1350;
 
@@ -38,6 +69,23 @@ export default function AIImageGenerator() {
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Load gambar custom jika pengguna mengunggah logo/foto
+    const targetImgSrc = customImgSrc !== undefined ? customImgSrc : uploadedImage;
+    let loadedCustomImg: HTMLImageElement | null = null;
+    if (targetImgSrc) {
+      try {
+        loadedCustomImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = targetImgSrc;
+        });
+      } catch (err) {
+        console.warn('Gagal memuat visual logo/foto:', err);
+      }
+    }
 
     const palettes = {
       amber: { bg1: '#321405', bg2: '#78350F', accent: '#F59E0B', text: '#FFFFFF', sub: '#FEF3C7', badgeBg: '#D97706' },
@@ -96,25 +144,80 @@ export default function AIImageGenerator() {
     ctx.textAlign = 'center';
     ctx.fillText(badgeText, width / 2, badgeY + 36);
 
-    // 2. Ikon Visual Emoji
-    ctx.font = '86px Arial, sans-serif';
-    ctx.fillText(design.iconEmoji || '✨', width / 2, 260);
+    // 2. Visual Centerpiece: Foto / Logo Kustom atau Ikon Emoji
+    let headlineStartY = 350;
+
+    if (loadedCustomImg) {
+      const imgSize = aspectRatio === 'square' ? 180 : 210;
+      const imgX = (width - imgSize) / 2;
+      const imgY = 175;
+
+      // Card latar belakang foto dengan bayangan halus
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetY = 6;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 24);
+      ctx.fill();
+      ctx.restore();
+
+      // Masking / Clip gambar di dalam rounded frame
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 24);
+      ctx.clip();
+
+      const hRatio = imgSize / loadedCustomImg.width;
+      const vRatio = imgSize / loadedCustomImg.height;
+      const ratio = Math.max(hRatio, vRatio);
+      const centerShiftX = (imgSize - loadedCustomImg.width * ratio) / 2;
+      const centerShiftY = (imgSize - loadedCustomImg.height * ratio) / 2;
+
+      ctx.drawImage(
+        loadedCustomImg,
+        0,
+        0,
+        loadedCustomImg.width,
+        loadedCustomImg.height,
+        imgX + centerShiftX,
+        imgY + centerShiftY,
+        loadedCustomImg.width * ratio,
+        loadedCustomImg.height * ratio
+      );
+      ctx.restore();
+
+      // Border ring aksen elegan
+      ctx.strokeStyle = pal.accent;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 24);
+      ctx.stroke();
+
+      headlineStartY = imgY + imgSize + 52;
+    } else {
+      ctx.font = '86px Arial, sans-serif';
+      ctx.fillText(design.iconEmoji || '✨', width / 2, 260);
+      headlineStartY = 350;
+    }
 
     // 3. Judul Utama (Headline)
-    ctx.font = '900 64px Arial, sans-serif';
+    ctx.font = loadedCustomImg ? '900 56px Arial, sans-serif' : '900 64px Arial, sans-serif';
     ctx.fillStyle = pal.text;
     ctx.textAlign = 'center';
 
     const words = design.headline.toUpperCase().split(' ');
     let line = '';
-    let curY = 350;
+    let curY = headlineStartY;
+    const lineHeight = loadedCustomImg ? 68 : 78;
     for (let n = 0; n < words.length; n++) {
       const testLine = line + words[n] + ' ';
       const metrics = ctx.measureText(testLine);
       if (metrics.width > width - 180 && n > 0) {
         ctx.fillText(line.trim(), width / 2, curY);
         line = words[n] + ' ';
-        curY += 78;
+        curY += lineHeight;
       } else {
         line = testLine;
       }
@@ -202,13 +305,15 @@ export default function AIImageGenerator() {
         body: JSON.stringify({
           prompt: cleanPrompt,
           action: 'generate',
+          hasUploadedImage: Boolean(uploadedImage),
+          uploadedImageName: uploadedFileName,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success && data.designData) {
-        renderPosterCanvas(data.designData);
+        await renderPosterCanvas(data.designData);
       } else {
         setErrorMessage(data.message || 'Gagal memproses desain poster.');
         setIsLoading(false);
@@ -295,6 +400,56 @@ export default function AIImageGenerator() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Fitur Unggah Foto Produk / Logo Brand */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Sisipkan Foto Produk atau Logo Brand (Opsional):
+            </label>
+            {!uploadedImage ? (
+              <label className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/40 rounded-xl p-3.5 flex flex-col items-center justify-center cursor-pointer transition text-center group bg-slate-50/50">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <div className="flex items-center gap-2 text-slate-600 group-hover:text-indigo-600 transition">
+                  <span className="text-xl">📸</span>
+                  <span className="text-xs font-bold">Pilih Foto Produk / Logo Merek</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Format PNG, JPG, WebP (Maks. 5MB) • Otomatis dipadukan ke dalam poster &amp; brosur AI
+                </p>
+              </label>
+            ) : (
+              <div className="flex items-center justify-between p-2.5 bg-indigo-50/80 border border-indigo-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={uploadedImage}
+                    alt="Pratinjau Foto Produk"
+                    className="w-12 h-12 object-cover rounded-lg border border-indigo-200 bg-white shadow-xs"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800 truncate max-w-[180px] sm:max-w-xs">
+                      {uploadedFileName || 'Foto Produk Tersemat'}
+                    </p>
+                    <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                      ✓ Foto Siap Dipadukan ke Desain AI
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 rounded-lg transition cursor-pointer"
+                >
+                  Ganti / Hapus
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Format Ukuran */}

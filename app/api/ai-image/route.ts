@@ -23,9 +23,12 @@ export async function POST(request: Request) {
       action = 'generate',
       enhancementType = 'clarity',
       apiKey: clientApiKey = '',
+      hasUploadedImage = false,
+      uploadedImageName = '',
     } = body;
 
     const cleanPrompt = sanitizeInput(String(prompt), 600);
+    const cleanImageName = sanitizeInput(String(uploadedImageName), 100);
 
     if (action === 'generate' && !cleanPrompt.trim()) {
       return NextResponse.json(
@@ -43,7 +46,11 @@ export async function POST(request: Request) {
     if (action === 'generate') {
       if (geminiKey) {
         try {
-          const geminiPrompt = `Anda adalah Creative Art Director & Desainer Grafis komersial. Rancanglah konsep poster/brosur promosi dalam Bahasa Indonesia yang sangat memikat untuk: "${cleanPrompt}".
+          const imageContext = hasUploadedImage
+            ? `\nINFORMASI PENTING: Pengguna mengunggah gambar/logo/produk fisik ("${cleanImageName || 'Produk'}"). Rancang teks headline, badge, dan deskripsi yang menyoroti visual produk/logo yang ditampilkan di poster agar selaras dan memikat pembeli.`
+            : '';
+
+          const geminiPrompt = `Anda adalah Creative Art Director & Desainer Grafis komersial. Rancanglah konsep poster/brosur promosi dalam Bahasa Indonesia yang sangat memikat untuk: "${cleanPrompt}".${imageContext}
 
 Kembalikan HANYA format JSON valid tanpa tanda kutip markdown (tanpa \`\`\`json) dengan format persis berikut:
 {

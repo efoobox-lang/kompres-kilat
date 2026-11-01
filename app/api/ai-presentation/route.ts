@@ -32,11 +32,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const { topic = '', slideCount = 5, theme = 'corporate', audience = 'general' } = body;
+    const { topic = '', slideCount = 5, theme = 'corporate', audience = 'general', hasLogo = false, logoName = '' } = body;
 
     const cleanTopic = sanitizeInput(String(topic), 400);
     const cleanTheme = sanitizeInput(String(theme), 30);
     const cleanAudience = sanitizeInput(String(audience), 50);
+    const cleanLogoName = sanitizeInput(String(logoName), 100);
 
     if (!cleanTopic) {
       return NextResponse.json(
@@ -51,7 +52,11 @@ export async function POST(request: Request) {
     // Jika user menghubungkan GEMINI_API_KEY, gunakan model Gemini untuk sintesis teks
     if (geminiKey) {
       try {
-        const prompt = `Anda adalah konsultan presentasi kelas dunia. Buatlah materi presentasi PowerPoint profesional dalam Bahasa Indonesia tentang: "${cleanTopic}".
+        const logoContext = hasLogo
+          ? `\nIdentitas Merek: Dokumen ini menyertakan logo resmi perusahaan/organisasi ("${cleanLogoName || 'Logo Resmi'}"). Sesuaikan gaya bahasa dan arsitektur slide agar bernuansa kredibel, representatif, dan elegan.`
+          : '';
+
+        const prompt = `Anda adalah konsultan presentasi kelas dunia. Buatlah materi presentasi PowerPoint profesional dalam Bahasa Indonesia tentang: "${cleanTopic}".${logoContext}
 Jumlah slide yang diminta: ${count} slide.
 Gaya tema: ${cleanTheme}.
 Target audiens: ${cleanAudience}.

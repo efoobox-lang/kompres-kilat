@@ -26,11 +26,41 @@ export default function AiPresentationMakerPage() {
   const [slideCount, setSlideCount] = useState<number>(5);
   const [theme, setTheme] = useState<'corporate' | 'startup' | 'creative' | 'academic'>('corporate');
   const [audience, setAudience] = useState('Profesional Bisnis / Stakeholder');
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [logoFileName, setLogoFileName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [presentation, setPresentation] = useState<PresentationResponse | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Harap unggah berkas logo gambar yang valid (PNG, JPG, SVG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Ukuran file logo maksimal 5 MB.');
+      return;
+    }
+
+    setErrorMessage('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoDataUrl(reader.result as string);
+      setLogoFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoDataUrl(null);
+    setLogoFileName('');
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +79,8 @@ export default function AiPresentationMakerPage() {
           slideCount,
           theme,
           audience,
+          hasLogo: Boolean(logoDataUrl),
+          logoName: logoFileName,
         }),
       });
 
@@ -90,9 +122,25 @@ export default function AiPresentationMakerPage() {
       // Slide 1: Cover Slide
       const coverSlide = pres.addSlide();
       coverSlide.background = { color: pal.bg };
+
+      if (logoDataUrl) {
+        try {
+          coverSlide.addImage({
+            data: logoDataUrl,
+            x: 1.0,
+            y: 0.8,
+            w: 2.2,
+            h: 1.0,
+            sizing: { type: 'contain', w: 2.2, h: 1.0 },
+          });
+        } catch (err) {
+          console.warn('Gagal menyematkan logo cover PPTX:', err);
+        }
+      }
+
       coverSlide.addText(presentation.title, {
         x: 1.0,
-        y: 2.0,
+        y: logoDataUrl ? 2.1 : 2.0,
         w: 11.3,
         fontSize: 32,
         bold: true,
@@ -101,7 +149,7 @@ export default function AiPresentationMakerPage() {
       });
       coverSlide.addText(`Disusun dengan AI Presentation Builder • KompresKilat`, {
         x: 1.0,
-        y: 3.8,
+        y: logoDataUrl ? 3.9 : 3.8,
         w: 11.3,
         fontSize: 14,
         color: pal.accent,
@@ -112,6 +160,22 @@ export default function AiPresentationMakerPage() {
       presentation.slides.forEach((s) => {
         const slide = pres.addSlide();
         slide.background = { color: pal.bg };
+
+        // Sematkan logo di sudut kanan atas tiap slide konten
+        if (logoDataUrl) {
+          try {
+            slide.addImage({
+              data: logoDataUrl,
+              x: 10.5,
+              y: 0.45,
+              w: 1.8,
+              h: 0.75,
+              sizing: { type: 'contain', w: 1.8, h: 0.75 },
+            });
+          } catch (err) {
+            console.warn('Gagal menyematkan logo slide PPTX:', err);
+          }
+        }
 
         // Nomor & Judul Slide
         slide.addText(`SLIDE ${s.slideNumber}`, {
@@ -291,6 +355,56 @@ export default function AiPresentationMakerPage() {
               </div>
             </div>
 
+            {/* Fitur Unggah Logo / Foto Brand */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Sisipkan Logo Perusahaan / Lembaga / Foto (Opsional):
+              </label>
+              {!logoDataUrl ? (
+                <label className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/40 rounded-xl p-3.5 flex flex-col items-center justify-center cursor-pointer transition text-center group bg-slate-50/50">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <div className="flex items-center gap-2 text-slate-600 group-hover:text-indigo-600 transition">
+                    <span className="text-xl">🏢</span>
+                    <span className="text-xs font-bold">Pilih Logo atau Foto Materi Slide</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Format PNG, JPG, WebP, SVG (Maks. 5MB) • Otomatis disematkan di Cover &amp; Header Slide PPTX
+                  </p>
+                </label>
+              ) : (
+                <div className="flex items-center justify-between p-2.5 bg-indigo-50/80 border border-indigo-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logoDataUrl}
+                      alt="Pratinjau Logo"
+                      className="w-12 h-10 object-contain rounded-lg border border-indigo-200 bg-white p-1 shadow-xs"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 truncate max-w-[180px] sm:max-w-xs">
+                        {logoFileName || 'Logo Dokumen Tersemat'}
+                      </p>
+                      <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                        ✓ Logo Siap Disematkan ke Tiap Slide (.pptx)
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 rounded-lg transition cursor-pointer"
+                  >
+                    Ganti / Hapus
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={isLoading || !topic.trim()}
@@ -347,14 +461,31 @@ export default function AiPresentationMakerPage() {
                   'bg-white text-slate-900 border-slate-300'
                 }`}>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 uppercase tracking-widest">
-                      Slide {currentSlideIndex + 1} dari {presentation.slides.length}
-                    </span>
-                    {presentation.slides[currentSlideIndex].keyHighlight && (
-                      <span className="text-[11px] font-bold text-amber-400">
-                        ⚡ {presentation.slides[currentSlideIndex].keyHighlight}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 uppercase tracking-widest">
+                        Slide {currentSlideIndex + 1} dari {presentation.slides.length}
                       </span>
-                    )}
+                      {logoDataUrl && (
+                        <span className="text-[10px] bg-indigo-500/25 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-full font-semibold hidden sm:inline-flex items-center gap-1">
+                          🏢 Logo Tersemat
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {logoDataUrl && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={logoDataUrl}
+                          alt="Logo Brand"
+                          className="h-7 max-w-[110px] object-contain bg-white/90 p-1 rounded-md border border-white/30 shadow-xs"
+                        />
+                      )}
+                      {presentation.slides[currentSlideIndex].keyHighlight && (
+                        <span className="text-[11px] font-bold text-amber-400">
+                          ⚡ {presentation.slides[currentSlideIndex].keyHighlight}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Judul Slide (Editable) */}
