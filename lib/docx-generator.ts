@@ -1,7 +1,9 @@
 import JSZip from 'jszip';
 
 function escapeXml(unsafe: string): string {
-  return unsafe
+  // Bersihkan karakter kontrol biner yang tidak valid dalam XML 1.0 agar file Word tidak corrupt
+  const clean = unsafe.replace(/[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]/g, '');
+  return clean
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -55,17 +57,43 @@ export async function generateDocxBlob(
         return '<w:p/>';
       }
 
+      if (trimmed.startsWith('===') || trimmed.startsWith('---') || /^\[\s*Halaman\s+\d+\s*\]/i.test(trimmed)) {
+        return `
+          <w:p>
+            <w:pPr>
+              <w:spacing w:before="280" w:after="140"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:b/>
+                <w:color w:val="4F46E5"/>
+                <w:sz w:val="26"/>
+                <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+              </w:rPr>
+              <w:t xml:space="preserve">${escapeXml(trimmed)}</w:t>
+            </w:r>
+          </w:p>
+        `;
+      }
+
       const isHeading = trimmed.startsWith('# ') || trimmed.startsWith('## ') || trimmed.startsWith('### ');
-      const cleanText = trimmed.replace(/^#+\s*/, '');
+      const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ');
+      let cleanText = trimmed;
+      if (isHeading) {
+        cleanText = trimmed.replace(/^#+\s*/, '');
+      } else if (isBullet) {
+        cleanText = trimmed.replace(/^[-•*]\s*/, '• ');
+      }
 
       return `
         <w:p>
           <w:pPr>
-            ${isHeading ? '<w:pStyle w:val="Heading1"/><w:b/>' : ''}
+            ${isHeading ? '<w:pStyle w:val="Heading1"/><w:spacing w:before="200" w:after="80"/>' : '<w:spacing w:after="100" w:line="276" w:lineRule="auto"/>'}
+            ${isBullet ? '<w:ind w:left="420" w:hanging="240"/>' : ''}
           </w:pPr>
           <w:r>
             <w:rPr>
-              ${isHeading ? '<w:b/><w:sz w:val="32"/>' : '<w:sz w:val="24"/>'}
+              ${isHeading ? '<w:b/><w:sz w:val="30"/><w:color w:val="1E1B4B"/>' : '<w:sz w:val="23"/><w:color w:val="1F2937"/>'}
               <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
             </w:rPr>
             <w:t xml:space="preserve">${escapeXml(cleanText)}</w:t>
