@@ -99,7 +99,7 @@ export default function RootLayout({
         </LanguageProvider>
 
         {/* Universal Full-Website Translation Engine */}
-        <div id="google_translate_element" style={{ display: 'none' }} />
+        <div id="google_translate_element" className="fixed -top-96 -left-96 opacity-0 pointer-events-none" />
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
             function googleTranslateElementInit() {

@@ -36,12 +36,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const hostname = window.location.hostname;
-      const cookieVal = targetLang === 'en' ? '/id/en' : '/id/id';
-
-      // Set cookie for both domain & default path so Google Translate activates
-      document.cookie = `googtrans=${cookieVal}; path=/;`;
-      if (hostname && hostname !== 'localhost') {
-        document.cookie = `googtrans=${cookieVal}; path=/; domain=.${hostname};`;
+      if (targetLang === 'en') {
+        document.cookie = 'googtrans=/id/en; path=/;';
+        if (hostname && hostname !== 'localhost') {
+          document.cookie = `googtrans=/id/en; path=/; domain=.${hostname};`;
+        }
+      } else {
+        document.cookie = 'googtrans=/id/id; path=/;';
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        if (hostname && hostname !== 'localhost') {
+          document.cookie = `googtrans=/id/id; path=/; domain=.${hostname};`;
+          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${hostname};`;
+        }
       }
 
       // If the translate combo is present in DOM, trigger change immediately
@@ -64,6 +70,19 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
     syncGoogleTranslate(newLang);
+
+    // Ensure DOM is translated; if widget is not active, reload with cookie
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        const select = document.querySelector<HTMLSelectElement>('.goog-te-combo');
+        if (select) {
+          select.value = newLang;
+          select.dispatchEvent(new Event('change'));
+        } else {
+          window.location.reload();
+        }
+      }, 350);
+    }
   };
 
   const toggleLang = () => {
