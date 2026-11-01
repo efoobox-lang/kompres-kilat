@@ -81,6 +81,45 @@ body {
   border-color: #1e293b !important;
 }
 
+/* Ensure all gradient cards in dark mode inherit uniform dark background */
+.dark .to-white,
+.dark [class*="to-white"] {
+  --tw-gradient-to: #0f172a !important;
+}
+
+.dark [class*="bg-gradient-to-br"],
+.dark [class*="bg-gradient-to-r"] {
+  background-image: none !important;
+  background-color: #0f172a !important;
+}
+
+.dark .border-indigo-200,
+.dark .border-purple-200,
+.dark .border-emerald-200,
+.dark .border-amber-200 {
+  border-color: #1e293b !important;
+}
+
+.dark .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  color: #a5b4fc !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.15) !important;
+  color: #d8b4fe !important;
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fde68a !important;
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #a7f3d0 !important;
+}
+
 .dark .shadow-sm {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
 }

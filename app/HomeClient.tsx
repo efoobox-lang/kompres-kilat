@@ -23,14 +23,14 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
 
       {/* Kotak Pilihan Tools Utama */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 text-left mb-10 sm:mb-16">
-        <Link href="/ai-image-tools" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+        <Link href="/ai-image-tools" className="bg-gradient-to-br from-indigo-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-indigo-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">✨</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_ai_image_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_ai_image_desc')}</p>
         </Link>
 
-        <Link href="/ai-presentation-maker" className="bg-gradient-to-br from-purple-50/50 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+        <Link href="/ai-presentation-maker" className="bg-gradient-to-br from-purple-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-purple-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-purple-600 mb-1">{t('tool_ai_slide_title')}</h2>
@@ -140,7 +140,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 5. AI Resume & ATS Reviewer */}
-        <Link href="/tools/ats-resume" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+        <Link href="/tools/ats-resume" className="bg-gradient-to-br from-indigo-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-indigo-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <FileCheck className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -150,7 +150,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 6. AI Document Summarizer */}
-        <Link href="/tools/document-summarizer" className="bg-gradient-to-br from-purple-50/50 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+        <Link href="/tools/document-summarizer" className="bg-gradient-to-br from-purple-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-purple-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="mb-2 sm:mb-3 text-purple-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <BookOpen className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -169,7 +169,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 8. Sensor & Blur KTP / Dokumen */}
-        <Link href="/tools/censor-ktp" className="bg-gradient-to-br from-emerald-50/40 to-white p-4 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group">
+        <Link href="/tools/censor-ktp" className="bg-gradient-to-br from-emerald-50/40 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-emerald-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-emerald-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <EyeOff className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -187,7 +187,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 10. Kalkulator Bisnis & UMKM */}
-        <Link href="/tools/kalkulator-umkm" className="bg-gradient-to-br from-amber-50/50 to-white p-4 sm:p-6 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group">
+        <Link href="/tools/kalkulator-umkm" className="bg-gradient-to-br from-amber-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-amber-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-amber-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Calculator className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -196,7 +196,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 11. Smart Scan & Fotocopy Dokumen */}
-        <Link href="/tools/scan-dokumen" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/scan-dokumen" className="bg-gradient-to-br from-indigo-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-indigo-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Scan className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -205,7 +205,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 12. Pro Photo & Document Editor */}
-        <Link href="/tools/pro-editor" className="bg-gradient-to-br from-purple-50/40 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group">
+        <Link href="/tools/pro-editor" className="bg-gradient-to-br from-purple-50/40 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-purple-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-purple-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Sliders className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -214,7 +214,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 13. Meme & Image Caption Generator */}
-        <Link href="/tools/meme-generator" className="bg-gradient-to-br from-amber-50/50 to-white p-4 sm:p-6 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group relative">
+        <Link href="/tools/meme-generator" className="bg-gradient-to-br from-amber-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-amber-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">POPULER</span>
           <div className="mb-2 sm:mb-3 text-amber-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Smile className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -224,7 +224,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 14. Tanda Tangan Digital Transparan */}
-        <Link href="/tools/tanda-tangan" className="bg-gradient-to-br from-emerald-50/50 to-white p-4 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group relative">
+        <Link href="/tools/tanda-tangan" className="bg-gradient-to-br from-emerald-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-emerald-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">E-SIGN</span>
           <div className="mb-2 sm:mb-3 text-emerald-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <PenTool className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -234,7 +234,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 15. Direct PDF Text Editor */}
-        <Link href="/tools/pdf-editor" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+        <Link href="/tools/pdf-editor" className="bg-gradient-to-br from-indigo-50/50 to-white dark:from-slate-900 dark:to-slate-900 p-4 sm:p-6 rounded-2xl border border-indigo-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BARU</span>
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Edit3 className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
