@@ -5,7 +5,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
-import { BookOpen, Sparkles, CheckCircle2, Clock, Copy, Check, Download, AlertTriangle, FileText } from 'lucide-react';
+import { extractTextFromPdf } from '@/lib/pdf-text-extractor';
+import { BookOpen, Sparkles, CheckCircle2, Clock, Copy, Check, Download, AlertTriangle, FileText, RefreshCw } from 'lucide-react';
 
 interface SummaryResult {
   title: string;
@@ -19,6 +20,7 @@ export default function DocumentSummarizerPage() {
   const [docText, setDocText] = useState<string>('');
   const [fileName, setFileName] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isExtractingPdf, setIsExtractingPdf] = useState<boolean>(false);
   const [result, setResult] = useState<SummaryResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
@@ -35,25 +37,29 @@ export default function DocumentSummarizerPage() {
 
     setFileName(file.name);
     setErrorMessage('');
+    setIsExtractingPdf(true);
 
     try {
-      const buffer = await file.arrayBuffer();
-      const decoder = new TextDecoder('latin1');
-      const text = decoder.decode(buffer);
+      const extraction = await extractTextFromPdf(file, {
+        enableOcrFallback: true,
+        maxPages: 15,
+      });
 
-      const matches = text.match(/[A-Za-z0-9,.;:\-_/()%$#@!&+=|\s]{4,}/g);
-      if (matches && matches.length > 0) {
-        const cleanContent = matches
-          .filter((s) => !s.startsWith('/') && !s.includes('obj') && !s.includes('endobj'))
-          .join(' ')
-          .substring(0, 7800);
-
-        setDocText(cleanContent);
-      } else {
-        setDocText(`[Dokumen PDF Terunggah: ${file.name}]\nLaporan Analisis dan Rangkuman Materi.`);
+      if (!extraction.success) {
+        setErrorMessage(extraction.error || 'Gagal membaca berkas PDF.');
+        return;
       }
+
+      if (!extraction.text.trim()) {
+        setErrorMessage('Tidak ada teks yang dapat dibaca dari PDF.');
+        return;
+      }
+
+      setDocText(extraction.text.substring(0, 10000));
     } catch {
       alert('Gagal mengekstrak teks PDF. Silakan tempel teks secara manual.');
+    } finally {
+      setIsExtractingPdf(false);
     }
   };
 
@@ -153,9 +159,18 @@ export default function DocumentSummarizerPage() {
                 <div className="flex items-center gap-3 text-xs">
                   <span className="text-slate-400 font-mono text-[11px]">{wordCount} kata</span>
                   <label className="text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>{fileName ? `Ganti PDF (${fileName})` : 'Unggah PDF'}</span>
-                    <input type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" />
+                    {isExtractingPdf ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                        <span>Mengekstrak PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>{fileName ? `Ganti PDF (${fileName.length > 18 ? fileName.substring(0, 16) + '...' : fileName})` : 'Unggah PDF'}</span>
+                      </>
+                    )}
+                    <input type="file" accept="application/pdf" onChange={handlePdfUpload} disabled={isExtractingPdf} className="hidden" />
                   </label>
                 </div>
               </div>
