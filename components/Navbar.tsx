@@ -94,7 +94,7 @@ export default function Navbar() {
               pathname === '/' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            🏠 Beranda
+            🏠 {t('nav_home')}
           </Link>
           <Link
             href="/tools/image"
@@ -103,7 +103,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/image') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            🖼️ Kompres Gambar (KTP/CPNS)
+            🖼️ {t('tool_image_title')}
           </Link>
           <Link
             href="/ai-image-tools"
@@ -112,7 +112,7 @@ export default function Navbar() {
               pathname.startsWith('/ai-image-tools') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            ✨ AI Photo Enhancer &amp; Upscale
+            ✨ {t('tool_ai_image_title')}
           </Link>
           <Link
             href="/ai-presentation-maker"
@@ -121,7 +121,7 @@ export default function Navbar() {
               pathname.startsWith('/ai-presentation-maker') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            📊 AI Presentation (PPTX Generator)
+            📊 {t('tool_ai_slide_title')}
           </Link>
           <Link
             href="/tools/remove-bg"
@@ -130,7 +130,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/remove-bg') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            🎨 Ganti Background (Merah/Biru)
+            🎨 {t('tool_bg_title')}
           </Link>
           <Link
             href="/tools/object-eraser"
@@ -139,7 +139,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/object-eraser') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            🪄 Hapus Objek / Watermark
+            🪄 {t('tool_eraser_title')}
           </Link>
           <Link
             href="/tools/pdf"
@@ -148,7 +148,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/pdf') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            📄 Kompres Dokumen PDF
+            📄 {t('tool_pdf_title')}
           </Link>
           <Link
             href="/tools/tracking"
@@ -157,7 +157,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/tracking') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            📦 Cek Resi Ekspedisi
+            📦 {t('tool_track_title')}
           </Link>
           <Link
             href="/tools/zip"
@@ -166,7 +166,7 @@ export default function Navbar() {
               pathname.startsWith('/tools/zip') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            🗜️ Arsip ZIP Multi-File
+            🗜️ {t('tool_zip_title')}
           </Link>
           <Link
             href="/blog"
@@ -175,7 +175,7 @@ export default function Navbar() {
               pathname.startsWith('/blog') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            📚 Semua Panduan &amp; Blog
+            📚 {t('footer_link_all_blogs')}
           </Link>
         </div>
       )}

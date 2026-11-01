@@ -233,7 +233,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
                 <span>{post.date}</span>
                 <span className="text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform inline-block">
-                  Baca Selengkapnya →
+                  {t('blog_read_more')}
                 </span>
               </div>
             </Link>

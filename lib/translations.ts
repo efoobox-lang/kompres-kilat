@@ -70,17 +70,29 @@ export const translations = {
     blog_heading_title: 'Panduan & Tips Terpopuler',
     blog_see_all: 'Lihat Semua →',
 
-    // Footer
+    // Footer & Common Links
     footer_desc: 'Platform online gratis untuk kompresi berkas gambar, optimasi dokumen PDF, arsip ZIP, dan utilitas AI dengan prioritas privasi data pengguna.',
     footer_privacy_note: 'File diproses langsung di memori browser Anda tanpa diunggah ke server database.',
     footer_popular_tools: 'Alat Populer',
+    footer_all_features: 'Semua Fitur',
     footer_guides: 'Panduan & Edukasi',
     footer_policies: 'Kebijakan & Informasi',
     footer_rights: 'Hak Cipta Dilindungi.',
+    footer_disclaimer: 'Disclaimer: KompresKilat adalah portal utilitas independen dan tidak berafiliasi resmi dengan ekspedisi manapun.',
+    footer_link_all_blogs: 'Semua Artikel Blog',
+    footer_link_guide_ktp: 'Panduan Foto KTP CPNS',
+    footer_link_guide_spx: 'Cek Resi Shopee Express',
+    footer_link_guide_resi: 'Arti Status Resi Logistik',
+    footer_link_guide_pdf: 'Kecilkan PDF Tugas Skripsi',
+    footer_policy_privacy: 'Kebijakan Privasi (Privacy Policy)',
+    footer_policy_terms: 'Syarat & Ketentuan (Terms)',
+    footer_policy_about: 'Tentang Kami (About Us)',
+    footer_policy_contact: 'Hubungi Kami (Contact Us)',
 
     // Common
     badge_new_ai: 'BARU AI',
     lang_switch: 'Bahasa',
+    blog_read_more: 'Baca Selengkapnya →',
   },
   en: {
     // Nav
@@ -151,17 +163,29 @@ export const translations = {
     blog_heading_title: 'Popular Guides & Resources',
     blog_see_all: 'View All →',
 
-    // Footer
+    // Footer & Common Links
     footer_desc: 'Free privacy-first online suite for image compression, PDF optimization, ZIP archives, and AI productivity tools.',
     footer_privacy_note: 'Files are processed directly in your browser memory and never uploaded to remote databases.',
     footer_popular_tools: 'Popular Tools',
+    footer_all_features: 'All Features',
     footer_guides: 'Guides & Tutorials',
     footer_policies: 'Policies & Legal',
     footer_rights: 'All Rights Reserved.',
+    footer_disclaimer: 'Disclaimer: KompresKilat is an independent utility portal and is not officially affiliated with any shipping courier.',
+    footer_link_all_blogs: 'All Blog Articles',
+    footer_link_guide_ktp: 'ID Photo CPNS Guide',
+    footer_link_guide_spx: 'Shopee Express Tracking Guide',
+    footer_link_guide_resi: 'Courier Tracking Status Guide',
+    footer_link_guide_pdf: 'Compress Thesis PDF Guide',
+    footer_policy_privacy: 'Privacy Policy',
+    footer_policy_terms: 'Terms of Service',
+    footer_policy_about: 'About Us',
+    footer_policy_contact: 'Contact Us',
 
     // Common
     badge_new_ai: 'NEW AI',
     lang_switch: 'Language',
+    blog_read_more: 'Read More →',
   },
 };
 

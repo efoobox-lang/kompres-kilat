@@ -33,7 +33,7 @@ export default function Footer() {
               {t('footer_popular_tools')}
             </h4>
             <span className="text-[10px] text-indigo-600 bg-indigo-50 font-semibold px-2 py-0.5 rounded-full border border-indigo-100">
-              Semua Fitur
+              {t('footer_all_features')}
             </span>
           </div>
 
@@ -41,77 +41,77 @@ export default function Footer() {
             {/* Sub-kolom A: Kompresi, Gambar & Dokumen */}
             <ul className="space-y-1.5">
               <li>
-                <Link href="/tools/image" className="hover:text-indigo-600 transition truncate block">Kompres Gambar KTP / CPNS</Link>
+                <Link href="/tools/image" className="hover:text-indigo-600 transition truncate block">{t('tool_image_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/pdf" className="hover:text-indigo-600 transition truncate block">Kompres Dokumen PDF</Link>
+                <Link href="/tools/pdf" className="hover:text-indigo-600 transition truncate block">{t('tool_pdf_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/remove-bg" className="hover:text-indigo-600 transition truncate block">Ganti Background Pas Foto</Link>
+                <Link href="/tools/remove-bg" className="hover:text-indigo-600 transition truncate block">{t('tool_bg_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/object-eraser" className="hover:text-indigo-600 transition truncate block">Hapus Objek &amp; Watermark</Link>
+                <Link href="/tools/object-eraser" className="hover:text-indigo-600 transition truncate block">{t('tool_eraser_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/resize-pasfoto" className="hover:text-indigo-600 transition truncate block">Resize Pas Foto &amp; TTD</Link>
+                <Link href="/tools/resize-pasfoto" className="hover:text-indigo-600 transition truncate block">{t('tool_resize_pasfoto_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/watermark" className="hover:text-indigo-600 transition truncate block">Watermark Dokumen &amp; KTP</Link>
+                <Link href="/tools/watermark" className="hover:text-indigo-600 transition truncate block">{t('tool_watermark_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/censor-ktp" className="hover:text-emerald-600 transition font-medium text-emerald-700 truncate block">🔒 Sensor &amp; Blur KTP</Link>
+                <Link href="/tools/censor-ktp" className="hover:text-emerald-600 transition font-medium text-emerald-700 truncate block">🔒 {t('tool_censor_ktp_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">🔐 Kunci &amp; Buka Password PDF</Link>
+                <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">🔐 {t('tool_pdf_password_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/pdf-to-word" className="hover:text-indigo-600 transition truncate block">Konverter PDF ke Word</Link>
+                <Link href="/tools/pdf-to-word" className="hover:text-indigo-600 transition truncate block">{t('tool_pdf_word_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/pdf-to-excel" className="hover:text-indigo-600 transition truncate block">Konversi PDF ke Excel (.xlsx)</Link>
+                <Link href="/tools/pdf-to-excel" className="hover:text-indigo-600 transition truncate block">{t('tool_pdf_excel_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/zip" className="hover:text-indigo-600 transition truncate block">Pembuat Arsip ZIP</Link>
+                <Link href="/tools/zip" className="hover:text-indigo-600 transition truncate block">{t('tool_zip_title')}</Link>
               </li>
             </ul>
 
             {/* Sub-kolom B: AI Cerdas, Konversi & Utilitas */}
             <ul className="space-y-1.5">
               <li>
-                <Link href="/ai-image-tools" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">✨ AI Photo Enhancer</Link>
+                <Link href="/ai-image-tools" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">✨ {t('tool_ai_image_title')}</Link>
               </li>
               <li>
-                <Link href="/ai-presentation-maker" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">📊 AI Presentation Maker</Link>
+                <Link href="/ai-presentation-maker" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">📊 {t('tool_ai_slide_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/ats-resume" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">✨ AI Resume &amp; ATS Reviewer</Link>
+                <Link href="/tools/ats-resume" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">✨ {t('tool_ats_resume_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/document-summarizer" className="hover:text-purple-600 transition font-medium text-purple-700 truncate block">📚 AI Document Summarizer</Link>
+                <Link href="/tools/document-summarizer" className="hover:text-purple-600 transition font-medium text-purple-700 truncate block">📚 {t('tool_summarizer_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/kalkulator-umkm" className="hover:text-amber-600 transition font-medium text-amber-700 truncate block">🧮 Kalkulator Bisnis &amp; UMKM</Link>
+                <Link href="/tools/kalkulator-umkm" className="hover:text-amber-600 transition font-medium text-amber-700 truncate block">🧮 {t('tool_kalkulator_umkm_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/file-utility" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">🔄 Konverter HEIC &amp; WebP</Link>
+                <Link href="/tools/file-utility" className="hover:text-indigo-600 transition font-medium text-indigo-700 truncate block">🔄 {t('tool_file_utility_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/poster-generator" className="hover:text-indigo-600 transition truncate block">AI Poster &amp; Brosur Studio</Link>
+                <Link href="/tools/poster-generator" className="hover:text-indigo-600 transition truncate block">{t('tool_poster_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/qr-generator" className="hover:text-indigo-600 transition truncate block">QR Code Generator HD</Link>
+                <Link href="/tools/qr-generator" className="hover:text-indigo-600 transition truncate block">{t('tool_qr_generator_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/batch-compress" className="hover:text-indigo-600 transition truncate block">Batch Kompres &amp; ZIP</Link>
+                <Link href="/tools/batch-compress" className="hover:text-indigo-600 transition truncate block">{t('tool_batch_compress_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/tracking" className="hover:text-indigo-600 transition truncate block">Lacak Resi (SPX, J&amp;T, JNE)</Link>
+                <Link href="/tools/tracking" className="hover:text-indigo-600 transition truncate block">{t('tool_track_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/excel-to-csv" className="hover:text-indigo-600 transition truncate block">Konverter Excel ke CSV</Link>
+                <Link href="/tools/excel-to-csv" className="hover:text-indigo-600 transition truncate block">{t('tool_excel_csv_title')}</Link>
               </li>
               <li>
-                <Link href="/tools/csv-to-excel" className="hover:text-indigo-600 transition truncate block">Konverter CSV ke Excel</Link>
+                <Link href="/tools/csv-to-excel" className="hover:text-indigo-600 transition truncate block">{t('tool_csv_excel_title')}</Link>
               </li>
             </ul>
           </div>
@@ -122,19 +122,19 @@ export default function Footer() {
           <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">{t('footer_guides')}</h4>
           <ul className="space-y-1.5">
             <li>
-              <Link href="/blog" className="hover:text-indigo-600 transition block">Semua Artikel Blog</Link>
+              <Link href="/blog" className="hover:text-indigo-600 transition block">{t('footer_link_all_blogs')}</Link>
             </li>
             <li>
-              <Link href="/blog/cara-kompres-foto-ktp-kurang-dari-500kb" className="hover:text-indigo-600 transition block">Panduan Foto KTP CPNS</Link>
+              <Link href="/blog/cara-kompres-foto-ktp-kurang-dari-500kb" className="hover:text-indigo-600 transition block">{t('footer_link_guide_ktp')}</Link>
             </li>
             <li>
-              <Link href="/blog/cara-lacak-paket-shopee-express-spx-akurat" className="hover:text-indigo-600 transition block">Cek Resi Shopee Express</Link>
+              <Link href="/blog/cara-lacak-paket-shopee-express-spx-akurat" className="hover:text-indigo-600 transition block">{t('footer_link_guide_spx')}</Link>
             </li>
             <li>
-              <Link href="/blog/arti-status-resi-jne-jnt-sicepat-lengkap" className="hover:text-indigo-600 transition block">Arti Status Resi Logistik</Link>
+              <Link href="/blog/arti-status-resi-jne-jnt-sicepat-lengkap" className="hover:text-indigo-600 transition block">{t('footer_link_guide_resi')}</Link>
             </li>
             <li>
-              <Link href="/blog/cara-memperkecil-ukuran-pdf-tugas-kuliah" className="hover:text-indigo-600 transition block">Kecilkan PDF Tugas Skripsi</Link>
+              <Link href="/blog/cara-memperkecil-ukuran-pdf-tugas-kuliah" className="hover:text-indigo-600 transition block">{t('footer_link_guide_pdf')}</Link>
             </li>
           </ul>
         </div>
@@ -144,16 +144,16 @@ export default function Footer() {
           <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">{t('footer_policies')}</h4>
           <ul className="space-y-1.5">
             <li>
-              <Link href="/privacy-policy" className="hover:text-indigo-600 transition block">Kebijakan Privasi (Privacy Policy)</Link>
+              <Link href="/privacy-policy" className="hover:text-indigo-600 transition block">{t('footer_policy_privacy')}</Link>
             </li>
             <li>
-              <Link href="/terms" className="hover:text-indigo-600 transition block">Syarat &amp; Ketentuan (Terms)</Link>
+              <Link href="/terms" className="hover:text-indigo-600 transition block">{t('footer_policy_terms')}</Link>
             </li>
             <li>
-              <Link href="/about" className="hover:text-indigo-600 transition block">Tentang Kami (About Us)</Link>
+              <Link href="/about" className="hover:text-indigo-600 transition block">{t('footer_policy_about')}</Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-indigo-600 transition block">Hubungi Kami (Contact Us)</Link>
+              <Link href="/contact" className="hover:text-indigo-600 transition block">{t('footer_policy_contact')}</Link>
             </li>
           </ul>
         </div>
@@ -162,7 +162,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-3">
         <p>&copy; 2026 KompresKilat. {t('footer_rights')}</p>
         <p className="text-center sm:text-right text-[10px]">
-          Disclaimer: KompresKilat adalah portal utilitas independen dan tidak berafiliasi resmi dengan ekspedisi manapun.
+          {t('footer_disclaimer')}
         </p>
       </div>
     </footer>
