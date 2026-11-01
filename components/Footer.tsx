@@ -93,6 +93,9 @@ export default function Footer() {
             <li>
               <Link href="/tools/censor-ktp" className="hover:text-emerald-600 transition font-medium text-emerald-700">🔒 Sensor &amp; Blur KTP</Link>
             </li>
+            <li>
+              <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700">🔐 Kunci &amp; Buka Password PDF</Link>
+            </li>
           </ul>
         </div>
 

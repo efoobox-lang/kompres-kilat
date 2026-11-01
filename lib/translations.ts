@@ -60,6 +60,8 @@ export const translations = {
     tool_file_utility_desc: 'Konversi massal foto HEIC Apple & WebP ke JPG/PNG, serta buat QR Code resolusi tinggi siap cetak.',
     tool_censor_ktp_title: 'Sensor & Blur KTP / Dokumen',
     tool_censor_ktp_desc: 'Tutup NIK, tanda tangan, dan alamat rahasia dengan kotak hitam atau blur mozaik 100% aman di browser.',
+    tool_pdf_password_title: 'Kunci & Buka Password PDF',
+    tool_pdf_password_desc: 'Proteksi dokumen PDF dengan enkripsi AES-256 atau hilangkan kata sandi PDF secara instan.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -137,6 +139,8 @@ export const translations = {
     tool_file_utility_desc: 'Batch convert iPhone HEIC & WebP images to JPG/PNG, and generate print-ready HD custom QR codes.',
     tool_censor_ktp_title: 'Censor & Blur ID / Documents',
     tool_censor_ktp_desc: 'Blackout or pixelate National ID (NIK), signatures, and sensitive text locally in your browser memory.',
+    tool_pdf_password_title: 'PDF Password Protect & Unlock',
+    tool_pdf_password_desc: 'Encrypt PDF documents with bank-grade AES-256 or permanently remove PDF passwords in browser.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
