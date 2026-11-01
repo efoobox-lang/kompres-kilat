@@ -3,19 +3,13 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import ThemeToggle from '@/components/ThemeToggle';
 import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator, Scan, Sliders, Smile, PenTool, Edit3 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
 
   return (
-    <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-8 sm:py-16 text-center">
-      {/* Dark Mode Switch Toggle - Posisikan di kanan atas persis sesuai foto garis merah */}
-      <div className="flex justify-end items-center mb-3 sm:mb-4">
-        <ThemeToggle />
-      </div>
-
+    <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16 text-center">
       {/* Hero Header */}
       <span className="inline-block bg-indigo-100 text-indigo-700 text-[11px] sm:text-xs px-3 py-1 rounded-full font-semibold mb-3 sm:mb-4">
         {t('hero_badge')}
