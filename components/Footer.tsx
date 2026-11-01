@@ -81,6 +81,12 @@ export default function Footer() {
             <li>
               <Link href="/tools/batch-compress" className="hover:text-indigo-600 transition">Batch Kompres &amp; ZIP</Link>
             </li>
+            <li>
+              <Link href="/tools/ats-resume" className="hover:text-indigo-600 transition font-medium text-indigo-700">✨ AI Resume &amp; ATS Reviewer</Link>
+            </li>
+            <li>
+              <Link href="/tools/document-summarizer" className="hover:text-purple-600 transition font-medium text-purple-700">📚 AI Document Summarizer</Link>
+            </li>
           </ul>
         </div>
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -137,6 +137,26 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_batch_compress_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_batch_compress_desc')}</p>
+        </Link>
+
+        {/* 5. AI Resume & ATS Reviewer */}
+        <Link href="/tools/ats-resume" className="bg-gradient-to-br from-indigo-50/50 to-white p-5 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+          <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
+          <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <FileCheck className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_ats_resume_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_ats_resume_desc')}</p>
+        </Link>
+
+        {/* 6. AI Document Summarizer */}
+        <Link href="/tools/document-summarizer" className="bg-gradient-to-br from-purple-50/50 to-white p-5 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+          <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
+          <div className="mb-2 sm:mb-3 text-purple-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-purple-600 mb-1">{t('tool_summarizer_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_summarizer_desc')}</p>
         </Link>
       </div>
 

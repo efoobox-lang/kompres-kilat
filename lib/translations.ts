@@ -52,6 +52,10 @@ export const translations = {
     tool_qr_generator_desc: 'Buat barcode QR kustom untuk tautan website, chat WhatsApp, dan WiFi secara instan.',
     tool_batch_compress_title: 'Batch Kompres & ZIP',
     tool_batch_compress_desc: 'Kecilkan banyak foto sekaligus secara massal dan satukan ke dalam satu berkas ZIP.',
+    tool_ats_resume_title: 'AI Resume & ATS Reviewer',
+    tool_ats_resume_desc: 'Cek skor ATS CV, deteksi kata kunci yang hilang, dan optimasi draf resume agar lolos HRD.',
+    tool_summarizer_title: 'AI Document Summarizer',
+    tool_summarizer_desc: 'Rangkum laporan kerja, bab buku, dan dokumen PDF panjang menjadi intisari ringkas dalam 5 detik.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -121,6 +125,10 @@ export const translations = {
     tool_qr_generator_desc: 'Generate custom QR codes for websites, WhatsApp direct messages, and Wi-Fi networks.',
     tool_batch_compress_title: 'Batch Compress & ZIP Archive',
     tool_batch_compress_desc: 'Compress dozens of images and documents in bulk and bundle them into a single ZIP archive.',
+    tool_ats_resume_title: 'AI Resume & ATS Reviewer',
+    tool_ats_resume_desc: 'Analyze your CV for ATS compatibility score, identify missing keywords, and get action-driven bullet points.',
+    tool_summarizer_title: 'AI Document Summarizer',
+    tool_summarizer_desc: 'Summarize lengthy reports, research papers, and PDF documents into concise executive takeaways in seconds.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',
