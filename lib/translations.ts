@@ -62,6 +62,8 @@ export const translations = {
     tool_censor_ktp_desc: 'Tutup NIK, tanda tangan, dan alamat rahasia dengan kotak hitam atau blur mozaik 100% aman di browser.',
     tool_pdf_password_title: 'Kunci & Buka Password PDF',
     tool_pdf_password_desc: 'Proteksi dokumen PDF dengan enkripsi AES-256 atau hilangkan kata sandi PDF secara instan.',
+    tool_kalkulator_umkm_title: 'Kalkulator Bisnis & UMKM',
+    tool_kalkulator_umkm_desc: 'Hitung margin harga jual, simulasi diskon bertingkat (50%+20%), dan estimasi pajak PPh Final 0.5%.',
 
     // Blog section
     blog_heading_badge: 'Artikel & Edukasi',
@@ -141,6 +143,8 @@ export const translations = {
     tool_censor_ktp_desc: 'Blackout or pixelate National ID (NIK), signatures, and sensitive text locally in your browser memory.',
     tool_pdf_password_title: 'PDF Password Protect & Unlock',
     tool_pdf_password_desc: 'Encrypt PDF documents with bank-grade AES-256 or permanently remove PDF passwords in browser.',
+    tool_kalkulator_umkm_title: 'Business & Profit Calculator',
+    tool_kalkulator_umkm_desc: 'Calculate profit margins, tiered discounts (50%+20%), and Indonesian 0.5% SME final tax.',
 
     // Blog section
     blog_heading_badge: 'Articles & Tutorials',

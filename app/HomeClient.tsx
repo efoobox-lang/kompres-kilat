@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
-import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock } from 'lucide-react';
+import { Camera, ShieldCheck, QrCode, Archive, FileCheck, BookOpen, Layers, EyeOff, Lock, Calculator } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
@@ -184,6 +184,15 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_password_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_password_desc')}</p>
+        </Link>
+
+        {/* 10. Kalkulator Bisnis & UMKM */}
+        <Link href="/tools/kalkulator-umkm" className="bg-gradient-to-br from-amber-50/50 to-white p-5 sm:p-6 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group">
+          <div className="mb-2 sm:mb-3 text-amber-600 group-hover:scale-110 transition-transform duration-200 w-fit">
+            <Calculator className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
+          </div>
+          <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-amber-600 mb-1">{t('tool_kalkulator_umkm_title')}</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">{t('tool_kalkulator_umkm_desc')}</p>
         </Link>
       </div>
 

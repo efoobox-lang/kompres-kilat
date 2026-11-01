@@ -96,6 +96,9 @@ export default function Footer() {
             <li>
               <Link href="/tools/pdf-password" className="hover:text-indigo-600 transition font-medium text-indigo-700">🔐 Kunci &amp; Buka Password PDF</Link>
             </li>
+            <li>
+              <Link href="/tools/kalkulator-umkm" className="hover:text-amber-600 transition font-medium text-amber-700">🧮 Kalkulator Bisnis &amp; UMKM</Link>
+            </li>
           </ul>
         </div>
 
