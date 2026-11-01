@@ -2,8 +2,6 @@
 
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import LanguageToggle from '@/components/LanguageToggle';
-import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -22,15 +20,6 @@ export default function Footer() {
           <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-sm mx-auto sm:mx-0">
             {t('footer_privacy_note')}
           </p>
-          <div className="flex items-center justify-center sm:justify-start gap-2.5 pt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span>{t('lang_switch')}:</span>
-              <LanguageToggle />
-            </div>
-            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-700">
-              <ThemeToggle />
-            </div>
-          </div>
         </div>
 
         {/* Kolom 2: Alat Populer (5 Kolom Grid Desktop - 2 Sub-Kolom Sejajar di Semua Layar Termasuk HP) */}
