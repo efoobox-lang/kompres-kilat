@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -23,12 +23,10 @@ import {
   Copy,
   Check,
   Sparkles,
-  Maximize2,
   Camera,
   ShieldCheck,
   Archive,
-  ArrowRight,
-  ExternalLink
+  ArrowRight
 } from 'lucide-react';
 
 interface ConvertedFileItem {
@@ -65,7 +63,7 @@ export default function FileUtilityPage() {
   const [bgColor, setBgColor] = useState('#ffffff');
   const [qrResolution, setQrResolution] = useState<number>(1000);
   const [errorLevel, setErrorLevel] = useState<'L' | 'M' | 'Q' | 'H'>('H');
-  const [qrMargin, setQrMargin] = useState<number>(2);
+  const qrMargin = 2;
   const [copiedQr, setCopiedQr] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -78,23 +76,24 @@ export default function FileUtilityPage() {
   const [waPhone, setWaPhone] = useState('6281234567890');
   const [waMessage, setWaMessage] = useState('Halo admin KompresKilat!');
 
-  // Update QR content on helper change
-  useEffect(() => {
+  // Komputasi konten QR secara murni (pure) tanpa cascading render effect
+  const effectiveQrContent = useMemo(() => {
     if (qrType === 'wifi') {
-      const formatted = `WIFI:T:${wifiType};S:${wifiSsid};P:${wifiPass};;`;
-      setQrContent(formatted);
-    } else if (qrType === 'whatsapp') {
+      return `WIFI:T:${wifiType};S:${wifiSsid};P:${wifiPass};;`;
+    }
+    if (qrType === 'whatsapp') {
       const cleanPhone = waPhone.replace(/[^0-9]/g, '');
       const encodedMsg = encodeURIComponent(waMessage);
-      setQrContent(`https://wa.me/${cleanPhone}?text=${encodedMsg}`);
+      return `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
     }
-  }, [qrType, wifiSsid, wifiPass, wifiType, waPhone, waMessage]);
+    return qrContent;
+  }, [qrType, qrContent, wifiType, wifiSsid, wifiPass, waPhone, waMessage]);
 
   // Render QR Code to Canvas with High DPI
   const renderQrCode = useCallback(async () => {
-    if (!qrCanvasRef.current || !qrContent.trim()) return;
+    if (!qrCanvasRef.current || !effectiveQrContent.trim()) return;
     try {
-      await QRCode.toCanvas(qrCanvasRef.current, qrContent, {
+      await QRCode.toCanvas(qrCanvasRef.current, effectiveQrContent, {
         width: 320,
         margin: qrMargin,
         color: {
@@ -106,7 +105,7 @@ export default function FileUtilityPage() {
     } catch (err) {
       console.error('Gagal merender QR Code canvas:', err);
     }
-  }, [qrContent, fgColor, bgColor, qrMargin, errorLevel]);
+  }, [effectiveQrContent, fgColor, bgColor, qrMargin, errorLevel]);
 
   useEffect(() => {
     renderQrCode();
@@ -117,7 +116,7 @@ export default function FileUtilityPage() {
     try {
       // Buat canvas off-screen dengan resolusi HD sesuai qrResolution (300 - 2400px)
       const offCanvas = document.createElement('canvas');
-      await QRCode.toCanvas(offCanvas, qrContent, {
+      await QRCode.toCanvas(offCanvas, effectiveQrContent, {
         width: qrResolution,
         margin: qrMargin,
         color: {
@@ -130,7 +129,7 @@ export default function FileUtilityPage() {
       const dataUrl = offCanvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `QRCode_KompresKilat_${qrResolution}px_${Date.now()}.png`;
+      a.download = `QRCode_KompresKilat_${qrResolution}px.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -143,7 +142,7 @@ export default function FileUtilityPage() {
   const copyQrToClipboard = async () => {
     try {
       const offCanvas = document.createElement('canvas');
-      await QRCode.toCanvas(offCanvas, qrContent, {
+      await QRCode.toCanvas(offCanvas, effectiveQrContent, {
         width: 800,
         margin: qrMargin,
         color: { dark: fgColor, light: bgColor },
@@ -266,11 +265,11 @@ export default function FileUtilityPage() {
         convertedUrl,
         convertedSize: outputBlob.size,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         ...item,
         status: 'error',
-        errorMessage: err?.message || 'Gagal mengonversi berkas',
+        errorMessage: err instanceof Error ? err.message : 'Gagal mengonversi berkas',
       };
     }
   };
@@ -633,7 +632,7 @@ export default function FileUtilityPage() {
                       key={t.id}
                       type="button"
                       onClick={() => {
-                        setQrType(t.id as any);
+                        setQrType(t.id as 'url' | 'whatsapp' | 'text' | 'wifi');
                         if (t.id === 'url') setQrContent('https://kompreskilat.site');
                         else if (t.id === 'text') setQrContent('Tulis teks atau catatan Anda di sini');
                       }}
@@ -828,7 +827,7 @@ export default function FileUtilityPage() {
                     <label className="block font-bold text-slate-700 mb-1.5">Toleransi Kerusakan (ECC):</label>
                     <select
                       value={errorLevel}
-                      onChange={(e) => setErrorLevel(e.target.value as any)}
+                      onChange={(e) => setErrorLevel(e.target.value as 'L' | 'M' | 'Q' | 'H')}
                       className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="H">Tinggi / High (30% pemulihan - Direkomendasikan)</option>

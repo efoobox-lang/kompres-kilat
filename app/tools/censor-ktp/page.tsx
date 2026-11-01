@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { useState, useRef, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
@@ -16,12 +15,8 @@ import {
   Download,
   Upload,
   Lock,
-  CheckCircle2,
   Sparkles,
-  Sliders,
-  FileCheck,
-  Info,
-  Maximize2
+  Info
 } from 'lucide-react';
 
 type ToolMode = 'brush-black' | 'rect-black' | 'brush-blur' | 'rect-blur';

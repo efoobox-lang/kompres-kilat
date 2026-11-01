@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
@@ -57,20 +57,18 @@ export default function TrackingPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [trackingResult, setTrackingResult] = useState<TrackingData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const [copied, setCopied] = useState<boolean>(false);
-
-  // Ambil riwayat dari LocalStorage saat mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('kk_track_history');
-      if (stored) {
-        setSavedSearches(JSON.parse(stored));
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('kk_track_history');
+        if (stored) return JSON.parse(stored);
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
     }
-  }, []);
+    return [];
+  });
+  const [copied, setCopied] = useState<boolean>(false);
 
   // Simpan riwayat ke LocalStorage
   const saveToHistory = (awb: string, courierCode: string, courierName: string) => {
@@ -149,7 +147,7 @@ export default function TrackingPage() {
       } else {
         setErrorMessage(json.message || 'Gagal melacak resi. Periksa kembali nomor resi dan kurir.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Terjadi gangguan jaringan saat menghubungi server pelacak.');
     } finally {
       setIsLoading(false);

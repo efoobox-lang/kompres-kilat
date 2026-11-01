@@ -1,28 +1,18 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import {
-  Calculator,
   TrendingUp,
   Tag,
   ReceiptText,
-  Percent,
   Copy,
   Check,
-  Share2,
-  DollarSign,
   Coins,
-  Store,
-  ArrowRight,
-  Sparkles,
-  RotateCcw,
-  Info,
-  HelpCircle
+  Info
 } from 'lucide-react';
 
 export default function BusinessCalculatorPage() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -18,8 +18,6 @@ export default function AiImageToolsPage() {
   const [showOriginal, setShowOriginal] = useState<boolean>(false);
   const [imageMeta, setImageMeta] = useState<{ width: number; height: number; size: string } | null>(null);
   const [enhancedMeta, setEnhancedMeta] = useState<{ width: number; height: number; size: string } | null>(null);
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,8 +79,6 @@ export default function AiImageToolsPage() {
         // Ambil data piksel untuk penajaman visual (Unsharp Masking)
         const imageData = ctx.getImageData(0, 0, targetW, targetH);
         const data = imageData.data;
-        const width = targetW;
-        const height = targetH;
 
         // Terapkan penyesuaian kontras dan saturasi
         const contrast = params.contrast || 1.15;
@@ -302,7 +298,7 @@ export default function AiImageToolsPage() {
                 </label>
                 <select
                   value={preset}
-                  onChange={(e) => setPreset(e.target.value as any)}
+                  onChange={(e) => setPreset(e.target.value as 'clarity' | 'upscale' | 'vibrant' | 'formal')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
                 >
                   <option value="upscale">Super Resolution (Bicubic + Unsharp Mask)</option>

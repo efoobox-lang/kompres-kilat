@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
@@ -19,12 +18,9 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   RefreshCw,
   FileUp,
-  FileCheck,
-  ShieldAlert,
-  ArrowRight
+  ShieldAlert
 } from 'lucide-react';
 
 export default function PdfPasswordPage() {

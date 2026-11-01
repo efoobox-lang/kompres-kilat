@@ -40,7 +40,7 @@ export default function TermsPage() {
 
           <h2 className="text-base sm:text-lg font-bold text-slate-900 pt-2">3. Batasan Tanggung Jawab &amp; Penafian (Disclaimer)</h2>
           <p>
-            Layanan KompresKilat disediakan atas dasar "sebagaimana adanya" (*as-is*) tanpa jaminan dalam bentuk apapun, baik tersurat maupun tersirat. 
+            Layanan KompresKilat disediakan atas dasar &quot;sebagaimana adanya&quot; (*as-is*) tanpa jaminan dalam bentuk apapun, baik tersurat maupun tersirat. 
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Kami tidak bertanggung jawab atas kerugian data, kerusakan berkas, atau hilangnya kesempatan kerja/akademis yang timbul dari penggunaan alat ini. Pengguna disarankan untuk selalu menyimpan salinan (*backup*) file asli sebelum melakukan kompresi.</li>

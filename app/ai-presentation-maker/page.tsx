@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
@@ -267,7 +266,7 @@ export default function AiPresentationMakerPage() {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Gaya &amp; Palet Desain:</label>
                 <select
                   value={theme}
-                  onChange={(e) => setTheme(e.target.value as any)}
+                  onChange={(e) => setTheme(e.target.value as 'corporate' | 'startup' | 'creative' | 'academic')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="corporate">Dark Navy Corporate</option>

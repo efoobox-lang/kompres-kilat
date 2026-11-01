@@ -26,8 +26,9 @@ export default function AdBanner({
 
   useEffect(() => {
     try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      const win = window as unknown as { adsbygoogle?: unknown[] };
+      win.adsbygoogle = win.adsbygoogle || [];
+      win.adsbygoogle.push({});
     } catch {
       // Menghindari error jika iklan diblokir adblocker atau belum aktif
     }

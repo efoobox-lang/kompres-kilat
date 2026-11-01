@@ -102,7 +102,7 @@ export async function POST(request: Request) {
 
         if (externalData.status === 200 && externalData.data) {
           const d = externalData.data;
-          const historyItems: TrackingHistoryItem[] = (d.history || []).map((h: any) => ({
+          const historyItems: TrackingHistoryItem[] = ((d.history || []) as Array<{ date: string; desc: string; location?: string }>).map((h) => ({
             date: h.date,
             desc: h.desc,
             location: h.location || '',
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
             { status: 404 }
           );
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching live courier API:', err);
       }
     }
@@ -186,9 +186,10 @@ export async function POST(request: Request) {
     };
 
     return NextResponse.json({ success: true, data: simulatedData });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Terjadi kesalahan pada server pelacak.';
     return NextResponse.json(
-      { success: false, message: error.message || 'Terjadi kesalahan pada server pelacak.' },
+      { success: false, message },
       { status: 500 }
     );
   }

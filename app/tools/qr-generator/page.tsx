@@ -127,7 +127,7 @@ export default function QrGeneratorPage() {
                     key={t.id}
                     type="button"
                     onClick={() => {
-                      setQrType(t.id as any);
+                      setQrType(t.id as 'url' | 'whatsapp' | 'text' | 'wifi');
                       if (t.id === 'whatsapp') setContent('https://wa.me/6281234567890?text=Halo%20Admin');
                       else if (t.id === 'url') setContent('https://kompreskilat.site');
                     }}
@@ -201,7 +201,7 @@ export default function QrGeneratorPage() {
                 <label className="block font-bold text-slate-700 mb-1">Error Correction Level:</label>
                 <select
                   value={errorLevel}
-                  onChange={(e) => setErrorLevel(e.target.value as any)}
+                  onChange={(e) => setErrorLevel(e.target.value as 'L' | 'M' | 'Q' | 'H')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
                 >
                   <option value="H">High (30% pemulihan)</option>

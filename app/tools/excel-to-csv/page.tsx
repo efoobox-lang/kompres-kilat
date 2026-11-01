@@ -14,9 +14,7 @@ export default function ExcelToCsvPage() {
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [delimiter, setDelimiter] = useState<string>(',');
-  const [csvContent, setCsvContent] = useState<string>('');
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [downloadUrl, setDownloadUrl] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string>('');
 
@@ -27,7 +25,6 @@ export default function ExcelToCsvPage() {
       setWorkbook(null);
       setSheetNames([]);
       setSelectedSheet('');
-      setCsvContent('');
       setPreviewRows([]);
       setDownloadUrl('');
       setStatusMessage('');
@@ -41,7 +38,7 @@ export default function ExcelToCsvPage() {
           setSheetNames(wb.SheetNames);
           if (wb.SheetNames.length > 0) {
             setSelectedSheet(wb.SheetNames[0]);
-            convertSheetToCsv(wb, wb.SheetNames[0], delimiter, file.name);
+            convertSheetToCsv(wb, wb.SheetNames[0], delimiter);
           }
         } catch (err) {
           console.error(err);
@@ -55,15 +52,12 @@ export default function ExcelToCsvPage() {
   const convertSheetToCsv = (
     wb: XLSX.WorkBook,
     sheetName: string,
-    delim: string,
-    fileName: string
+    delim: string
   ) => {
-    setIsLoading(true);
     try {
       const sheet = wb.Sheets[sheetName];
       // Generate CSV string
       const csv = XLSX.utils.sheet_to_csv(sheet, { FS: delim });
-      setCsvContent(csv);
 
       // Generate preview (first 10 rows)
       const jsonRows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 });
@@ -75,25 +69,23 @@ export default function ExcelToCsvPage() {
       setDownloadUrl(url);
 
       setStatusMessage('🎉 File Excel berhasil dikonversi ke format CSV!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatusMessage('Terjadi kendala saat mengonversi lembar kerja.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleSheetChange = (newSheet: string) => {
     setSelectedSheet(newSheet);
-    if (workbook && selectedFile) {
-      convertSheetToCsv(workbook, newSheet, delimiter, selectedFile.name);
+    if (workbook) {
+      convertSheetToCsv(workbook, newSheet, delimiter);
     }
   };
 
   const handleDelimiterChange = (newDelim: string) => {
     setDelimiter(newDelim);
-    if (workbook && selectedSheet && selectedFile) {
-      convertSheetToCsv(workbook, selectedSheet, newDelim, selectedFile.name);
+    if (workbook && selectedSheet) {
+      convertSheetToCsv(workbook, selectedSheet, newDelim);
     }
   };
 

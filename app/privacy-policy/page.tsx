@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
 
           <h2 className="text-base sm:text-lg font-bold text-slate-900 pt-2">4. Cookie dan Web Beacon (Google AdSense &amp; Pihak Ketiga)</h2>
           <p>
-            Seperti kebanyakan situs web lainnya, KompresKilat menggunakan 'cookie'. Cookie digunakan untuk menyimpan preferensi pengunjung dan mengoptimalkan pengalaman pengguna.
+            Seperti kebanyakan situs web lainnya, KompresKilat menggunakan &apos;cookie&apos;. Cookie digunakan untuk menyimpan preferensi pengunjung dan mengoptimalkan pengalaman pengguna.
           </p>
           <p>
             Google adalah salah satu vendor pihak ketiga di situs kami. Google juga menggunakan cookie, yang dikenal sebagai <b>cookie DART</b>, untuk menayangkan iklan kepada pengunjung situs kami berdasarkan kunjungan mereka ke situs kami dan situs lain di internet. Pengunjung dapat memilih untuk menolak penggunaan cookie DART dengan mengunjungi Kebijakan Privasi jaringan iklan dan konten Google di URL berikut: <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">https://policies.google.com/technologies/ads</a>.

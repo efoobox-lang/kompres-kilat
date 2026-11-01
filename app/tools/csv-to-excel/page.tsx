@@ -29,13 +29,13 @@ export default function CsvToExcelPage() {
       reader.onload = (evt) => {
         const text = evt.target?.result as string;
         setCsvRawText(text);
-        processCsvToExcel(text, file.name);
+        processCsvToExcel(text);
       };
       reader.readAsText(file);
     }
   };
 
-  const processCsvToExcel = (csvData: string, originName: string) => {
+  const processCsvToExcel = (csvData: string) => {
     if (!csvData.trim()) return;
 
     setIsLoading(true);
@@ -60,7 +60,7 @@ export default function CsvToExcelPage() {
 
       setDownloadUrl(url);
       setStatusMessage('🎉 File CSV berhasil dikonversi ke Microsoft Excel (.xlsx)!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatusMessage('Gagal mengonversi CSV ke Excel. Periksa kembali struktur data berkas Anda.');
     } finally {
@@ -70,7 +70,7 @@ export default function CsvToExcelPage() {
 
   const handleManualConvert = () => {
     if (!csvRawText.trim()) return;
-    processCsvToExcel(csvRawText, 'teks-csv.xlsx');
+    processCsvToExcel(csvRawText);
   };
 
   const jsonLd = {

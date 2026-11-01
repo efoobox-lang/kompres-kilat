@@ -281,6 +281,20 @@ export default function AIImageGenerator() {
               className="w-full px-4 py-3 text-xs sm:text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
               required
             />
+            {/* Saran Ide Prompt Cepat */}
+            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+              <span className="text-[11px] text-slate-500 font-semibold mr-1">Contoh Cepat:</span>
+              {PROMPT_SUGGESTIONS.map((sug, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setPrompt(sug)}
+                  className="text-[10px] bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 px-2 py-1 rounded-lg border border-slate-200 transition cursor-pointer"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Format Ukuran */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
@@ -16,7 +16,6 @@ export default function ObjectEraserPage() {
 
   const imageCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [imageSize, setImageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -28,8 +27,6 @@ export default function ObjectEraserPage() {
 
         const img = new Image();
         img.onload = () => {
-          setImageSize({ width: img.width, height: img.height });
-
           // Setup Canvas Gambar Utama
           const imgCanvas = imageCanvasRef.current;
           if (imgCanvas) {

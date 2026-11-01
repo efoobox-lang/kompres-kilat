@@ -53,13 +53,13 @@ export async function POST(request: Request) {
       try {
         const prompt = `Anda adalah konsultan presentasi kelas dunia. Buatlah materi presentasi PowerPoint profesional dalam Bahasa Indonesia tentang: "${cleanTopic}".
 Jumlah slide yang diminta: ${count} slide.
-Gaya tema: ${theme}.
-Target audiens: ${audience}.
+Gaya tema: ${cleanTheme}.
+Target audiens: ${cleanAudience}.
 
 Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) dengan struktur persis seperti ini:
 {
   "title": "Judul Utama Presentasi",
-  "theme": "${theme}",
+  "theme": "${cleanTheme}",
   "slides": [
     {
       "slideNumber": 1,
@@ -201,9 +201,10 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
     };
 
     return NextResponse.json({ success: true, data: presentationData });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Gagal memproses draf presentasi AI.';
     return NextResponse.json(
-      { success: false, message: error.message || 'Gagal memproses draf presentasi AI.' },
+      { success: false, message },
       { status: 500 }
     );
   }

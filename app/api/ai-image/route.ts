@@ -63,7 +63,7 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
 
           // Coba model gemini-3.8-flash, lalu fallback ke gemini-flash-latest
           const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
-          let geminiData: any = null;
+          let geminiData: Record<string, unknown> | null = null;
 
           for (const model of models) {
             try {
@@ -78,8 +78,9 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
                   }),
                 }
               );
-              const data = await res.json();
-              if (res.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+              const data = await res.json() as Record<string, unknown>;
+              const candidates = data.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }> | undefined;
+              if (res.ok && candidates?.[0]?.content?.parts?.[0]?.text) {
                 geminiData = data;
                 break;
               }
@@ -88,8 +89,9 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
             }
           }
 
-          if (geminiData && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
-            const rawText = geminiData.candidates[0].content.parts[0].text;
+          const candidates = geminiData?.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }> | undefined;
+          if (candidates?.[0]?.content?.parts?.[0]?.text) {
+            const rawText = candidates[0].content.parts[0].text;
             const cleanJsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsedDesign = JSON.parse(cleanJsonText);
             return NextResponse.json({
@@ -99,7 +101,7 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
               prompt: cleanPrompt,
             });
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Gemini API fetch error:', err);
         }
       }
@@ -136,7 +138,7 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
 
     // 2. PARAMETER IMAGE ENHANCER
     const cleanType = sanitizeInput(String(enhancementType), 30);
-    const presets: Record<string, any> = {
+    const presets: Record<string, { contrast: number; brightness: number; sharpness: number; saturation: number; summary: string }> = {
       clarity: { contrast: 1.25, brightness: 1.05, sharpness: 1.6, saturation: 1.15, summary: 'Penajaman visual dan koreksi pencahayaan wajah.' },
       upscale: { contrast: 1.15, brightness: 1.02, sharpness: 2.0, saturation: 1.05, summary: 'Peningkatan detail mikroskopis 2x/4x.' },
       vibrant: { contrast: 1.2, brightness: 1.08, sharpness: 1.4, saturation: 1.35, summary: 'Pemberian warna hidup natural.' },
@@ -147,9 +149,10 @@ Catatan colorPalette: pilih antara "amber" (kopi/makanan hangat), "indigo" (bisn
       success: true,
       aiAdjustment: presets[cleanType] || presets.clarity,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Gagal memproses gambar AI.';
     return NextResponse.json(
-      { success: false, message: error.message || 'Gagal memproses gambar AI.' },
+      { success: false, message },
       { status: 500 }
     );
   }

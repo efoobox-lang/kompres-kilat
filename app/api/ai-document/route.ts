@@ -220,9 +220,10 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
     }
 
     return NextResponse.json({ success: false, message: 'Aksi tidak dikenali.' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Gagal memproses dokumen AI.';
     return NextResponse.json(
-      { success: false, message: error?.message || 'Gagal memproses dokumen AI.' },
+      { success: false, message },
       { status: 500 }
     );
   }

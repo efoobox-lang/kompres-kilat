@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
-import Link from 'next/link';
 
 interface PresetSize {
   id: string;
@@ -72,7 +71,6 @@ const PRESET_SIZES: PresetSize[] = [
 ];
 
 export default function ResizePasFotoPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [currentPreset, setCurrentPreset] = useState<PresetSize>(PRESET_SIZES[0]);
   const [targetKb, setTargetKb] = useState<number>(200); // 200KB standard CPNS
@@ -85,7 +83,6 @@ export default function ResizePasFotoPage() {
 
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
   const [outputSizeText, setOutputSizeText] = useState<string>('');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imageElementRef = useRef<HTMLImageElement | null>(null);
@@ -93,7 +90,6 @@ export default function ResizePasFotoPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setImageSrc(url);
       setZoom(1);
@@ -109,7 +105,7 @@ export default function ResizePasFotoPage() {
     }
   };
 
-  const renderCanvas = (
+  const renderCanvas = useCallback((
     img: HTMLImageElement,
     preset: PresetSize,
     scale: number,
@@ -167,14 +163,14 @@ export default function ResizePasFotoPage() {
     const head = 'data:image/jpeg;base64,';
     const fileSizeByte = Math.round(((dataUrl.length - head.length) * 3) / 4);
     setOutputSizeText(`${(fileSizeByte / 1024).toFixed(1)} KB`);
-  };
+  }, [targetKb]);
 
   // Trigger render setiap kali ada perubahan parameter
   useEffect(() => {
     if (imageElementRef.current) {
       renderCanvas(imageElementRef.current, currentPreset, zoom, offsetX, offsetY, bgChoice);
     }
-  }, [currentPreset, zoom, offsetX, offsetY, bgChoice, targetKb]);
+  }, [currentPreset, zoom, offsetX, offsetY, bgChoice, renderCanvas]);
 
   // Handle Drag / Pan di Canvas
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -372,6 +368,33 @@ export default function ResizePasFotoPage() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    3. Warna Latar Pas Foto:
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { id: 'original' as const, label: 'Asli' },
+                      { id: 'red' as const, label: '🔴 Merah' },
+                      { id: 'blue' as const, label: '🔵 Biru' },
+                      { id: 'white' as const, label: '⚪ Putih' },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setBgChoice(item.id)}
+                        className={`py-1.5 px-1 text-center text-xs rounded-xl border font-bold transition cursor-pointer ${
+                          bgChoice === item.id
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Informasi Ringkasan & Unduh */}
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
                   <div>
@@ -393,7 +416,7 @@ export default function ResizePasFotoPage() {
                   <button
                     onClick={() => {
                       setImageSrc(null);
-                      setSelectedFile(null);
+                      setPreviewDataUrl(null);
                     }}
                     className="px-3.5 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition"
                     title="Ganti Foto"

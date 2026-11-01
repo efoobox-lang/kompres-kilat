@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
-import Link from 'next/link';
 
 export default function RemoveBgPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [bgColor, setBgColor] = useState<string>('#DC2626'); // Default Merah CPNS
   const [isTransparent, setIsTransparent] = useState<boolean>(false);
   const [tolerance, setTolerance] = useState<number>(35);
-  const [feather, setFeather] = useState<number>(2);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isProcessed, setIsProcessed] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('');

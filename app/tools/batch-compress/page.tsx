@@ -206,7 +206,7 @@ export default function BatchCompressPage() {
                 ) : (
                   <a
                     href={zipDownloadUrl}
-                    download={`kompreskilat_batch_${Date.now()}.zip`}
+                    download="kompreskilat_batch_compressed.zip"
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-sm text-xs sm:text-sm text-center block"
                   >
                     📥 Unduh Semua File dalam 1 ZIP (.zip)
@@ -217,7 +217,9 @@ export default function BatchCompressPage() {
           )}
         </div>
 
-        <AdBanner zone="in-tool" label="Iklan" />
+        <div className="mt-10 sm:mt-12">
+          <AdBanner zone="in-tool" label="Iklan" />
+        </div>
       </section>
 
       <Footer />

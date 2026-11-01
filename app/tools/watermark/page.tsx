@@ -175,20 +175,32 @@ export default function WatermarkPage() {
                     className="w-full accent-indigo-600 cursor-pointer"
                   />
                 </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Warna Cap:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={watermarkColor}
+                      onChange={(e) => setWatermarkColor(e.target.value)}
+                      className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+                    />
+                    <span className="font-mono text-slate-500 uppercase">{watermarkColor}</span>
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Posisi Watermark:</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'diagonal', label: 'Diagonal Miring' },
-                    { id: 'center', label: 'Tengah' },
-                    { id: 'bottom-right', label: 'Sudut Bawah' },
+                    { id: 'diagonal' as const, label: 'Diagonal Miring' },
+                    { id: 'center' as const, label: 'Tengah' },
+                    { id: 'bottom-right' as const, label: 'Sudut Bawah' },
                   ].map((p) => (
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => setPosition(p.id as any)}
+                      onClick={() => setPosition(p.id)}
                       className={`py-2 px-2 text-center rounded-xl border font-bold transition ${
                         position === p.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200'
                       }`}

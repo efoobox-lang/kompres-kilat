@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Language, translations } from '@/lib/translations';
 
 interface LanguageContextType {
@@ -18,25 +18,18 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Language>('id');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    try {
-      const stored = localStorage.getItem('kk_lang') as Language;
-      if (stored && (stored === 'id' || stored === 'en')) {
-        setLangState(stored);
-      } else if (typeof navigator !== 'undefined') {
-        const browserLang = navigator.language.toLowerCase();
-        if (browserLang.startsWith('en')) {
-          setLangState('en');
-        }
+  const [lang, setLangState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('kk_lang') as Language;
+        if (stored && (stored === 'id' || stored === 'en')) return stored;
+        if (navigator.language.toLowerCase().startsWith('en')) return 'en';
+      } catch {
+        // fallback
       }
-    } catch {
-      // Ignore if localStorage unavailable
     }
-  }, []);
+    return 'id';
+  });
 
   const setLang = (newLang: Language) => {
     setLangState(newLang);
