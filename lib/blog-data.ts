@@ -31,6 +31,163 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'cara-menggabungkan-file-pdf-menjadi-satu-online-gratis',
+    title: 'Cara Menggabungkan File PDF Jadi Satu Online Gratis & Aman untuk Syarat CPNS & BUMN',
+    excerpt: 'Panduan lengkap menyatukan berkas CV, ijazah, sertifikat, dan transkrip nilai menjadi satu file PDF utuh dengan mudah, bebas atur urutan halaman, dan 100% aman tanpa upload server.',
+    category: 'Dokumen PDF',
+    date: '1 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Mengapa Dokumen Pendaftaran Kerja & CPNS Wajib Digabungkan Menjadi Satu PDF?
+Bagi pelamar kerja di portal Rekrutmen Bersama BUMN, SSCASN CPNS/PPPK, maupun pendaftar beasiswa LPDP, salah satu syarat administrasi yang paling sering menggugurkan berkas adalah format dokumen yang tercecer. Sebagian besar sistem *Applicant Tracking System* (ATS) dan panitia seleksi hanya menyediakan satu slot unggahan untuk berkas pendukung, seperti **"CV + Ijazah + Transkrip Nilai + Sertifikat Keahlian"** dalam satu file PDF tunggal.
+
+Tantangan terbesarnya adalah:
+1. **Privasi Berkas Sensitif**: Mengunggah ijazah, KTP, dan sertifikat berharga ke website konverter PDF gratisan asing berisiko tinggi terhadap kebocoran data pribadi (*identity theft*).
+2. **Keterbatasan Kuota & Batas Ukuran**: Banyak alat merger online membatasi maksimal 2-3 file per hari atau menuntut langganan berbayar.
+3. **Urutan Halaman Acak**: Seringkali urutan berkas tertukar (misal transkrip nilai muncul sebelum ijazah), sehingga panitia rekrutmen kesulitan memverifikasi keaslian dokumen.
+
+---
+
+### Solusi Cepat & Aman: Penggabung Berkas PDF KompresKilat
+Untuk mengatasi kendala tersebut, KompresKilat menghadirkan alat **[Penggabung Berkas PDF (PDF Merger)](/tools/pdf-merge)** yang beroperasi dengan prinsip keamanan tertinggi:
+- **100% Client-Side Processing**: Berkas dokumen Anda tidak pernah dikirim atau disimpan di server luar. Seluruh proses penyatuan halaman dieksekusi langsung di memori RAM peramban komputer atau HP Anda menggunakan engine *pdf-lib*.
+- **Bebas Atur Urutan Berkas**: Dilengkapi tombol geser ke atas (🔼) dan ke bawah (🔽) untuk memastikan urutan halaman tersusun rapi sesuai regulasi instansi.
+- **Tanpa Batas File & Ukuran**: Anda dapat menggabungkan 5, 10, hingga puluhan file PDF sekaligus tanpa syarat kuota harian.
+- **Kustomisasi Nama Berkas**: Anda bisa langsung memberi nama file keluaran (misal \`Berkas_Lengkap_CPNS_NamaAnda.pdf\`) sebelum diunduh.
+
+---
+
+### Langkah Demi Langkah Menggabungkan File PDF Jadi Satu:
+1. **Buka Halaman Alat**: Masuk ke menu [Penggabung Berkas PDF](/tools/pdf-merge).
+2. **Pilih atau Tarik Berkas**: Klik tombol *"Pilih Berkas PDF"* atau tarik beberapa file PDF sekaligus dari laptop/smartphone Anda.
+3. **Cek Rincian & Atur Urutan**:
+   - Periksa jumlah halaman dan ukuran file pada masing-masing kartu dokumen.
+   - Gunakan tombol panah **Naik** atau **Turun** untuk menempatkan berkas utama (seperti CV di halaman awal, disusul ijazah, transkrip, dan sertifikat pendukung).
+4. **Beri Nama File Output**: Ketik nama file gabungan sesuai format yang diminta perusahaan atau instansi yang Anda tuju.
+5. **Klik "Gabungkan Dokumen PDF Sekarang ⚡"**: Sistem akan menyatukan halaman dalam hitungan detik.
+6. **Unduh File Selesai**: Klik *"Unduh File PDF Gabungan"* untuk menyimpan hasilnya ke perangkat Anda.
+
+> [!TIP]
+> **Tips Tambahan Lolos Administrasi**: Jika file PDF hasil gabungan melebihi batas ukuran maksimal portal pendaftaran (misal instansi membatasi maksimal 2MB atau 500KB), Anda dapat langsung memperkecil ukurannya dengan alat [Kompres Dokumen PDF](/tools/pdf) kami tanpa mengurangi ketajaman teks stempel dan tanda tangan.
+`,
+    relatedTool: {
+      title: 'Penggabung Berkas PDF (PDF Merger)',
+      description: 'Satukan banyak file PDF seperti CV, ijazah, dan sertifikat jadi satu dokumen secara 100% lokal di browser.',
+      url: '/tools/pdf-merge',
+      icon: '🗂️',
+      buttonText: 'Coba Gabungkan PDF Sekarang ⚡',
+    },
+    en: {
+      title: 'How to Merge Multiple PDF Files Online for Free & Securely',
+      excerpt: 'Step-by-step guide to combine resumes, certificates, and diplomas into a single PDF file with zero server uploads and 100% privacy.',
+      category: 'PDF Documents',
+      date: 'November 1, 2026',
+      readTime: '5 min',
+      content: `
+### Why Job & Scholarship Applications Require a Single Merged PDF
+Most job application systems and universities require applicants to combine multiple documents (Resume, Diplomas, Transcripts, and Certifications) into one single PDF portfolio.
+
+Using online tools that upload your sensitive documents to remote servers poses severe privacy risks. KompresKilat's **[PDF Merger](/tools/pdf-merge)** runs 100% client-side in your browser memory, ensuring your confidential data never leaves your device.
+`,
+      relatedTool: {
+        title: 'PDF Merger Online',
+        description: 'Combine multiple PDF files into one cleanly formatted document in seconds.',
+        buttonText: 'Merge PDF Files Now ⚡',
+      },
+    },
+  },
+  {
+    slug: 'cara-menghitung-diskon-bertingkat-dan-pajak-pph-21-online',
+    title: 'Cara Menghitung Diskon Bertingkat Belanja dan Simulasi PPh 21 UU HPP Terbaru',
+    excerpt: 'Pelajari rahasia rumus diskon ganda 50% + 20% saat belanja flash sale, simulasi potongan pajak penghasilan karyawan PPh 21 resmi, serta cara menghitung zakat mal 85 gram emas.',
+    category: 'Bisnis & UMKM',
+    date: '1 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Rahasia di Balik Promo Diskon Bertingkat: 50% + 20% Bukan 70%!
+Saat berbelanja di mall atau menyambut pesta diskon *flash sale* e-commerce (seperti promo 11.11 atau Hari Belanja Online Nasional), kita sering melihat label promosi menggiurkan: **"Diskon 50% + 20%"**.
+
+Banyak konsumen secara keliru mengira bahwa promo tersebut berarti potongan harga sebesar **70%**. Padahal secara matematika finansial ritel, perhitungannya tidak dijumlahkan langsung, melainkan dihitung secara berjenjang (*compound discount*).
+
+#### Rumus Menghitung Diskon Ganda (Bertingkat):
+1. **Diskon Pertama ($D_1$)**: Dihitung dari harga dasar barang.
+   $$\\text{Harga Setelah } D_1 = \\text{Harga Awal} - (\\text{Harga Awal} \\times D_1)$$
+2. **Diskon Kedua ($D_2$)**: Dihitung dari **sisa harga** setelah diskon pertama, bukan dari harga awal!
+   $$\\text{Harga Akhir} = \\text{Harga Setelah } D_1 - (\\text{Harga Setelah } D_1 \\times D_2)$$
+
+**Contoh Kasus Nyata**:
+Anda membeli jaket seharga **Rp 200.000** dengan promo 50% + 20%:
+- Diskon tahap pertama 50%: Memotong Rp 100.000 $\\rightarrow$ Harga sisa menjadi Rp 100.000.
+- Diskon tahap kedua 20%: Memotong 20% dari Rp 100.000 = Rp 20.000 $\\rightarrow$ Harga akhir menjadi **Rp 80.000**.
+- **Diskon Riil Sebenarnya**: Anda menghemat Rp 120.000 dari Rp 200.000, yang setara dengan **60%**, bukan 70%!
+
+Untuk mempermudah belanja cerdas tanpa repot menghitung manual di kasir, Anda dapat menggunakan [Kalkulator Diskon Belanja](/tools/kalkulator-finansial) kami.
+
+---
+
+### Simulasi Perhitungan PPh 21 Karyawan Resmi Berdasarkan UU HPP
+Bagi pekerja kantoran dan staf HRD, menghitung Pajak Penghasilan Pasal 21 (PPh 21) seringkali membingungkan karena adanya perubahan regulasi melalui **Undang-Undang Harmonisasi Peraturan Perpajakan (UU HPP No. 7 Tahun 2021)**.
+
+Dalam aturan UU HPP, perhitungan pajak mempertimbangkan faktor:
+1. **Biaya Jabatan 5%**: Pengurang penghasilan bruto maksimal Rp 500.000 per bulan atau Rp 6.000.000 per tahun.
+2. **PTKP (Penghasilan Tidak Kena Pajak)**:
+   - TK/0 (Lajang tanpa tanggungan): Rp 54.000.000 / tahun.
+   - K/0 (Menikah tanpa tanggungan): Rp 58.500.000 / tahun (bertambah Rp 4.500.000 per tanggungan anak hingga maksimal 3).
+3. **Lapisan Tarif Pajak Progresif**:
+   - PKP s.d. Rp 60 Juta: **5%**
+   - Di atas Rp 60 Juta s.d. Rp 250 Juta: **15%**
+   - Di atas Rp 250 Juta s.d. Rp 500 Juta: **25%**
+   - Di atas Rp 500 Juta s.d. Rp 5 Miliar: **30%**
+   - Di atas Rp 5 Miliar: **35%**
+
+Gunakan alat [Kalkulator PPh 21 KompresKilat](/tools/kalkulator-finansial) untuk mengetahui estimasi potongan pajak bulanan serta *Take Home Pay* bersih yang akan masuk ke rekening Anda.
+
+---
+
+### Ketentuan Zakat Mal & Zakat Profesi Standar BAZNAS
+Selain pajak negara, kalkulator finansial kami juga memfasilitasi kewajiban syariat bagi umat muslim:
+- **Nisab Emas 85 Gram**: Harta simpanan (tabungan, deposito, emas) wajib dizakati apabila nilainya telah mencapai setara harga **85 gram emas murni** (sekitar Rp 123.250.000 per tahun dengan harga emas acuan Rp 1.450.000/gram).
+- **Kadar Zakat 2.5%**: Apabila harta telah memenuhi haul (tersimpan selama 1 tahun penuh), besaran zakat mal yang harus dikeluarkan adalah 2.5% dari total harta bersih setelah dikurangi hutang jatuh tempo.
+
+---
+
+### Konversi Satuan Tanah Tradisional: Ru & Tumbak ke Meter Persegi
+Bagi masyarakat di Pulau Jawa dan Jawa Barat yang sedang melakukan transaksi jual beli tanah atau mengurus sertifikat warisan, istilah **Ru**, **Tumbak**, atau **Bata** seringkali dijumpai:
+- **1 Ru / Tumbak / Bata** = **14.0625 m²**
+- **1 Hektar (ha)** = **10.000 m²** (setara 711.1 Ru)
+- **1 Are** = **100 m²**
+
+Semua modul perhitungan di atas kini tersedia dalam satu halaman terintegrasi di **[Kalkulator Finansial & Konverter Satuan Praktis](/tools/kalkulator-finansial)** KompresKilat, siap diakses secara cepat, gratis, dan tanpa perlu mendaftar akun.
+`,
+    relatedTool: {
+      title: 'Kalkulator Finansial & Konverter Satuan',
+      description: 'Hitung diskon bertingkat 50%+20%, simulasi potongan pajak PPh 21, zakat mal 85 gram emas, dan konversi satuan tanah.',
+      url: '/tools/kalkulator-finansial',
+      icon: '🧮',
+      buttonText: 'Gunakan Kalkulator Finansial ⚡',
+    },
+    en: {
+      title: 'How to Calculate Compound Discounts & Income Tax (PPh 21) Online',
+      excerpt: 'Learn the real formula behind double discounts (50% + 20%), estimate payroll income tax, and calculate gold-backed zakat mal.',
+      category: 'Business & Finance',
+      date: 'November 1, 2026',
+      readTime: '5 min',
+      content: `
+### The Mathematics of Tiered Discounts (50% + 20% is Not 70%)
+In retail and seasonal sales, tiered discounts are calculated sequentially rather than added together. A 50% discount followed by a 20% discount on a $100 item yields a final price of $40 (an effective 60% discount, not 70%).
+
+Use our **[Financial Calculator & Unit Converter](/tools/kalkulator-finansial)** for immediate real-time calculations.
+`,
+      relatedTool: {
+        title: 'Financial Calculator & Converter',
+        description: 'Instant client-side calculation for shopping discounts, income taxes, and measurement conversions.',
+        buttonText: 'Open Financial Calculator ⚡',
+      },
+    },
+  },
+  {
     slug: 'cara-edit-teks-pdf-langsung-di-browser-online',
     title: 'Cara Edit Teks PDF Langsung di Browser Gratis, Cepat & Tanpa Upload ke Server',
     excerpt: 'Panduan mudah mengedit kalimat typo, menghapus teks rahasia, menambah paragraf baru, dan menggeser posisi teks dokumen PDF langsung di browser tanpa instalasi software.',
