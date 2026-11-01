@@ -58,13 +58,13 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Quick Action & Hamburger Toggle */}
-        <div className="flex md:hidden items-center gap-2">
-          <LanguageToggle />
+        <div className="flex md:hidden items-center gap-1.5">
+          <LanguageToggle className="px-2 py-0.5 text-[11px]" />
           <Link
             href="/blog"
-            className="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 transition whitespace-nowrap"
+            className="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 transition whitespace-nowrap"
           >
-            Blog
+            {t('nav_blog')}
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}

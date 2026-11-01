@@ -23,88 +23,88 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
 
       {/* Kotak Pilihan Tools Utama */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 text-left mb-10 sm:mb-16">
-        <Link href="/ai-image-tools" className="bg-gradient-to-br from-indigo-50/50 to-white p-5 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+        <Link href="/ai-image-tools" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">✨</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_ai_image_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_ai_image_desc')}</p>
         </Link>
 
-        <Link href="/ai-presentation-maker" className="bg-gradient-to-br from-purple-50/50 to-white p-5 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+        <Link href="/ai-presentation-maker" className="bg-gradient-to-br from-purple-50/50 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-purple-600 mb-1">{t('tool_ai_slide_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_ai_slide_desc')}</p>
         </Link>
 
-        <Link href="/tools/image" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/image" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🖼️</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_image_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_image_desc')}</p>
         </Link>
 
-        <Link href="/tools/remove-bg" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/remove-bg" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🎨</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_bg_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_bg_desc')}</p>
         </Link>
 
-        <Link href="/tools/object-eraser" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/object-eraser" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🪄</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_eraser_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_eraser_desc')}</p>
         </Link>
 
-        <Link href="/tools/pdf" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/pdf" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📄</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_desc')}</p>
         </Link>
 
-        <Link href="/tools/tracking" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/tracking" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📦</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_track_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_track_desc')}</p>
         </Link>
 
-        <Link href="/tools/pdf-to-word" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/pdf-to-word" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🔄</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_word_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_word_desc')}</p>
         </Link>
 
-        <Link href="/tools/pdf-to-excel" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/pdf-to-excel" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📈</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_pdf_excel_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_pdf_excel_desc')}</p>
         </Link>
 
-        <Link href="/tools/poster-generator" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/poster-generator" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🎨</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_poster_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_poster_desc')}</p>
         </Link>
 
-        <Link href="/tools/excel-to-csv" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/excel-to-csv" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_excel_csv_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_excel_csv_desc')}</p>
         </Link>
 
-        <Link href="/tools/csv-to-excel" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/csv-to-excel" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📑</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_csv_excel_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_csv_excel_desc')}</p>
         </Link>
 
-        <Link href="/tools/zip" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/zip" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🗜️</div>
           <h2 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-indigo-600 mb-1">{t('tool_zip_title')}</h2>
           <p className="text-xs text-slate-500 leading-relaxed">{t('tool_zip_desc')}</p>
         </Link>
 
         {/* 1. Resize Pas Foto & Tanda Tangan */}
-        <Link href="/tools/resize-pasfoto" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/resize-pasfoto" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Camera className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -113,7 +113,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 2. Watermark Dokumen & KTP */}
-        <Link href="/tools/watermark" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/watermark" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -122,7 +122,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 3. QR Code Generator */}
-        <Link href="/tools/qr-generator" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/qr-generator" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <QrCode className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -131,7 +131,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 4. Batch Kompres & ZIP */}
-        <Link href="/tools/batch-compress" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/batch-compress" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Archive className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -140,7 +140,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 5. AI Resume & ATS Reviewer */}
-        <Link href="/tools/ats-resume" className="bg-gradient-to-br from-indigo-50/50 to-white p-5 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
+        <Link href="/tools/ats-resume" className="bg-gradient-to-br from-indigo-50/50 to-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <FileCheck className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -150,7 +150,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 6. AI Document Summarizer */}
-        <Link href="/tools/document-summarizer" className="bg-gradient-to-br from-purple-50/50 to-white p-5 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
+        <Link href="/tools/document-summarizer" className="bg-gradient-to-br from-purple-50/50 to-white p-4 sm:p-6 rounded-2xl border border-purple-200 shadow-sm hover:shadow-md hover:border-purple-500 transition duration-200 group relative">
           <span className="absolute top-4 right-4 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{t('badge_new_ai')}</span>
           <div className="mb-2 sm:mb-3 text-purple-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <BookOpen className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
@@ -160,7 +160,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 7. Utilitas File & Konverter HEIC */}
-        <Link href="/tools/file-utility" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/file-utility" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Layers className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -169,7 +169,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 8. Sensor & Blur KTP / Dokumen */}
-        <Link href="/tools/censor-ktp" className="bg-gradient-to-br from-emerald-50/40 to-white p-5 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group">
+        <Link href="/tools/censor-ktp" className="bg-gradient-to-br from-emerald-50/40 to-white p-4 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-emerald-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <EyeOff className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -178,7 +178,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 9. Kunci & Buka Password PDF */}
-        <Link href="/tools/pdf-password" className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
+        <Link href="/tools/pdf-password" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-indigo-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Lock className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -187,7 +187,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
         </Link>
 
         {/* 10. Kalkulator Bisnis & UMKM */}
-        <Link href="/tools/kalkulator-umkm" className="bg-gradient-to-br from-amber-50/50 to-white p-5 sm:p-6 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group">
+        <Link href="/tools/kalkulator-umkm" className="bg-gradient-to-br from-amber-50/50 to-white p-4 sm:p-6 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-500 transition duration-200 group">
           <div className="mb-2 sm:mb-3 text-amber-600 group-hover:scale-110 transition-transform duration-200 w-fit">
             <Calculator className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.2} />
           </div>
@@ -197,13 +197,16 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       </div>
 
       {/* Section Artikel Blog Terbaru */}
-      <div className="text-left pt-6 border-t border-slate-200">
-        <div className="flex justify-between items-end mb-5">
-          <div>
-            <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">{t('blog_heading_badge')}</span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">{t('blog_heading_title')}</h2>
+      <div className="text-left pt-8 sm:pt-12 border-t border-slate-200">
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-indigo-600 uppercase tracking-wider block">{t('blog_heading_badge')}</span>
+            <h2 className="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug mt-0.5 truncate sm:overflow-visible sm:whitespace-normal">{t('blog_heading_title')}</h2>
           </div>
-          <Link href="/blog" className="text-xs font-bold text-indigo-600 hover:underline whitespace-nowrap ml-2">
+          <Link 
+            href="/blog" 
+            className="text-[11px] sm:text-xs font-bold text-indigo-600 hover:text-indigo-800 transition whitespace-nowrap shrink-0 px-2.5 sm:px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/80"
+          >
             {t('blog_see_all')}
           </Link>
         </div>
