@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
 import AdBanner from '@/components/AdBanner';
-import { Globe, ArrowLeft, Share2, Check } from 'lucide-react';
+import { ArrowLeft, Share2, Check } from 'lucide-react';
 
 export default function BlogPostClient({ post }: { post: BlogPost }) {
-  const { lang, setLang, t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   // Check if active language is English and English translation is available
@@ -38,7 +38,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Navigation & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex items-center justify-between gap-3 mb-6">
         <Link 
           href="/blog" 
           className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition inline-flex items-center gap-1.5"
@@ -47,32 +47,25 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           <span>{t('blog_back_to_all')}</span>
         </Link>
 
-        {/* In-Article Bilingual Language Switcher */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
-          <Globe className="w-3.5 h-3.5 text-slate-500 ml-1.5 mr-0.5" />
-          <button
-            type="button"
-            onClick={() => setLang('id')}
-            className={`px-3 py-1 rounded-lg transition cursor-pointer ${
-              lang === 'id'
-                ? 'bg-white text-indigo-700 shadow-sm font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Bahasa Indonesia
-          </button>
-          <button
-            type="button"
-            onClick={() => setLang('en')}
-            className={`px-3 py-1 rounded-lg transition cursor-pointer ${
-              lang === 'en'
-                ? 'bg-white text-indigo-700 shadow-sm font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            English
-          </button>
-        </div>
+        {/* Tombol Bagikan Tautan */}
+        <button
+          onClick={handleCopyLink}
+          type="button"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-indigo-600 transition px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm cursor-pointer"
+          title="Bagikan Tautan Artikel"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-emerald-600 font-semibold">{isEn ? 'Copied!' : 'Tersalin!'}</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-3.5 h-3.5 text-slate-500" />
+              <span>{isEn ? 'Share' : 'Bagikan'}</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Article Header */}
@@ -96,29 +89,9 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           {title}
         </h1>
 
-        <div className="flex items-center justify-between text-xs md:text-sm text-slate-500 border-l-2 border-indigo-400 pl-3 py-0.5">
-          <p>
-            {isEn ? 'Written by' : 'Oleh'} {post.author} • KompresKilat
-          </p>
-          <button
-            onClick={handleCopyLink}
-            type="button"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 transition px-2.5 py-1 rounded-lg hover:bg-slate-100"
-            title="Bagikan Tautan Artikel"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-600 font-semibold">{isEn ? 'Copied!' : 'Tersalin!'}</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3.5 h-3.5" />
-                <span>{isEn ? 'Share' : 'Bagikan'}</span>
-              </>
-            )}
-          </button>
-        </div>
+        <p className="text-xs md:text-sm text-slate-500 border-l-2 border-indigo-400 pl-3 py-0.5">
+          {isEn ? 'Written by' : 'Oleh'} {post.author} • KompresKilat
+        </p>
       </div>
 
       {/* Article Content Container */}

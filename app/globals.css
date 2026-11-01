@@ -25,18 +25,39 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Google Translate Widget: Sembunyikan banner & toolbar default agar UI tetap bersih */
+/* Google Translate Widget: Sembunyikan SEMUA banner, toolbar, dan popup agar berjalan 100% di latar belakang */
+body > .skiptranslate,
+.skiptranslate:not(.goog-te-combo),
+.goog-te-banner-frame,
 .goog-te-banner-frame.skiptranslate,
-.goog-te-banner-frame {
+iframe.goog-te-banner-frame,
+iframe[class*="goog-te-banner-frame"],
+iframe[id^=":"][src*="translate.google"],
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-xl07Ob-OEVmcd,
+#goog-gt-tt,
+.goog-te-balloon-frame {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0px !important;
+  width: 0px !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  z-index: -9999 !important;
 }
 
 body {
   top: 0px !important;
+  position: static !important;
 }
 
 #google_translate_element {
   display: none !important;
+  visibility: hidden !important;
 }
 
 .goog-tooltip,
