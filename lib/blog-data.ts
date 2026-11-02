@@ -31,6 +31,181 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'cara-edit-teks-pdf-hasil-scan-dan-dokumen-digital-online-gratis',
+    title: 'Cara Edit Teks PDF Hasil Scan & Dokumen Digital Online Gratis Tanpa Aplikasi (Fitur Whiteout & Ganti Tulisan)',
+    excerpt: 'Panduan praktis mengedit teks typo di PDF digital maupun PDF hasil scan fotocopy/kamera HP. Tutup kalimat lama dengan fitur Whiteout dan tulis kalimat perbaikan secara presisi 100% lokal di browser.',
+    category: 'Dokumen PDF',
+    date: '2 November 2026',
+    readTime: '6 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Masalah Klasik: Salah Ketik (Typo) pada Dokumen PDF yang Terlanjur Ditandatangani atau Di-Scan
+Sering kali kita dihadapkan pada situasi genting:
+- **Surat Perjanjian Kerja / MoU**: Terdapat salah ketik pada nomor surat, tanggal pelaksanaan, atau ejaan nama pihak terkait.
+- **Sertifikat & Formulir Lamaran**: Ada huruf yang tertinggal pada gelar atau alamat domisili.
+- **Dokumen Hasil Scan Fotocopy / Kamera HP**: Dokumen hanya berupa gambar statis (*flat raster image*) tanpa lapisan teks digital, sehingga program pembaca PDF biasa tidak bisa memilih teks untuk diedit.
+
+Sebelum ada teknologi editor langsung di peramban, solusi yang biasa dilakukan orang adalah:
+1. **Konversi ke Word**: Tata letak (*layout*) tabel, stempel, dan tanda tangan sering kali berantakan atau bergeser total.
+2. **Cetak Ulang, Tipe-X, Lalu Scan Lagi**: Memakan waktu, boros kertas, dan hasilnya buram atau terlihat jelas bekas tip-ex nya.
+3. **Unggah ke Situs Asing Berbayar**: Berisiko tinggi terhadap kebocoran data rahasia (*identity theft*) dan dibatasi langganan bulanan mahal.
+
+---
+
+### Solusi Modern: Direct PDF Text Editor & Whiteout Tool KompresKilat
+Melalui pembaruan terbaru, KompresKilat menghadirkan alat **[Direct PDF Text Editor](/tools/pdf-editor)** dengan arsitektur canggih yang mampu menangani dua jenis dokumen sekaligus:
+
+#### 1. Untuk Dokumen PDF Digital (Hasil Ekspor Word / Spreadsheet / Canva):
+- Seluruh teks dideteksi otomatis secara presisi menggunakan engine *PDF.js*.
+- Anda cukup **klik kalimat mana saja** untuk mengganti kata, mengubah ukuran font, mengganti warna teks, atau menebalkan (*bold*).
+- Posisi kalimat dapat **diseret (*drag-and-drop*)** ke koordinat mana pun yang diinginkan.
+- Teks lama yang tidak diperlukan dapat dihapus langsung (*auto-redact*).
+
+#### 2. Untuk Dokumen PDF Hasil Scan / Gambar Kamera HP:
+- PDF hasil pindaian tidak memiliki teks digital (0 elemen teks asli).
+- KompresKilat otomatis mendeteksi kondisi ini dan menyediakan **Mode Koreksi / Whiteout**:
+  - Anda dapat mengklik tombol *"Mode Whiteout"* lalu menyeret tetikus (*mouse*) untuk menggambar kotak penutup putih (*whiteout patch*) di atas kalimat yang salah.
+  - Ukuran kotak penutup dapat ditarik (*resize*) dan dipindahkan posisinya secara bebas.
+  - Setelah kalimat tertutup rapi, klik tombol **"Tambah Teks Baru (+)"** untuk mengetik kalimat perbaikan tepat di atas area penutup tersebut!
+
+---
+
+### Langkah Demi Langkah Mengedit PDF Hasil Scan & Digital:
+1. **Buka Halaman Alat**: Masuk ke fitur [Direct PDF Text Editor](/tools/pdf-editor).
+2. **Pilih Berkas PDF**: Unggah dokumen Anda dari laptop atau smartphone. Jika belum memiliki file, Anda bisa menguji coba dengan menekan *"Buka Contoh Surat PDF"*.
+3. **Jika Dokumen Berupa Scan / Gambar**:
+   - Aktifkan tombol **"Mode Whiteout"**.
+   - Klik dan seret kursor tepat di atas kata atau angka yang ingin ditutupi hingga muncul kotak putih.
+   - Klik **"Tambah Teks Baru (+)"**, lalu ketik kata yang benar pada panel sebelah kiri.
+   - Sesuaikan ukuran dan warna font agar serasi dengan dokumen asli, lalu seret teks tersebut ke atas kotak whiteout.
+4. **Jika Dokumen Berupa PDF Teks Asli**:
+   - Klik langsung pada kalimat yang ingin diperbaiki.
+   - Ketik kalimat pengganti di kolom teks sebelah kiri, lalu tekan *"Terapkan Teks Ini"*.
+5. **Simpan & Unduh**: Klik tombol **"Simpan & Unduh"**. Dokumen baru akan digenerate secara instan dan diunduh langsung ke komputer atau ponsel Anda.
+
+---
+
+### Keamanan Data & Privasi Terjamin 100%
+Seluruh pemrosesan dokumen, manipulasi kanvas, penutupan kotak whiteout, hingga penggabungan font dengan *pdf-lib* dieksekusi secara **100% client-side di memori perangkat Anda**. Tidak ada berkas, nomor rekening, KTP, atau teks rahasia yang pernah dikirim ke server backend mana pun.
+`,
+    relatedTool: {
+      title: 'Direct PDF Text Editor & Whiteout Tool',
+      description: 'Koreksi typo pada PDF digital maupun PDF hasil scan dengan fitur whiteout penutup teks langsung di browser.',
+      url: '/tools/pdf-editor',
+      icon: '✏️',
+      buttonText: 'Coba Direct PDF Editor Sekarang ⚡',
+    },
+    en: {
+      title: 'How to Edit Scanned & Digital PDF Text Online for Free Without Software (Whiteout & Replace Feature)',
+      excerpt: 'Practical step-by-step guide to fix typos in digital and scanned PDFs directly in your browser. Whiteout old text and overlay custom draggable text with 100% client-side privacy.',
+      category: 'PDF Documents',
+      date: 'November 2, 2026',
+      readTime: '6 min',
+      content: `
+### Easily Fix Typos in Scanned and Flat Image PDFs
+Editing text on scanned PDFs used to require costly software or clunky OCR converters that ruined your document formatting.
+
+With KompresKilat's **[Direct PDF Text Editor](/tools/pdf-editor)**, you can now:
+1. **Edit Digital PDF Text**: Click any text block to change words, fonts, colors, and reposition via drag-and-drop.
+2. **Whiteout Scanned PDFs**: Draw a clean white box over mistakes on scanned pages, then overlay new custom text directly on top.
+3. **100% Client-Side Privacy**: All operations are rendered locally in browser RAM using *pdf-lib* with zero server uploads.
+`,
+      relatedTool: {
+        title: 'Direct PDF Text Editor',
+        description: 'Edit digital text or whiteout scanned PDFs directly in your browser.',
+        buttonText: 'Open PDF Editor ⚡',
+      },
+    },
+  },
+  {
+    slug: 'cara-membuat-kartu-ucapan-online-gratis-dengan-foto-sendiri',
+    title: 'Cara Membuat Kartu Ucapan Online Gratis dengan Foto Sendiri untuk Ulang Tahun, Hari Guru & Hari Raya',
+    excerpt: 'Rancang kartu ucapan estetik beresolusi tinggi (1200×1200 px) langsung di browser. Pilih tema gradasi, unggah foto personal sebagai avatar atau background blend, dan unduh gratis dalam format PNG/JPG.',
+    category: 'Gambar & Foto',
+    date: '2 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Merayakan Momen Spesial dengan Kartu Ucapan Personal & Estetik
+Menyampaikan ucapan selamat melalui pesan teks WhatsApp atau media sosial sering kali terasa kurang berkesan jika hanya berupa teks biasa. Kartu ucapan grafis yang memuat **foto kenangan bersama, doa tulus, dan nama penerima** memiliki nilai emosional yang jauh lebih hangat dan mendalam.
+
+Namun, tidak semua orang memiliki keahlian menggunakan software desain yang rumit seperti Adobe Photoshop atau ingin repot berlangganan template berbayar di aplikasi luar. 
+
+Untuk menjawab kebutuhan tersebut, KompresKilat meluncurkan **[Creative Studio & Pembuat Kartu Ucapan](/tools/creative-studio)** — solusi praktis, cepat, dan 100% gratis untuk merancang kartu ucapan berkualitas cetak beresolusi tinggi (1200 × 1200 piksel) langsung dari peramban HP maupun laptop Anda.
+
+---
+
+### Fitur Unggulan Creative Studio KompresKilat:
+
+#### 1. Kategori Acara Lengkap dengan Palet Gradasi Tematik
+Tersedia 4 kategori acara utama dengan tema warna yang dirancang khusus oleh desainer:
+- **🎂 Ulang Tahun**: Sunset Celebration, Cyber Party neon, Luxury Midnight Gold, dan Sweet Peach pastel.
+- **👩‍🏫 Hari Guru Nasional (25 November)**: Royal Academic Blue, Emerald Wisdom, Vintage Scholar, dan Executive Slate.
+- **🌙 Hari Raya (Idul Fitri & Ramadhan)**: Islamic Emerald & Gold, Twilight Ramadhan, dan Desert Oasis.
+- **🇮🇩 Hari Nasional (17 Agustus Kemerdekaan)**: Merah Putih Heroik, Garuda Nusantara Gold, dan Semangat Juang 1945.
+
+#### 2. Kustomisasi Foto Pribadi (Photo Blending Engine)
+Anda dapat mengunggah foto Anda sendiri atau foto orang yang Anda sayangi dengan 3 pilihan gaya:
+- **Avatar Bulat (*Circle Frame*)**: Foto terpotong bulat rapi dengan cincin kilau (*accent glow*) di atas kartu.
+- **Bingkai Persegi (*Square Frame*)**: Frame foto modern dengan sudut membulat dan efek bayangan lembut.
+- **Background Blend**: Foto membaur sebagai latar belakang penuh dengan pengaturan transparansi (*opacity slider*) agar teks tetap nyaman dibaca.
+
+#### 3. Editor Gambar Cepat & Template Siap Unduh
+Selain kartu ucapan, Creative Studio juga dilengkapi:
+- **Editor Gambar Kilat**: Potong foto (*Crop* 1:1, 4:5 Instagram, 16:9), putar 90°, ubah dimensi (*resize*), dan atur pencahayaan (*Brightness, Contrast, Saturation*).
+- **Katalog Template Siap Pakai**: Galeri template sertifikat penghargaan, poster promo UMKM, dan kartu ucapan beresolusi tajam yang bisa langsung diunduh dengan satu klik.
+
+---
+
+### Panduan Cepat Membuat Kartu Ucapan dalam 3 Menit:
+1. **Kunjungi Halaman Alat**: Masuk ke [Creative Studio & Kartu Ucapan](/tools/creative-studio).
+2. **Pilih Kategori Acara**: Klik tab kategori (misalnya *"🎂 Ulang Tahun"* atau *"👩‍🏫 Hari Guru Nasional"*).
+3. **Pilih Tema Warna**: Tentukan palet gradasi yang paling sesuai dengan kepribadian penerima.
+4. **Unggah Foto (Opsional)**: Klik *"Klik untuk Unggah Foto Anda"*, lalu pilih gaya penyematan (*Avatar Bulat, Bingkai Kotak, atau Background Blend*).
+5. **Sesuaikan Teks**:
+   - Ketik nama penerima (misal: *"Untuk: Bpk. Haryanto, S.Pd."*).
+   - Tulis ucapan dan doa tulus di kolom pesan.
+   - Cantumkan nama pengirim (misal: *"Dari: Murid-Murid Angkatan 2026"*).
+   - Pilih gaya huruf (*Serif Klasik, Sans Modern, atau Display Tegas*).
+6. **Unduh Hasil Kartu**: Klik tombol **"Unduh Kartu HD (.PNG)"** atau **"Format JPG"**. Gambar siap dibagikan ke WhatsApp Story, Instagram Feed, atau dicetak fisik.
+
+---
+
+### Mengapa Lebih Baik Menggunakan KompresKilat?
+- **Resolusi Tinggi Tanpa Pecah**: Output dihasilkan pada ukuran 1200 × 1200 px (HD).
+- **Bebas Watermark & Iklan Pengganggu**: Tidak ada cap logo pihak ketiga pada gambar hasil kreasi Anda.
+- **100% Menjaga Privasi**: Foto dan ucapan pribadi Anda diproses sepenuhnya di peramban lokal perangkat tanpa pernah disimpan di server luar.
+`,
+    relatedTool: {
+      title: 'Creative Studio & Kartu Ucapan Suite',
+      description: 'Rancang kartu ucapan estetik dengan foto sendiri, editor gambar kilat, dan katalog template siap unduh.',
+      url: '/tools/creative-studio',
+      icon: '🎨',
+      buttonText: 'Buat Kartu Ucapan Sekarang ⚡',
+    },
+    en: {
+      title: 'How to Make Free Greeting Cards Online with Your Own Photos (Birthday, Teacher Day & Holidays)',
+      excerpt: 'Design aesthetic high-resolution greeting cards (1200x1200px) directly in your browser. Pick gradient themes, upload photos, and download for free in PNG/JPG.',
+      category: 'Images & Photos',
+      date: 'November 2, 2026',
+      readTime: '5 min',
+      content: `
+### Create Meaningful, Personalized Greeting Cards in Minutes
+Sending a personalized greeting card with a heartfelt message and personal photo creates lasting emotional connections.
+
+With KompresKilat's **[Creative Studio](/tools/creative-studio)**, you can easily:
+- Choose from themed event categories (Birthdays, Teachers Day, Eid Mubarak, Independence Day).
+- Upload personal photos as circular avatars, rounded frames, or blended background overlays.
+- Export crisp 1200x1200px HD images in PNG or JPG with zero watermarks and 100% privacy.
+`,
+      relatedTool: {
+        title: 'Creative Studio & Greeting Card Suite',
+        description: 'Design beautiful greeting cards with your own photo directly in your browser.',
+        buttonText: 'Create Greeting Card Now ⚡',
+      },
+    },
+  },
+  {
     slug: 'cara-menggabungkan-file-pdf-menjadi-satu-online-gratis',
     title: 'Cara Menggabungkan File PDF Jadi Satu Online Gratis & Aman untuk Syarat CPNS & BUMN',
     excerpt: 'Panduan lengkap menyatukan berkas CV, ijazah, sertifikat, dan transkrip nilai menjadi satu file PDF utuh dengan mudah, bebas atur urutan halaman, dan 100% aman tanpa upload server.',
