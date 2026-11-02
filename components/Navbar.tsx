@@ -213,7 +213,7 @@ export default function Navbar() {
         {/* ========================================================== */}
         <div className="hidden md:flex items-center gap-2">
           {/* Sleek Search Button Trigger (Hemat Ruang Horizontal) */}
-          <SearchBar variant="desktop-button" placeholder="Cari alat... (⌘K)" />
+          <SearchBar variant="desktop-button" placeholder="Cari alat atau fitur..." />
 
           {/* Subtle Vertical Divider */}
           <div className="h-5 w-px bg-slate-200 dark:bg-slate-700/80 mx-1" />

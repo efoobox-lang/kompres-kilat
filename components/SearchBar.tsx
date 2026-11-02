@@ -133,16 +133,15 @@ export default function SearchBar({
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className={`hidden md:flex items-center justify-between gap-2.5 px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100/90 dark:bg-slate-800/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-slate-700/70 rounded-xl transition-all duration-150 shadow-2xs group cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 ${className}`}
-          title="Cari alat (Ctrl + K)"
+          className={`hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100/90 dark:bg-slate-800/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-slate-700/70 rounded-xl transition-all duration-150 shadow-2xs group cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${className}`}
+          title="Cari alat atau fitur (Ctrl + K)"
           aria-label="Cari alat atau fitur"
         >
           <div className="flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
-            <span className="hidden lg:inline">{placeholder}</span>
-            <span className="lg:hidden">Cari alat...</span>
+            <span className="font-normal">{placeholder || 'Cari alat atau fitur...'}</span>
           </div>
-          <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-850 rounded border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+          <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-700/80 shadow-2xs select-none">
             <Command className="w-2.5 h-2.5" /> K
           </kbd>
         </button>
@@ -229,7 +228,7 @@ export default function SearchBar({
                 type="text"
                 value={query}
                 onChange={(e) => handleQueryChange(e.target.value)}
-                placeholder="Ketik nama alat atau kata kunci (misal: PDF, HEIC, Resi)..."
+                placeholder="Cari alat atau fitur..."
                 className="flex-1 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
               />
 
