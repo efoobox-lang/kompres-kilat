@@ -26,6 +26,9 @@ import {
   Bold,
   RefreshCw,
   FileText,
+  Eraser,
+  Square,
+  AlertCircle,
 } from 'lucide-react';
 
 interface TextEditItem {
@@ -49,6 +52,16 @@ interface TextEditItem {
   isCustomAdd?: boolean; // Jika true, teks baru buatan pengguna
 }
 
+// Kotak Penutup Putih (Whiteout / Redact Box) untuk PDF scan maupun digital
+interface WhiteoutBox {
+  id: string;
+  pageNum: number;
+  pdfX: number; // Koordinat X kiri-bawah dalam PDF
+  pdfY: number; // Koordinat Y kiri-bawah dalam PDF
+  width: number; // Lebar dalam poin PDF
+  height: number; // Tinggi dalam poin PDF
+}
+
 const COLOR_OPTIONS = [
   { name: 'Hitam Teks', value: '#000000', rgb: [0, 0, 0] },
   { name: 'Biru Dokumen', value: '#1D4ED8', rgb: [0.11, 0.31, 0.85] },
@@ -68,7 +81,7 @@ export default function DirectPdfEditorPage() {
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Dimensi Halaman PDF Aktif
+  // Dimensi Halaman PDF Aktif (point)
   const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number }>({
     width: 595,
     height: 842,
@@ -79,7 +92,17 @@ export default function DirectPdfEditorPage() {
   const [editedItems, setEditedItems] = useState<TextEditItem[]>([]);
   const [activeEditingId, setActiveEditingId] = useState<string | null>(null);
 
-  // Form Input Edit Aktif
+  // State Whiteout / Mode Koreksi untuk PDF Scan & Gambar
+  const [whiteoutBoxes, setWhiteoutBoxes] = useState<WhiteoutBox[]>([]);
+  const [isWhiteoutMode, setIsWhiteoutMode] = useState<boolean>(false);
+  const [activeWhiteoutId, setActiveWhiteoutId] = useState<string | null>(null);
+
+  // State Interaktif Menggambar Kotak Whiteout di Kanvas
+  const [isDrawingWhiteout, setIsDrawingWhiteout] = useState<boolean>(false);
+  const [drawStartPos, setDrawStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [drawCurrentPos, setDrawCurrentPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Form Input Edit Teks Aktif
   const [editTextValue, setEditTextValue] = useState<string>('');
   const [editTextColor, setEditTextColor] = useState<string>('#000000');
   const [editTextSize, setEditTextSize] = useState<number>(12);
@@ -91,6 +114,7 @@ export default function DirectPdfEditorPage() {
 
   // References
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayContainerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfJsDocRef = useRef<any>(null);
@@ -99,7 +123,7 @@ export default function DirectPdfEditorPage() {
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   // 1. Inisialisasi & Muat PDF.js secara Dinamis
@@ -121,12 +145,11 @@ export default function DirectPdfEditorPage() {
       setStatusMessage('Merender tampilan visual halaman PDF...');
 
       try {
-        // Batalkan tugas render sebelumnya jika masih berjalan
         if (activeRenderTaskRef.current) {
           try {
             activeRenderTaskRef.current.cancel();
           } catch {
-            // Abaikan error pembatalan
+            // Abaikan pembatalan
           }
         }
 
@@ -137,7 +160,6 @@ export default function DirectPdfEditorPage() {
         const pageH = page.view[3] - page.view[1];
         setPdfPageDimensions({ width: pageW, height: pageH });
 
-        // Tunggu hingga canvas terpasang jika belum siap
         const canvas = canvasRef.current;
         if (!canvas) {
           setIsLoading(false);
@@ -204,7 +226,7 @@ export default function DirectPdfEditorPage() {
       } catch (err: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((err as any)?.name === 'RenderingCancelledException') {
-          return; // Abaikan pembatalan render normal
+          return;
         }
         console.error('Error saat merender PDF:', err);
         setErrorMessage('Gagal merender halaman PDF. Pastikan berkas tidak rusak.');
@@ -222,18 +244,19 @@ export default function DirectPdfEditorPage() {
     }
   }, [currentPage, scale, renderPdfPage]);
 
-  // 3. Tangani Upload File PDF Pengguna dengan Validasi Keamanan
+  // 3. Tangani Upload File PDF Pengguna
   const handleFileUpload = async (file: File) => {
     setErrorMessage('');
     setIsLoading(true);
     setStatusMessage('Memvalidasi dan memuat berkas PDF...');
     setSelectedFile(file);
     setEditedItems([]);
+    setWhiteoutBoxes([]);
     setActiveEditingId(null);
+    setActiveWhiteoutId(null);
     setPageDetectedItems([]);
 
     try {
-      // Validasi berkas client-side
       const validation = await validateUploadedFile(file, {
         allowedExtensions: ['pdf', '.pdf'],
         allowedMimeTypes: ['application/pdf'],
@@ -263,7 +286,6 @@ export default function DirectPdfEditorPage() {
       setTotalPages(pdfDoc.numPages);
       setCurrentPage(1);
 
-      // Render pertama kali (tunggu render selesai)
       await renderPdfPage(pdfDoc, 1, scale);
       showToast(`Dokumen "${file.name}" siap diedit!`);
     } catch (err: unknown) {
@@ -339,7 +361,7 @@ export default function DirectPdfEditorPage() {
         color: rgb(0.2, 0.2, 0.2),
       });
 
-      page.drawText('Catatan: Klik kalimat mana saja untuk edit teks, hapus, atau seret posisinya!', {
+      page.drawText('Catatan: Klik kalimat mana saja untuk edit teks, tutup putih (whiteout), atau seret posisinya!', {
         x: 60,
         y: 520,
         size: 11,
@@ -354,7 +376,9 @@ export default function DirectPdfEditorPage() {
       });
       setSelectedFile(fakeFile);
       setEditedItems([]);
+      setWhiteoutBoxes([]);
       setActiveEditingId(null);
+      setActiveWhiteoutId(null);
 
       const pdfjs = await loadPdfJs();
       const loadingTask = pdfjs.getDocument({
@@ -369,7 +393,7 @@ export default function DirectPdfEditorPage() {
       setCurrentPage(1);
 
       await renderPdfPage(pdfDoc, 1, scale);
-      showToast('Contoh surat berhasil dimuat! Klik kalimat mana pun untuk mengedit.');
+      showToast('Contoh surat berhasil dimuat! Klik teks mana pun atau buat kotak whiteout.');
     } catch (err) {
       console.error('Gagal membuat contoh PDF:', err);
       setErrorMessage('Terjadi kendala saat memuat contoh dokumen.');
@@ -383,6 +407,7 @@ export default function DirectPdfEditorPage() {
     if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
     setActiveEditingId(null);
+    setActiveWhiteoutId(null);
   };
 
   // Zoom Kanvas
@@ -395,6 +420,7 @@ export default function DirectPdfEditorPage() {
   const handleSelectItemToEdit = (item: TextEditItem) => {
     const existing = editedItems.find((e) => e.id === item.id);
     setActiveEditingId(item.id);
+    setActiveWhiteoutId(null);
     setEditTextValue(existing ? existing.currentText : item.originalText);
     setEditTextColor(existing ? existing.color : item.color);
     setEditTextSize(existing ? existing.fontSize : item.fontSize);
@@ -433,7 +459,7 @@ export default function DirectPdfEditorPage() {
     showToast('Teks berhasil diperbarui!');
   };
 
-  // Hapus Teks (Redact / Tutup Putih pada Dokumen)
+  // Hapus Teks Asli (Redact Teks Digital)
   const handleDeleteTextItem = (itemId: string) => {
     const baseItem =
       pageDetectedItems.find((i) => i.id === itemId) ||
@@ -467,11 +493,46 @@ export default function DirectPdfEditorPage() {
     showToast('Teks asli dikembalikan.');
   };
 
-  // Tambahkan Teks Baru di Tengah Halaman
+  // ==========================================================================
+  // FITUR KHUSUS PDF SCAN / GAMBAR: WHITEOUT & CUSTOM TEXT OVERLAY
+  // ==========================================================================
+
+  // Tambahkan Kotak Whiteout Cepat (Default 120 x 24 point)
+  const handleAddWhiteoutBox = (customX?: number, customY?: number, customW = 140, customH = 26) => {
+    const pdfPageH = pdfPageDimensions.height;
+    const initialPdfX = customX !== undefined ? customX : 60;
+    const initialPdfY = customY !== undefined ? customY : Math.round(pdfPageH * 0.5);
+
+    const newBox: WhiteoutBox = {
+      id: `whiteout_${Date.now()}`,
+      pageNum: currentPage,
+      pdfX: Math.round(initialPdfX),
+      pdfY: Math.round(initialPdfY),
+      width: Math.round(customW),
+      height: Math.round(customH),
+    };
+
+    setWhiteoutBoxes((prev) => [...prev, newBox]);
+    setActiveWhiteoutId(newBox.id);
+    setActiveEditingId(null);
+    showToast('Kotak penutup putih (whiteout) ditambahkan! Seret ke teks yang ingin ditutupi.');
+  };
+
+  // Hapus Kotak Whiteout
+  const handleDeleteWhiteoutBox = (boxId: string) => {
+    setWhiteoutBoxes((prev) => prev.filter((b) => b.id !== boxId));
+    if (activeWhiteoutId === boxId) setActiveWhiteoutId(null);
+    showToast('Kotak penutup putih dihapus.');
+  };
+
+  // Tambahkan Teks Baru Bebas di Atas Dokumen (bisa di atas area Whiteout)
   const handleAddNewTextBlock = () => {
     const pdfPageH = pdfPageDimensions.height;
-    const initialPdfX = 60;
-    const initialPdfY = Math.round(pdfPageH * 0.5);
+    // Jika ada whiteout box di halaman aktif, tempatkan teks baru tepat di atas kotak tersebut
+    const lastBox = whiteoutBoxes.filter((b) => b.pageNum === currentPage).slice(-1)[0];
+
+    const initialPdfX = lastBox ? lastBox.pdfX + 4 : 60;
+    const initialPdfY = lastBox ? lastBox.pdfY + 4 : Math.round(pdfPageH * 0.5);
 
     const newCustomItem: TextEditItem = {
       id: `custom_${Date.now()}`,
@@ -480,7 +541,7 @@ export default function DirectPdfEditorPage() {
       currentText: 'Ketik Teks Baru di Sini',
       origPdfX: initialPdfX,
       origPdfY: initialPdfY,
-      origPdfWidth: 180,
+      origPdfWidth: 160,
       origPdfHeight: 16,
       pdfX: initialPdfX,
       pdfY: initialPdfY,
@@ -494,14 +555,77 @@ export default function DirectPdfEditorPage() {
 
     setEditedItems((prev) => [...prev, newCustomItem]);
     setActiveEditingId(newCustomItem.id);
+    setActiveWhiteoutId(null);
     setEditTextValue('Ketik Teks Baru di Sini');
     setEditTextColor('#000000');
     setEditTextSize(14);
     setEditTextBold(false);
-    showToast('Kotak teks baru ditambahkan! Anda dapat menyeret posisinya.');
+    showToast('Teks baru ditambahkan! Anda dapat menyeret posisinya langsung ke atas area penutup.');
   };
 
-  // 5. Fitur Geser Teks (Drag & Drop Repositioning)
+  // ==========================================================================
+  // FITUR INTERAKTIF: MENGGAMBAR KOTAK WHITEOUT DENGAN MOUSE/SENTUHAN
+  // ==========================================================================
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isWhiteoutMode) return;
+    const container = overlayContainerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const startX = e.clientX - rect.left;
+    const startY = e.clientY - rect.top;
+
+    setIsDrawingWhiteout(true);
+    setDrawStartPos({ x: startX, y: startY });
+    setDrawCurrentPos({ x: startX, y: startY });
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDrawingWhiteout || !overlayContainerRef.current) return;
+    const rect = overlayContainerRef.current.getBoundingClientRect();
+    setDrawCurrentPos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const handleCanvasMouseUp = () => {
+    if (!isDrawingWhiteout || !drawStartPos || !drawCurrentPos) {
+      setIsDrawingWhiteout(false);
+      return;
+    }
+
+    const minScreenX = Math.min(drawStartPos.x, drawCurrentPos.x);
+    const minScreenY = Math.min(drawStartPos.y, drawCurrentPos.y);
+    const screenW = Math.abs(drawCurrentPos.x - drawStartPos.x);
+    const screenH = Math.abs(drawCurrentPos.y - drawStartPos.y);
+
+    setIsDrawingWhiteout(false);
+    setDrawStartPos(null);
+    setDrawCurrentPos(null);
+
+    // Jika jarak drag sangat kecil (hanya klik biasa), buat ukuran default
+    if (screenW < 8 && screenH < 8) {
+      const clickPdfX = (minScreenX / scale) - 60;
+      const clickPdfY = pdfPageDimensions.height - (minScreenY / scale) - 12;
+      handleAddWhiteoutBox(Math.max(0, clickPdfX), Math.max(0, clickPdfY), 120, 24);
+      return;
+    }
+
+    // Hitung koordinat PDF
+    const pdfW = Math.max(15, screenW / scale);
+    const pdfH = Math.max(10, screenH / scale);
+    const pdfX = Math.max(0, minScreenX / scale);
+    const pdfY = Math.max(0, pdfPageDimensions.height - (minScreenY / scale) - pdfH);
+
+    handleAddWhiteoutBox(pdfX, pdfY, pdfW, pdfH);
+  };
+
+  // ==========================================================================
+  // FITUR GESER (DRAG & DROP): TEKS & KOTAK WHITEOUT
+  // ==========================================================================
+
+  // Geser Posisi Teks (Drag Text)
   const handleStartDrag = (
     e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
     itemId: string
@@ -531,7 +655,6 @@ export default function DirectPdfEditorPage() {
       const deltaX = (moveClientX - startClientX) / scale;
       const deltaY = (moveClientY - startClientY) / scale;
 
-      // Pada koordinat PDF, Y berawal dari bawah (bawah ke atas); sehingga gerakan ke bawah mengurangi Y
       const newPdfX = Math.round(initialPdfX + deltaX);
       const newPdfY = Math.round(initialPdfY - deltaY);
 
@@ -554,53 +677,168 @@ export default function DirectPdfEditorPage() {
     window.addEventListener('touchend', onEnd);
   };
 
-  // 6. Simpan & Ekspor File PDF Menggunakan pdf-lib
+  // Geser Posisi Kotak Whiteout (Drag Whiteout Box)
+  const handleStartDragWhiteout = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+    boxId: string
+  ) => {
+    e.stopPropagation();
+    setActiveWhiteoutId(boxId);
+    setActiveEditingId(null);
+
+    const isTouch = 'touches' in e;
+    const startClientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const startClientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    const targetBox = whiteoutBoxes.find((b) => b.id === boxId);
+    if (!targetBox) return;
+
+    const initialPdfX = targetBox.pdfX;
+    const initialPdfY = targetBox.pdfY;
+
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveClientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const moveClientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+      const deltaX = (moveClientX - startClientX) / scale;
+      const deltaY = (moveClientY - startClientY) / scale;
+
+      const newPdfX = Math.round(initialPdfX + deltaX);
+      const newPdfY = Math.round(initialPdfY - deltaY);
+
+      setWhiteoutBoxes((prev) =>
+        prev.map((b) => (b.id === boxId ? { ...b, pdfX: newPdfX, pdfY: newPdfY } : b))
+      );
+    };
+
+    const onEnd = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      showToast('Posisi kotak whiteout diperbarui!');
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  };
+
+  // Ubah Ukuran Kotak Whiteout (Resize Handle)
+  const handleStartResizeWhiteout = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+    boxId: string
+  ) => {
+    e.stopPropagation();
+    setActiveWhiteoutId(boxId);
+
+    const isTouch = 'touches' in e;
+    const startClientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const startClientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    const targetBox = whiteoutBoxes.find((b) => b.id === boxId);
+    if (!targetBox) return;
+
+    const initialW = targetBox.width;
+    const initialH = targetBox.height;
+    const initialPdfY = targetBox.pdfY;
+
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveClientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const moveClientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+      const deltaX = (moveClientX - startClientX) / scale;
+      const deltaY = (moveClientY - startClientY) / scale;
+
+      const newW = Math.max(20, Math.round(initialW + deltaX));
+      const newH = Math.max(10, Math.round(initialH + deltaY));
+      const newPdfY = Math.round(initialPdfY - deltaY);
+
+      setWhiteoutBoxes((prev) =>
+        prev.map((b) => (b.id === boxId ? { ...b, width: newW, height: newH, pdfY: newPdfY } : b))
+      );
+    };
+
+    const onEnd = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  };
+
+  // ==========================================================================
+  // 6. SIMPAN & EKSPOR PDF MENGGUNAKAN PDF-LIB (100% CLIENT-SIDE)
+  // ==========================================================================
   const handleSaveAndDownloadPdf = async () => {
     if (!originalBytes) {
       alert('Belum ada dokumen PDF yang dimuat.');
       return;
     }
 
-    if (editedItems.length === 0) {
-      alert('Belum ada teks yang diubah, dihapus, atau ditambahkan.');
+    if (editedItems.length === 0 && whiteoutBoxes.length === 0) {
+      alert('Belum ada teks atau kotak whiteout yang ditambahkan/diubah.');
       return;
     }
 
     setIsSaving(true);
-    setStatusMessage('Menyematkan modifikasi teks langsung ke struktur PDF...');
+    setStatusMessage('Menyematkan lapisan whiteout dan teks baru ke PDF...');
 
     try {
       const pdfDoc = await PDFDocument.load(originalBytes);
       const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      for (const item of editedItems) {
-        const pageIndex = item.pageNum - 1;
-        if (pageIndex < 0 || pageIndex >= pdfDoc.getPageCount()) continue;
+      const pageCount = pdfDoc.getPageCount();
 
-        const page = pdfDoc.getPage(pageIndex);
+      for (let pIdx = 0; pIdx < pageCount; pIdx++) {
+        const pageNum = pIdx + 1;
+        const page = pdfDoc.getPage(pIdx);
 
-        // 1. Jika ini teks asli PDF yang diedit atau dihapus: Tutup teks lama dengan blok putih
-        if (!item.isCustomAdd && item.origPdfWidth > 0 && item.origPdfHeight > 0) {
+        // LANGKAH 1: Gambar seluruh kotak Whiteout pada halaman ini
+        const pageWhiteouts = whiteoutBoxes.filter((b) => b.pageNum === pageNum);
+        for (const box of pageWhiteouts) {
           page.drawRectangle({
-            x: Math.max(0, item.origPdfX - 1.5),
-            y: Math.max(0, item.origPdfY - 1.5),
-            width: item.origPdfWidth + 3,
-            height: item.origPdfHeight + 3,
-            color: rgb(1, 1, 1), // Redact visual
+            x: Math.max(0, box.pdfX),
+            y: Math.max(0, box.pdfY),
+            width: Math.max(5, box.width),
+            height: Math.max(5, box.height),
+            color: rgb(1, 1, 1), // Putih murni 100% untuk menutupi teks scan/gambar
           });
         }
 
-        // 2. Jika tidak dihapus: Tulis teks baru pada koordinat pdfX dan pdfY
-        if (!item.isDeleted && item.currentText.trim()) {
-          const matchedColor = COLOR_OPTIONS.find((c) => c.value === item.color)?.rgb || [0, 0, 0];
-          page.drawText(item.currentText, {
-            x: Math.max(0, item.pdfX),
-            y: Math.max(0, item.pdfY),
-            size: Math.max(7, item.fontSize),
-            font: item.isBold || item.fontSize >= 15 ? helveticaBold : helvetica,
-            color: rgb(matchedColor[0], matchedColor[1], matchedColor[2]),
-          });
+        // LANGKAH 2: Gambar penutup putih untuk teks digital yang diedit/dihapus
+        const pageEdits = editedItems.filter((it) => it.pageNum === pageNum);
+        for (const item of pageEdits) {
+          if (!item.isCustomAdd && item.origPdfWidth > 0 && item.origPdfHeight > 0) {
+            page.drawRectangle({
+              x: Math.max(0, item.origPdfX - 1.5),
+              y: Math.max(0, item.origPdfY - 1.5),
+              width: item.origPdfWidth + 3,
+              height: item.origPdfHeight + 3,
+              color: rgb(1, 1, 1),
+            });
+          }
+        }
+
+        // LANGKAH 3: Tuliskan teks baru / hasil edit di atas halaman (termasuk di atas whiteout)
+        for (const item of pageEdits) {
+          if (!item.isDeleted && item.currentText.trim()) {
+            const matchedColor = COLOR_OPTIONS.find((c) => c.value === item.color)?.rgb || [0, 0, 0];
+            page.drawText(item.currentText, {
+              x: Math.max(0, item.pdfX),
+              y: Math.max(0, item.pdfY),
+              size: Math.max(7, item.fontSize),
+              font: item.isBold || item.fontSize >= 15 ? helveticaBold : helvetica,
+              color: rgb(matchedColor[0], matchedColor[1], matchedColor[2]),
+            });
+          }
         }
       }
 
@@ -612,7 +850,7 @@ export default function DirectPdfEditorPage() {
       showToast('PDF hasil edit berhasil disimpan dan diunduh!');
     } catch (err) {
       console.error('Gagal menyimpan PDF:', err);
-      alert('Terjadi kendala saat menyematkan teks ke PDF.');
+      alert('Terjadi kendala saat menyematkan teks dan whiteout ke PDF.');
     } finally {
       setIsSaving(false);
       setStatusMessage('');
@@ -626,10 +864,16 @@ export default function DirectPdfEditorPage() {
     setCurrentPage(1);
     setPageDetectedItems([]);
     setEditedItems([]);
+    setWhiteoutBoxes([]);
     setActiveEditingId(null);
+    setActiveWhiteoutId(null);
+    setIsWhiteoutMode(false);
     pdfJsDocRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  // Jumlah total modifikasi (teks + whiteout)
+  const totalModifications = editedItems.length + whiteoutBoxes.length;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans flex flex-col transition-colors">
@@ -639,7 +883,7 @@ export default function DirectPdfEditorPage() {
           '@type': 'WebApplication',
           name: 'Direct PDF Text Editor - KompresKilat',
           description:
-            'Aplikasi online gratis untuk edit teks, hapus kalimat, tambah tulisan baru, dan geser posisi teks langsung di dokumen PDF tanpa konversi.',
+            'Aplikasi online gratis untuk edit teks, hapus kalimat, tambah tulisan baru, geser posisi teks, dan whiteout teks pada dokumen PDF scan maupun digital 100% lokal di browser.',
           applicationCategory: 'BusinessApplication',
           operatingSystem: 'All',
         }}
@@ -659,14 +903,13 @@ export default function DirectPdfEditorPage() {
         <div className="mb-8 text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-bold mb-3 shadow-2xs">
             <Edit3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>Direct PDF Text Editor (100% Client-Side)</span>
+            <span>Direct PDF Text Editor &amp; Whiteout Tool (100% Client-Side)</span>
           </div>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-            Edit, Hapus &amp; Geser Teks PDF di Browser
+            Edit Teks, Tutup (Whiteout) &amp; Tambah Tulisan PDF
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Koreksi salah ketik (typo) teks asli, hapus kalimat, tambahkan tulisan baru, dan{' '}
-            <b>geser posisinya secara bebas</b> langsung pada lembar dokumen PDF Anda tanpa konversi.
+            Koreksi typo pada dokumen PDF digital maupun <b>PDF hasil scan/gambar</b> dengan fitur kotak penutup putih (whiteout), tambahkan tulisan baru, dan <b>geser posisinya secara bebas</b> langsung di peramban.
           </p>
 
           <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium">
@@ -678,72 +921,94 @@ export default function DirectPdfEditorPage() {
         {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs sm:text-sm flex items-center justify-between gap-3">
-            <span>{errorMessage}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span>{errorMessage}</span>
+            </div>
             <button
+              type="button"
               onClick={() => setErrorMessage('')}
-              className="font-bold underline cursor-pointer text-xs"
+              className="text-xs font-bold underline cursor-pointer"
             >
               Tutup
             </button>
           </div>
         )}
 
-        {/* Toolbar Utama */}
-        <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-6 flex flex-wrap items-center justify-between gap-3">
-          {/* Pilihan File / Upload */}
-          <div className="flex items-center gap-2 flex-wrap">
+        {/* Toolbar Utama Dokumen */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+              className="hidden"
+            />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Buka Dokumen PDF</span>
+              <span>{selectedFile ? 'Ganti File PDF' : 'Buka File PDF'}</span>
             </button>
 
-            {!selectedFile && (
+            {totalPages > 0 && (
               <button
                 type="button"
-                onClick={handleLoadSamplePdf}
-                disabled={isLoading}
-                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                onClick={handleResetDocument}
+                className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1"
+                title="Batal dan tutup dokumen saat ini"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Coba Contoh Surat PDF</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Tutup</span>
               </button>
             )}
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="application/pdf,.pdf"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleFileUpload(f);
-              }}
-              className="hidden"
-            />
-
             {selectedFile && (
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
-                <FileText className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[160px] sm:max-w-xs">
-                  {selectedFile.name}
-                </span>
-                <button
-                  onClick={handleResetDocument}
-                  className="text-slate-400 hover:text-red-500 ml-1 p-0.5 rounded cursor-pointer"
-                  title="Ganti Dokumen"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                </button>
-              </div>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl truncate max-w-[220px]">
+                {selectedFile.name}
+              </span>
             )}
           </div>
 
-          {/* Aksi Toolbar PDF: Tambah Teks & Simpan */}
           {totalPages > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Tombol Toggle Mode Whiteout / Koreksi */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsWhiteoutMode(!isWhiteoutMode);
+                  showToast(
+                    !isWhiteoutMode
+                      ? 'Mode Koreksi Aktif: Klik/seret di kanvas dokumen untuk menutup teks lama.'
+                      : 'Mode Koreksi dinonaktifkan.'
+                  );
+                }}
+                className={`px-3.5 py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                  isWhiteoutMode
+                    ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-400/30'
+                    : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                }`}
+                title="Aktifkan kursor koreksi untuk menggambar kotak penutup putih di atas teks dokumen"
+              >
+                <Eraser className="w-3.5 h-3.5" />
+                <span>{isWhiteoutMode ? 'Mode Koreksi (Aktif)' : 'Mode Whiteout'}</span>
+              </button>
+
+              {/* Tambah Kotak Whiteout Cepat */}
+              <button
+                type="button"
+                onClick={() => handleAddWhiteoutBox()}
+                className="px-3 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                title="Tambahkan kotak penutup putih instan di tengah halaman"
+              >
+                <Square className="w-3.5 h-3.5 text-slate-500" />
+                <span>+ Kotak Whiteout</span>
+              </button>
+
+              {/* Tambah Teks Baru */}
               <button
                 type="button"
                 onClick={handleAddNewTextBlock}
@@ -753,10 +1018,11 @@ export default function DirectPdfEditorPage() {
                 <span>Tambah Teks Baru (+)</span>
               </button>
 
+              {/* Tombol Simpan & Unduh */}
               <button
                 type="button"
                 onClick={handleSaveAndDownloadPdf}
-                disabled={isSaving || editedItems.length === 0}
+                disabled={isSaving || totalModifications === 0}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs disabled:cursor-not-allowed"
               >
                 {isSaving ? (
@@ -767,7 +1033,7 @@ export default function DirectPdfEditorPage() {
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5" />
-                    <span>Simpan &amp; Unduh ({editedItems.length})</span>
+                    <span>Simpan &amp; Unduh ({totalModifications})</span>
                   </>
                 )}
               </button>
@@ -853,7 +1119,7 @@ export default function DirectPdfEditorPage() {
                 <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-indigo-500 shadow-lg space-y-3.5 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                     <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                      <Edit3 className="w-3.5 h-3.5" /> Edit Kalimat Terpilih
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Teks Terpilih
                     </span>
                     <button
                       type="button"
@@ -866,7 +1132,7 @@ export default function DirectPdfEditorPage() {
 
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Teks Baru:
+                      Isi Teks:
                     </label>
                     <textarea
                       rows={2}
@@ -944,31 +1210,112 @@ export default function DirectPdfEditorPage() {
                   </div>
 
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-                    💡 Tips: Anda dapat langsung menggeser teks ini pada lembar dokumen menggunakan tetikus atau sentuhan jari.
+                    💡 Tips: Seret teks ini untuk memindahkan posisinya langsung ke atas area penutup dokumen.
                   </p>
                 </div>
               )}
 
-              {/* Daftar Perubahan Teks (History Modifikasi) */}
+              {/* Panel Info Whiteout jika ada kotak whiteout yang dipilih */}
+              {activeWhiteoutId && (
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-amber-500 shadow-md space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <Square className="w-3.5 h-3.5" /> Kotak Whiteout Terpilih
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveWhiteoutId(null)}
+                      className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      Tutup ✕
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Seret kotak ini ke atas kalimat yang ingin ditutupi. Tarik sudut kanan-bawah kotak untuk memperbesar/memperkecil ukurannya.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleAddNewTextBlock}
+                      className="flex-1 py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Tambah Teks di Sini</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteWhiteoutBox(activeWhiteoutId)}
+                      className="py-1.5 px-2.5 bg-red-100 hover:bg-red-200 dark:bg-red-950/70 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition cursor-pointer"
+                      title="Hapus Kotak Whiteout Ini"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Daftar Perubahan Teks & Whiteout (History Modifikasi) */}
               <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-indigo-600" /> Riwayat Modifikasi ({editedItems.length})
+                    <Layers className="w-3.5 h-3.5 text-indigo-600" /> Riwayat Modifikasi ({totalModifications})
                   </span>
                 </div>
 
-                {editedItems.length === 0 ? (
+                {totalModifications === 0 ? (
                   <p className="text-xs text-slate-400 italic leading-relaxed">
-                    Belum ada teks yang dimodifikasi. Klik kalimat mana saja pada dokumen di samping untuk mengedit, menghapus, atau menggeser posisinya.
+                    Belum ada teks atau whiteout yang ditambahkan. Gunakan tombol &quot;Mode Whiteout&quot; atau &quot;Tambah Teks Baru (+)&quot; untuk mulai mengedit dokumen.
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {/* Item Kotak Whiteout */}
+                    {whiteoutBoxes.map((box, bIdx) => (
+                      <div
+                        key={box.id}
+                        onClick={() => {
+                          setActiveWhiteoutId(box.id);
+                          setActiveEditingId(null);
+                        }}
+                        className={`p-2 rounded-xl border flex items-center justify-between gap-2 text-xs cursor-pointer ${
+                          activeWhiteoutId === box.id
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400'
+                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block">
+                            Hal. {box.pageNum} • Kotak Whiteout #{bIdx + 1}
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Ukuran: {box.width} × {box.height} pt
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteWhiteoutBox(box.id);
+                          }}
+                          className="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
+                          title="Hapus Kotak Ini"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Item Teks */}
                     {editedItems.map((item) => (
                       <div
                         key={item.id}
-                        className={`p-2.5 rounded-xl border flex items-start justify-between gap-2 text-xs ${
+                        onClick={() => {
+                          if (!item.isDeleted) handleSelectItemToEdit(item);
+                        }}
+                        className={`p-2.5 rounded-xl border flex items-start justify-between gap-2 text-xs cursor-pointer ${
                           item.isDeleted
                             ? 'bg-red-50/60 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
+                            : activeEditingId === item.id
+                            ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500'
                             : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
                         }`}
                       >
@@ -982,8 +1329,8 @@ export default function DirectPdfEditorPage() {
                             {item.isDeleted
                               ? 'Dihapus (Ditutup Putih)'
                               : item.isCustomAdd
-                              ? 'Teks Baru'
-                              : 'Diedit / Digeser'}
+                              ? 'Teks Tambahan'
+                              : 'Teks Diedit'}
                           </span>
 
                           {item.isDeleted ? (
@@ -1008,7 +1355,10 @@ export default function DirectPdfEditorPage() {
                           {item.isDeleted ? (
                             <button
                               type="button"
-                              onClick={() => handleRestoreTextItem(item.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRestoreTextItem(item.id);
+                              }}
                               className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded cursor-pointer"
                               title="Kembalikan Teks Asli"
                             >
@@ -1017,7 +1367,10 @@ export default function DirectPdfEditorPage() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() => handleDeleteTextItem(item.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTextItem(item.id);
+                              }}
                               className="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer"
                               title="Hapus"
                             >
@@ -1032,41 +1385,157 @@ export default function DirectPdfEditorPage() {
               </div>
             </div>
 
-            {/* Kolom Kanan: Area Kanvas PDF & Lapisan Teks Interaktif yang Bisa Digeser (8 Kolom) */}
+            {/* Kolom Kanan: Kanvas PDF & Lapisan Interaktif (8 Kolom) */}
             <div className="lg:col-span-8 space-y-3">
+              {/* Petunjuk Interaksi */}
               <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 gap-2">
                 <span className="flex items-center gap-1">
                   <Move className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                   <span>
-                    Klik teks untuk mengedit atau <b>seret teks untuk memindahkan posisinya</b>.
+                    {isWhiteoutMode
+                      ? 'Mode Koreksi Aktif: Seret mouse di atas dokumen untuk menggambar kotak penutup putih.'
+                      : 'Klik kalimat mana pun untuk edit, atau seret teks / whiteout untuk memindahkan posisi.'}
                   </span>
                 </span>
                 <span className="font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
-                  {pageDetectedItems.length} Elemen Teks Terdeteksi
+                  {pageDetectedItems.length > 0
+                    ? `${pageDetectedItems.length} Elemen Teks Terdeteksi`
+                    : 'Dokumen Gambar / Scan'}
                 </span>
               </div>
 
-              {/* Notice jika PDF berupa scan tanpa teks digital */}
+              {/* Banner Panduan jika PDF berupa scan tanpa teks digital */}
               {pageDetectedItems.length === 0 && !isLoading && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-200">
-                  ℹ️ Dokumen ini berupa gambar/scan tanpa lapisan teks digital (0 elemen teks asli). Anda tetap dapat menggunakan tombol <b>&quot;Tambah Teks Baru (+)&quot;</b> untuk menambahkan tulisan, paraf, atau stempel di atas halaman ini.
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 rounded-2xl text-xs text-amber-900 dark:text-amber-200 space-y-2.5 shadow-xs">
+                  <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 text-sm">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Dokumen Scan / Gambar Terdeteksi (0 Lapisan Teks Digital)</span>
+                  </div>
+                  <p className="leading-relaxed text-[11px] sm:text-xs">
+                    Dokumen ini adalah foto/scan. Gunakan tombol <b>Mode Whiteout</b> untuk menutupi kalimat yang salah pada gambar dokumen, lalu klik <b>Tambah Teks Baru (+)</b> untuk menuliskan teks perbaikan di atasnya secara presisi.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWhiteoutMode(true);
+                        showToast('Silakan klik dan seret pada kanvas untuk menutup tulisan yang salah.');
+                      }}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      <Eraser className="w-3.5 h-3.5" />
+                      <span>Aktifkan Mode Whiteout (Tutup Teks)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddNewTextBlock}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 text-amber-900 dark:text-amber-200 font-bold rounded-xl transition cursor-pointer flex items-center gap-1"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Tambah Teks Baru di Sini</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* Kontainer Kanvas Scrollable */}
+              {/* Kontainer Kanvas PDF Scrollable */}
               <div className="relative bg-slate-200/80 dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-800 rounded-2xl p-2 sm:p-4 flex justify-center items-start overflow-auto max-h-[780px] shadow-inner select-none">
-                <div className="relative shadow-2xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800">
+                <div
+                  ref={overlayContainerRef}
+                  onMouseDown={handleCanvasMouseDown}
+                  onMouseMove={handleCanvasMouseMove}
+                  onMouseUp={handleCanvasMouseUp}
+                  className={`relative shadow-2xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 ${
+                    isWhiteoutMode ? 'cursor-crosshair' : 'cursor-default'
+                  }`}
+                >
                   {/* Kanvas PDF.js Asli */}
                   <canvas ref={canvasRef} className="block max-w-none" />
 
-                  {/* Lapisan Interaktif: Deteksi, Edit, Hapus & Geser */}
+                  {/* Kotak Sementara saat Pengguna Sedang Menyeret untuk Membuat Whiteout */}
+                  {isDrawingWhiteout && drawStartPos && drawCurrentPos && (
+                    <div
+                      style={{
+                        left: `${Math.min(drawStartPos.x, drawCurrentPos.x)}px`,
+                        top: `${Math.min(drawStartPos.y, drawCurrentPos.y)}px`,
+                        width: `${Math.abs(drawCurrentPos.x - drawStartPos.x)}px`,
+                        height: `${Math.abs(drawCurrentPos.y - drawStartPos.y)}px`,
+                      }}
+                      className="absolute border-2 border-dashed border-amber-500 bg-white/90 z-40 pointer-events-none shadow-md"
+                    />
+                  )}
+
+                  {/* Lapisan Interaktif: Whiteout Boxes, Teks Asli & Teks Baru */}
                   <div className="absolute inset-0 pointer-events-none">
-                    {/* A. Teks Asli yang Terdeteksi di Halaman */}
+                    {/* A. Kotak-kotak Whiteout (Penutup Putih) pada Halaman Aktif */}
+                    {whiteoutBoxes
+                      .filter((b) => b.pageNum === currentPage)
+                      .map((box) => {
+                        const posX = box.pdfX * scale;
+                        const posY = (pdfPageDimensions.height - box.pdfY - box.height) * scale;
+                        const boxW = box.width * scale;
+                        const boxH = box.height * scale;
+                        const isSelected = activeWhiteoutId === box.id;
+
+                        return (
+                          <div
+                            key={box.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveWhiteoutId(box.id);
+                              setActiveEditingId(null);
+                            }}
+                            style={{
+                              left: `${posX}px`,
+                              top: `${posY}px`,
+                              width: `${boxW}px`,
+                              height: `${boxH}px`,
+                            }}
+                            className={`absolute pointer-events-auto bg-white rounded-xs transition-all z-20 flex items-center justify-between group ${
+                              isSelected
+                                ? 'ring-2 ring-amber-500 shadow-md border border-amber-400'
+                                : 'border border-slate-300/80 hover:border-amber-400/90 shadow-2xs'
+                            }`}
+                          >
+                            {/* Tombol Drag Kotak Whiteout */}
+                            <div
+                              onMouseDown={(e) => handleStartDragWhiteout(e, box.id)}
+                              onTouchStart={(e) => handleStartDragWhiteout(e, box.id)}
+                              className="cursor-move p-0.5 text-slate-400 hover:text-amber-600 bg-white/90 hidden group-hover:flex items-center"
+                              title="Klik dan seret untuk memindahkan kotak penutup putih ini"
+                            >
+                              <Move className="w-2.5 h-2.5" />
+                            </div>
+
+                            {/* Tombol Hapus Kotak */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteWhiteoutBox(box.id);
+                              }}
+                              className="cursor-pointer p-0.5 text-slate-300 hover:text-red-500 hidden group-hover:flex items-center"
+                              title="Hapus kotak whiteout ini"
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                            </button>
+
+                            {/* Handle Sudut Kanan Bawah untuk Mengubah Ukuran (Resize Handle) */}
+                            <div
+                              onMouseDown={(e) => handleStartResizeWhiteout(e, box.id)}
+                              onTouchStart={(e) => handleStartResizeWhiteout(e, box.id)}
+                              className="absolute -right-1 -bottom-1 w-3 h-3 bg-amber-500 rounded-full cursor-nwse-resize shadow-xs opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                              title="Tarik sudut ini untuk mengubah ukuran kotak penutup"
+                            />
+                          </div>
+                        );
+                      })}
+
+                    {/* B. Teks Asli yang Terdeteksi di Halaman */}
                     {pageDetectedItems.map((item) => {
                       const edited = editedItems.find((e) => e.id === item.id);
                       const isDeleted = edited?.isDeleted;
 
-                      // Posisi teks (gunakan posisi hasil geser jika sudah pernah digeser)
                       const targetPdfX = edited ? edited.pdfX : item.pdfX;
                       const targetPdfY = edited ? edited.pdfY : item.pdfY;
 
@@ -1087,7 +1556,7 @@ export default function DirectPdfEditorPage() {
                               width: `${itemW}px`,
                               height: `${itemH}px`,
                             }}
-                            className="absolute pointer-events-auto bg-white/95 border border-red-300 text-red-500 rounded-xs flex items-center justify-between px-1 z-10 shadow-2xs"
+                            className="absolute pointer-events-auto bg-white/95 border border-red-300 text-red-500 rounded-xs flex items-center justify-between px-1 z-25 shadow-2xs"
                           >
                             <span className="text-[9px] font-bold truncate">[Dihapus]</span>
                             <button
@@ -1121,8 +1590,8 @@ export default function DirectPdfEditorPage() {
                             isSelected
                               ? 'ring-2 ring-indigo-600 bg-indigo-500/25 z-30'
                               : edited
-                              ? 'bg-amber-300/40 border border-amber-500 z-20 px-1'
-                              : 'hover:bg-indigo-500/15 hover:border hover:border-indigo-400/50'
+                              ? 'bg-amber-300/40 border border-amber-500 z-25 px-1'
+                              : 'hover:bg-indigo-500/15 hover:border hover:border-indigo-400/50 z-20'
                           }`}
                         >
                           {/* Handle untuk Menggeser Teks */}
@@ -1154,7 +1623,7 @@ export default function DirectPdfEditorPage() {
                       );
                     })}
 
-                    {/* B. Teks Kustom Baru yang Ditambahkan Pengguna */}
+                    {/* C. Teks Kustom Baru yang Ditambahkan Pengguna (Muncul di Atas Whiteout) */}
                     {editedItems
                       .filter((e) => e.pageNum === currentPage && e.isCustomAdd && !e.isDeleted)
                       .map((item) => {
@@ -1173,7 +1642,7 @@ export default function DirectPdfEditorPage() {
                               left: `${posX}px`,
                               top: `${posY}px`,
                             }}
-                            className={`absolute pointer-events-auto p-1.5 bg-white/95 dark:bg-slate-900 border rounded-lg shadow-md cursor-pointer flex items-center gap-1.5 z-25 group ${
+                            className={`absolute pointer-events-auto p-1.5 bg-white/95 dark:bg-slate-900 border rounded-lg shadow-md cursor-pointer flex items-center gap-1.5 z-30 group ${
                               isSelected ? 'ring-2 ring-indigo-600 border-indigo-600' : 'border-indigo-400'
                             }`}
                           >
@@ -1181,7 +1650,7 @@ export default function DirectPdfEditorPage() {
                               onMouseDown={(e) => handleStartDrag(e, item.id)}
                               onTouchStart={(e) => handleStartDrag(e, item.id)}
                               className="cursor-move p-0.5 rounded text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 shadow-xs"
-                              title="Seret untuk memindahkan posisi"
+                              title="Seret untuk memindahkan posisi teks di atas dokumen"
                             >
                               <Move className="w-3 h-3" />
                             </div>
@@ -1227,7 +1696,7 @@ export default function DirectPdfEditorPage() {
                 Pilih Berkas PDF yang Ingin Diedit
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Unggah dokumen surat, sertifikat, laporan invoice, atau formulir PDF. Seluruh teks akan dideteksi dan dapat langsung diedit, dihapus, atau digeser posisinya secara bebas.
+                Unggah dokumen surat, sertifikat, laporan invoice, atau hasil scan PDF. Teks digital dideteksi otomatis, dan untuk PDF hasil scan/gambar tersedia <b>Mode Whiteout</b> untuk menghapus dan menimpa teks lama secara presisi.
               </p>
             </div>
 
@@ -1251,65 +1720,43 @@ export default function DirectPdfEditorPage() {
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 pt-3">
-              🛡️ Privasi 100% Terjamin: Dokumen diproses murni pada memori browser Anda menggunakan teknologi PDF.js dan pdf-lib tanpa dikirim ke server.
-            </p>
+            <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400 pt-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span>Mendukung PDF digital, e-faktur, formulir lamaran, serta PDF hasil scan fotocopy / foto HP.</span>
+            </div>
           </div>
         )}
 
         {/* Slot Iklan Kepatuhan AdSense */}
-        <div className="my-10 pt-4">
-          <AdBanner zone="in-tool" label="Iklan Sponsor" />
+        <div className="my-10">
+          <AdBanner zone="in-tool" label="Iklan" />
         </div>
 
-        {/* Konten Edukasi & SEO: Panduan Cara Mengedit Teks PDF */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-          <div>
-            <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
-              💡 Cara Kerja Direct PDF Text Editor di Browser (Tanpa Install Aplikasi)
-            </h2>
-            <p>
-              Mengedit berkas PDF selama ini dianggap sulit karena format PDF dirancang sebagai format dokumen final cetak (*print-ready*). Umumnya pengguna harus mengonversi PDF ke Word terlebih dahulu, memperbaikinya, lalu mengekspornya kembali ke PDF sehingga seringkali merusak kerapian tata letak (*layout formatting*).
-            </p>
-          </div>
+        {/* Panduan & FAQ Praktis */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 text-xs text-slate-600 dark:text-slate-400">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-indigo-600" />
+            <span>Cara Mengedit PDF Digital &amp; PDF Hasil Scan / Gambar:</span>
+          </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🔍</span> 1. Deteksi &amp; Klik Teks
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Mesin <b>PDF.js</b> membaca matriks tipografi pada dokumen dan memetakan setiap kalimat ke koordinat piksel yang presisi di atas layar browser Anda.
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 leading-relaxed">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+              <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                1. Untuk PDF Digital (Word ke PDF / Dokumen Ketik):
+              </span>
+              <p>
+                Klik langsung pada teks mana pun yang ingin diubah. Kotak input akan muncul di sebelah kiri untuk mengganti teks, warna, atau ukuran font. Anda juga dapat menyeret teks untuk memindahkannya ke posisi lain.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🖐️</span> 2. Bebas Geser Posisi
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Teks yang Anda edit atau tambahkan dapat langsung <b>diseret (drag-and-drop)</b> ke koordinat yang diinginkan agar sejajar rapi dengan garis formulir atau tanda tangan.
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+              <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                2. Untuk PDF Hasil Scan / Foto Dokumen (0 Elemen Teks):
+              </span>
+              <p>
+                Aktifkan tombol <b>Mode Whiteout</b> dan seret mouse untuk membuat kotak penutup putih di atas tulisan lama. Setelah tertutup, klik <b>Tambah Teks Baru (+)</b> untuk mengetik kalimat perbaikan tepat di atasnya.
               </p>
             </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🔒</span> 3. Tanpa Risiko Kebocoran Data
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Surat perjanjian, nilai kontrak, nomor rekening, atau ijazah Anda aman dari pencurian data karena seluruh pemrosesan kode berjalan 100% di peramban lokal pengunjung.
-              </p>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-2 text-xs">
-            <h4 className="font-bold text-slate-800 dark:text-slate-200">Tips Penggunaan:</h4>
-            <ul className="space-y-1.5 list-disc pl-5 text-slate-500 dark:text-slate-400">
-              <li><b>Koreksi Typo Cepat:</b> Klik kalimat yang ingin Anda perbaiki, ganti kata yang salah, lalu klik tombol <b>Terapkan Teks Ini</b>.</li>
-              <li><b>Menghapus Kalimat:</b> Pilih kalimat yang ingin dihilangkan, lalu klik ikon tempat sampah (Hapus) untuk menutup teks lama dengan blok putih rapi.</li>
-              <li><b>Menambahkan &amp; Menggeser Teks:</b> Klik tombol <b>Tambah Teks Baru (+)</b>, kemudian gunakan ikon panah empat arah untuk menggeser teks ke posisi yang Anda kehendaki.</li>
-              <li><b>Unduh Hasil Akhir:</b> Klik tombol <b>Simpan &amp; Unduh</b> untuk mengekspor dokumen PDF baru siap kirim.</li>
-            </ul>
           </div>
         </div>
       </main>
