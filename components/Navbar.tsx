@@ -58,6 +58,7 @@ export default function Navbar() {
       title: 'AI & Kreatif',
       icon: <Sparkles className="w-4 h-4 text-amber-500" />,
       items: [
+        { label: 'Creative Studio & Kartu', href: '/tools/creative-studio', badge: 'Baru' },
         { label: 'AI Photo Enhancer & 4K', href: '/ai-image-tools', badge: 'Ultra' },
         { label: 'AI Presentation Generator', href: '/ai-presentation-maker' },
         { label: 'AI Resume & ATS Checker', href: '/tools/ats-resume', badge: 'CV' },
