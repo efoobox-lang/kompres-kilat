@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
 import ThemeToggle from '@/components/ThemeToggle';
+import SearchBar from '@/components/SearchBar';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,52 +28,60 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo Brand */}
         <Link 
           href="/" 
-          className="flex items-center gap-1.5 font-black text-indigo-600 text-lg sm:text-2xl tracking-tight whitespace-nowrap"
+          className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl tracking-tight whitespace-nowrap shrink-0"
         >
           <span className="text-xl sm:text-2xl">⚡</span>
           <span>KompresKilat</span>
         </Link>
 
+        {/* Desktop Search Bar (Tengah & Proporsional) */}
+        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm justify-center px-2">
+          <SearchBar variant="desktop" />
+        </div>
+
         {/* Desktop Navigation Links */}
-        <div className="hidden md:flex items-center space-x-3">
-          <nav className="flex items-center space-x-1 lg:space-x-2 text-xs sm:text-sm font-semibold">
+        <div className="hidden md:flex items-center space-x-2 lg:space-x-3 shrink-0">
+          <nav className="flex items-center space-x-1 lg:space-x-1.5 text-xs sm:text-sm font-semibold">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 rounded-xl transition ${
+                className={`px-2.5 lg:px-3 py-1.5 rounded-xl transition ${
                   isActive(link.href)
-                    ? 'bg-indigo-50 text-indigo-600 font-bold'
-                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2 pl-1">
+          <div className="flex items-center gap-1.5 pl-1">
             <LanguageToggle />
             <ThemeToggle />
           </div>
         </div>
 
         {/* Mobile Quick Action & Hamburger Toggle */}
-        <div className="flex md:hidden items-center gap-1.5">
+        <div className="flex md:hidden items-center gap-1 sm:gap-1.5">
+          {/* Tombol Search Icon Mobile */}
+          <SearchBar variant="mobile" />
+
           <LanguageToggle className="px-2 py-0.5 text-[11px]" />
           <Link
             href="/blog"
-            className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 transition whitespace-nowrap"
+            className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition whitespace-nowrap"
           >
             {t('nav_blog')}
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer"
+            className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer"
             aria-label="Buka Menu"
           >
             {isOpen ? (
@@ -90,7 +99,12 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown Accordion */}
       {isOpen && (
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-lg space-y-1 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-lg space-y-1.5 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Quick search input button inside accordion */}
+          <div className="pb-1">
+            <SearchBar variant="mobile" mobileTriggerLabel="Cari 30+ Alat & Fitur..." className="w-full" />
+          </div>
+
           <div className="flex items-center justify-between p-2 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
             <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{t('theme_toggle')}</span>
             <ThemeToggle compact={true} />
@@ -99,7 +113,7 @@ export default function Navbar() {
             href="/"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname === '/' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname === '/' ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🏠 {t('nav_home')}
@@ -108,7 +122,7 @@ export default function Navbar() {
             href="/tools/image"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/image') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/image') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🖼️ {t('tool_image_title')}
@@ -117,7 +131,7 @@ export default function Navbar() {
             href="/ai-image-tools"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/ai-image-tools') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/ai-image-tools') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             ✨ {t('tool_ai_image_title')}
@@ -126,7 +140,7 @@ export default function Navbar() {
             href="/ai-presentation-maker"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/ai-presentation-maker') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/ai-presentation-maker') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             📊 {t('tool_ai_slide_title')}
@@ -135,7 +149,7 @@ export default function Navbar() {
             href="/tools/remove-bg"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/remove-bg') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/remove-bg') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🎨 {t('tool_bg_title')}
@@ -144,7 +158,7 @@ export default function Navbar() {
             href="/tools/object-eraser"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/object-eraser') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/object-eraser') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🪄 {t('tool_eraser_title')}
@@ -153,7 +167,7 @@ export default function Navbar() {
             href="/tools/scan-dokumen"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/scan-dokumen') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/scan-dokumen') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🖨️ {t('tool_smart_scan_title')}
@@ -162,7 +176,7 @@ export default function Navbar() {
             href="/tools/pro-editor"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pro-editor') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/pro-editor') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🎨 {t('tool_pro_editor_title')}
@@ -171,7 +185,7 @@ export default function Navbar() {
             href="/tools/meme-generator"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/meme-generator') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/meme-generator') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             😂 {t('tool_meme_title')}
@@ -180,7 +194,7 @@ export default function Navbar() {
             href="/tools/tanda-tangan"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/tanda-tangan') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/tanda-tangan') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             ✍️ {t('tool_signature_title')}
@@ -189,7 +203,7 @@ export default function Navbar() {
             href="/tools/pdf-editor"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pdf-editor') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/pdf-editor') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             📝 {t('tool_pdf_editor_title')}
@@ -198,7 +212,7 @@ export default function Navbar() {
             href="/tools/pdf"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pdf') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/pdf') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             📄 {t('tool_pdf_title')}
@@ -207,7 +221,7 @@ export default function Navbar() {
             href="/tools/tracking"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/tracking') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/tracking') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             📦 {t('tool_track_title')}
@@ -216,7 +230,7 @@ export default function Navbar() {
             href="/tools/zip"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/zip') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/tools/zip') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             🗜️ {t('tool_zip_title')}
@@ -225,7 +239,7 @@ export default function Navbar() {
             href="/blog"
             onClick={() => setIsOpen(false)}
             className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/blog') ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+              pathname.startsWith('/blog') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             📚 {t('footer_link_all_blogs')}
@@ -235,4 +249,3 @@ export default function Navbar() {
     </header>
   );
 }
-

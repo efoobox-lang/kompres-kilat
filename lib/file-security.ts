@@ -191,3 +191,4 @@ export function loadImageSafely(file: File): Promise<{ img: HTMLImageElement; re
     img.src = objectUrl;
   });
 }
+
