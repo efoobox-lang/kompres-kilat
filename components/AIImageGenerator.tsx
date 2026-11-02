@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 
 const PROMPT_SUGGESTIONS = [
   'Brosur promo jualan kopi desain meriah diskon 50%',
@@ -29,6 +30,7 @@ export default function AIImageGenerator() {
   const [providerInfo, setProviderInfo] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const aiProgress = useAIProgress();
 
   // Unggah foto atau logo produk kustom
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -297,6 +299,12 @@ export default function AIImageGenerator() {
     setIsLoading(true);
     setErrorMessage('');
     setGeneratedImageUrl(null);
+    aiProgress.startProgress([
+      { progress: 20, text: 'Menyiapkan konsep prompt & rasio poster...', delayMs: 300 },
+      { progress: 48, text: 'Menghubungi Gemini AI Studio...', delayMs: 1200 },
+      { progress: 75, text: 'Menyusun struktur tata letak & palet warna...', delayMs: 2500 },
+      { progress: 92, text: 'Merender kanvas grafis resolusi 1080p...', delayMs: 4000 },
+    ]);
 
     try {
       const response = await fetch('/api/ai-image', {
@@ -314,12 +322,17 @@ export default function AIImageGenerator() {
 
       if (response.ok && data.success && data.designData) {
         await renderPosterCanvas(data.designData);
+        aiProgress.completeProgress(() => {
+          setIsLoading(false);
+        });
       } else {
         setErrorMessage(data.message || 'Gagal memproses desain poster.');
+        aiProgress.resetProgress();
         setIsLoading(false);
       }
     } catch {
       setErrorMessage('Terjadi kendala jaringan saat menghubungi generator.');
+      aiProgress.resetProgress();
       setIsLoading(false);
     }
   };
@@ -483,18 +496,27 @@ export default function AIImageGenerator() {
             </div>
           </div>
 
+          {/* Progress Bar & Indikator Persentase AI */}
+          <AIProgressBar
+            isGenerating={aiProgress.isGenerating}
+            progress={aiProgress.progress}
+            phase={aiProgress.phase}
+            title="AI Sedang Merancang Desain Poster"
+            className="mb-3"
+          />
+
           <button
             type="submit"
-            disabled={isLoading || !prompt.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-semibold text-xs sm:text-sm py-3 px-4 rounded-xl transition duration-200 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            disabled={isLoading || aiProgress.isGenerating || !prompt.trim()}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-semibold text-xs sm:text-sm py-3 px-4 rounded-xl transition duration-200 shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            {isLoading ? (
+            {isLoading || aiProgress.isGenerating ? (
               <>
                 <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                <span>AI Sedang Merancang Tata Letak &amp; Desain Brosur...</span>
+                <span>AI Sedang Merancang Tata Letak &amp; Desain Brosur ({aiProgress.progress}%)...</span>
               </>
             ) : (
               <span>Rancang Poster &amp; Brosur Sekarang ⚡</span>

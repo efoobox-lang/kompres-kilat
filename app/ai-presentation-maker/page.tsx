@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 
 interface SlideData {
   slideNumber: number;
@@ -32,6 +33,7 @@ export default function AiPresentationMakerPage() {
   const [presentation, setPresentation] = useState<PresentationResponse | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  const aiProgress = useAIProgress();
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +71,12 @@ export default function AiPresentationMakerPage() {
     setIsLoading(true);
     setErrorMessage('');
     setPresentation(null);
+    aiProgress.startProgress([
+      { progress: 18, text: 'Menganalisis topik & profil audiens...', delayMs: 300 },
+      { progress: 42, text: 'Menghubungi AI Gemini untuk menyusun outline slide...', delayMs: 1200 },
+      { progress: 70, text: 'Menulis poin-poin materi & catatan pembicara...', delayMs: 2600 },
+      { progress: 90, text: 'Menata tata letak & palet warna slide...', delayMs: 4200 },
+    ]);
 
     try {
       const res = await fetch('/api/ai-presentation', {
@@ -88,12 +96,17 @@ export default function AiPresentationMakerPage() {
       if (data.success && data.data) {
         setPresentation(data.data);
         setCurrentSlideIndex(0);
+        aiProgress.completeProgress(() => {
+          setIsLoading(false);
+        });
       } else {
         setErrorMessage(data.message || 'Gagal membuat slide presentasi.');
+        aiProgress.resetProgress();
+        setIsLoading(false);
       }
     } catch {
       setErrorMessage('Terjadi kendala jaringan saat menghubungi generator AI.');
-    } finally {
+      aiProgress.resetProgress();
       setIsLoading(false);
     }
   };
@@ -405,18 +418,27 @@ export default function AiPresentationMakerPage() {
               )}
             </div>
 
+            {/* Progress Bar & Indikator Persentase AI */}
+            <AIProgressBar
+              isGenerating={aiProgress.isGenerating}
+              progress={aiProgress.progress}
+              phase={aiProgress.phase}
+              title="AI Sedang Menyusun Slide Presentasi"
+              className="mb-2"
+            />
+
             <button
               type="submit"
-              disabled={isLoading || !topic.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm disabled:bg-slate-300 cursor-pointer flex justify-center items-center gap-2"
+              disabled={isLoading || aiProgress.isGenerating || !topic.trim()}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-sm disabled:bg-slate-300 cursor-pointer flex justify-center items-center gap-2 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isLoading || aiProgress.isGenerating ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  <span>AI Sedang Menyusun Struktur Presentasi...</span>
+                  <span>AI Sedang Menyusun Struktur Presentasi ({aiProgress.progress}%)...</span>
                 </>
               ) : (
                 <span>Buat Struktur Slide AI ⚡</span>

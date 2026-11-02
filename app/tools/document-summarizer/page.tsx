@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { extractTextFromPdf } from '@/lib/pdf-text-extractor';
+import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 import { BookOpen, Sparkles, CheckCircle2, Clock, Copy, Check, Download, AlertTriangle, FileText, RefreshCw } from 'lucide-react';
 
 interface SummaryResult {
@@ -24,6 +25,7 @@ export default function DocumentSummarizerPage() {
   const [result, setResult] = useState<SummaryResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const aiProgress = useAIProgress();
 
   // Unggah & Ekstraksi PDF lokal
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,6 +75,12 @@ export default function DocumentSummarizerPage() {
     setIsLoading(true);
     setErrorMessage('');
     setResult(null);
+    aiProgress.startProgress([
+      { progress: 20, text: 'Membaca dan mem-parsing struktur teks dokumen...', delayMs: 250 },
+      { progress: 50, text: 'Menghubungi AI Gemini untuk analisis semantik...', delayMs: 1200 },
+      { progress: 75, text: 'Mengekstrak ringkasan eksekutif & poin kunci...', delayMs: 2500 },
+      { progress: 92, text: 'Menyusun rekomendasi kesimpulan & tindakan...', delayMs: 4000 },
+    ]);
 
     try {
       const res = await fetch('/api/ai-document', {
@@ -87,12 +95,17 @@ export default function DocumentSummarizerPage() {
       const data = await res.json();
       if (res.ok && data.success && data.data) {
         setResult(data.data);
+        aiProgress.completeProgress(() => {
+          setIsLoading(false);
+        });
       } else {
         setErrorMessage(data.message || 'Gagal merangkum dokumen.');
+        aiProgress.resetProgress();
+        setIsLoading(false);
       }
     } catch {
       setErrorMessage('Terjadi kendala jaringan saat menghubungi sistem perangkum AI.');
-    } finally {
+      aiProgress.resetProgress();
       setIsLoading(false);
     }
   };
@@ -187,13 +200,25 @@ export default function DocumentSummarizerPage() {
               />
             </div>
 
+            <AIProgressBar
+              isGenerating={aiProgress.isGenerating}
+              progress={aiProgress.progress}
+              phase={aiProgress.phase}
+              title="AI Sedang Merangkum Dokumen"
+              className="mb-1"
+            />
+
             <button
               type="submit"
-              disabled={isLoading || !docText.trim()}
+              disabled={isLoading || aiProgress.isGenerating || !docText.trim()}
               className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-300 text-white font-bold py-3.5 px-6 rounded-xl transition duration-200 shadow-sm cursor-pointer flex items-center justify-center gap-2 text-xs sm:text-sm"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{isLoading ? 'AI Sedang Membaca & Mengekstrak Intisari Dokumen...' : 'Rangkum Dokumen Sekarang ⚡'}</span>
+              <span>
+                {isLoading || aiProgress.isGenerating
+                  ? `Sedang Memproses (${aiProgress.progress}%)...`
+                  : 'Rangkum Dokumen Sekarang ⚡'}
+              </span>
             </button>
           </form>
 

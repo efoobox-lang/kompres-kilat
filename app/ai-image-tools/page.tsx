@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 
 export default function AiImageToolsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -15,6 +16,7 @@ export default function AiImageToolsPage() {
   const [preset, setPreset] = useState<'clarity' | 'upscale' | 'vibrant' | 'formal'>('upscale');
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const aiProgress = useAIProgress();
   const [showOriginal, setShowOriginal] = useState<boolean>(false);
   const [imageMeta, setImageMeta] = useState<{ width: number; height: number; size: string } | null>(null);
   const [enhancedMeta, setEnhancedMeta] = useState<{ width: number; height: number; size: string } | null>(null);
@@ -43,6 +45,12 @@ export default function AiImageToolsPage() {
   const applySharpenAndUpscale = async () => {
     if (!imageSrc || !imageMeta) return;
     setIsProcessing(true);
+    aiProgress.startProgress([
+      { progress: 25, text: 'Menganalisis piksel & noise foto...', delayMs: 200 },
+      { progress: 55, text: 'Menghitung interpolasi super-resolusi 4K...', delayMs: 800 },
+      { progress: 82, text: 'Menerapkan unsharp mask & penajaman detail...', delayMs: 1600 },
+      { progress: 95, text: 'Merender hasil HD ke kanvas memori...', delayMs: 2400 },
+    ]);
 
     try {
       // Panggil backend API jika user memasukkan custom prompt
@@ -122,11 +130,14 @@ export default function AiImageToolsPage() {
             : `${(estimatedBytes / 1024).toFixed(1)} KB`,
         });
 
-        setIsProcessing(false);
+        aiProgress.completeProgress(() => {
+          setIsProcessing(false);
+        });
       };
       img.src = imageSrc;
     } catch (e) {
       console.error(e);
+      aiProgress.resetProgress();
       setIsProcessing(false);
     }
   };
@@ -322,18 +333,27 @@ export default function AiImageToolsPage() {
               </div>
             </div>
 
+            {/* Progress Bar & Indikator Persentase AI */}
+            <AIProgressBar
+              isGenerating={aiProgress.isGenerating}
+              progress={aiProgress.progress}
+              phase={aiProgress.phase}
+              title="AI Sedang Meningkatkan Resolusi Foto"
+              className="mb-3"
+            />
+
             <button
               onClick={applySharpenAndUpscale}
-              disabled={isProcessing}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition shadow-sm disabled:bg-slate-300 cursor-pointer flex justify-center items-center gap-2"
+              disabled={isProcessing || aiProgress.isGenerating}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition shadow-sm disabled:bg-slate-300 cursor-pointer flex justify-center items-center gap-2 disabled:cursor-not-allowed"
             >
-              {isProcessing ? (
+              {isProcessing || aiProgress.isGenerating ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  <span>Sedang Meningkatkan Resolusi Piksel &amp; Menajamkan Foto...</span>
+                  <span>Meningkatkan Resolusi ({aiProgress.progress}%)...</span>
                 </>
               ) : (
                 <span>Tingkatkan Resolusi &amp; Pertajam Sekarang ⚡</span>
