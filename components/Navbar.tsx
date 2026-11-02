@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false); // Mobile drawer state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile dropdown menu state
   const [isToolsOpen, setIsToolsOpen] = useState(false); // Desktop "Semua Alat" dropdown
   const toolsDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -88,18 +88,6 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Lock body scroll when mobile drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
-
 
   const isHomeActive = pathname === '/';
   const isBlogActive = pathname.startsWith('/blog');
@@ -228,7 +216,7 @@ export default function Navbar() {
           <SearchBar variant="desktop-button" placeholder="Cari alat... (⌘K)" />
 
           {/* Subtle Vertical Divider */}
-          <div className="h-5 w-px bg-slate-200 dark:border-slate-800 bg-slate-200 dark:bg-slate-700/80 mx-1" />
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700/80 mx-1" />
 
           {/* Grouped Secondary Controls: Language & Theme */}
           <div className="flex items-center gap-1.5">
@@ -247,152 +235,120 @@ export default function Navbar() {
           {/* Hamburger Menu Toggle Button */}
           <button
             type="button"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition focus:outline-none cursor-pointer"
-            aria-label={isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
-            aria-expanded={isOpen}
+            aria-label={isMobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            aria-expanded={isMobileMenuOpen}
           >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
       {/* ========================================================== */}
-      {/* MOBILE RESPONSIVE SLIDE-OVER DRAWER                        */}
+      {/* MOBILE RESPONSIVE DROPDOWN MENU CONTAINER                  */}
       {/* ========================================================== */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs flex justify-end animate-in fade-in duration-150">
-          {/* Backdrop Click to Close */}
-          <div
-            className="fixed inset-0 -z-10"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
+      {isMobileMenuOpen && (
+        <div className="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-slate-900 shadow-md p-4 flex flex-col space-y-3 border-b border-slate-200 dark:border-slate-800 max-h-[calc(100vh-4.5rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Search Bar Cepat di Mobile */}
+          <div className="pb-1">
+            <SearchBar
+              variant="full-input"
+              mobileTriggerLabel="Cari 30+ Alat &amp; Fitur..."
+              className="w-full"
+            />
+          </div>
 
-          {/* Drawer Panel */}
-          <div className="w-[85%] max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200 border-l border-slate-200 dark:border-slate-800">
-            {/* Drawer Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <Link
-                href="/"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg tracking-tight"
+          {/* Navigasi Utama */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+              Menu Utama
+            </p>
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                isHomeActive
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Home className="w-4 h-4 text-indigo-500" />
+              <span>{t('nav_home')}</span>
+            </Link>
+            <Link
+              href="/blog"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                isBlogActive
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-purple-500" />
+              <span>{t('nav_blog')}</span>
+            </Link>
+            <Link
+              href="/#tools"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition"
+            >
+              <Layers className="w-4 h-4" />
+              <span>Jelajahi Seluruh 31+ Alat &rarr;</span>
+            </Link>
+          </div>
+
+          {/* Daftar Kategori Alat */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+              Pilihan Alat Populer
+            </p>
+
+            {dropdownCategories.map((cat) => (
+              <div
+                key={cat.title}
+                className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2"
               >
-                <span>⚡</span>
-                <span>KompresKilat</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                aria-label="Tutup menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Drawer Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Full Width Search Trigger */}
-              <SearchBar
-                variant="full-input"
-                mobileTriggerLabel="Cari 30+ Alat &amp; Fitur..."
-                className="w-full"
-              />
-
-              {/* Core Navigation Links */}
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
-                  Navigasi Utama
-                </p>
-                <Link
-                  href="/"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
-                    isHomeActive
-                      ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-indigo-500" />
-                  <span>{t('nav_home')}</span>
-                </Link>
-                <Link
-                  href="/blog"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
-                    isBlogActive
-                      ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4 text-purple-500" />
-                  <span>{t('nav_blog')}</span>
-                </Link>
-                <Link
-                  href="/#tools"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition"
-                >
-                  <Layers className="w-4 h-4" />
-                  <span>Jelajahi Seluruh 31+ Alat &rarr;</span>
-                </Link>
-              </div>
-
-              {/* Grouped Feature Sections */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
-                  Kategori Alat Populer
-                </p>
-
-                {dropdownCategories.map((cat) => (
-                  <div
-                    key={cat.title}
-                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2"
-                  >
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-                      {cat.icon}
-                      <span>{cat.title}</span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1 text-xs">
-                      {cat.items.slice(0, 3).map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center justify-between py-1 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-750 transition"
-                        >
-                          <span className="truncate">{item.label}</span>
-                          {item.badge && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
-                              {item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Drawer Footer Controls */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Bahasa &amp; Tema:
-                </span>
-                <div className="flex items-center gap-2">
-                  <LanguageToggle className="px-2 py-1 text-xs" />
-                  <ThemeToggle compact={true} />
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  {cat.icon}
+                  <span>{cat.title}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-1 text-xs">
+                  {cat.items.slice(0, 3).map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between py-1 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-750 transition"
+                    >
+                      <span className="truncate">{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
                 </div>
               </div>
+            ))}
+          </div>
 
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 pt-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>100% Client-Side Privacy: Bebas Upload ke Server</span>
-              </div>
+          {/* Kontrol Bahasa & Tema */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+              Pengaturan Tampilan:
+            </span>
+            <div className="flex items-center gap-2">
+              <LanguageToggle className="px-2 py-1 text-xs" />
+              <ThemeToggle compact={true} />
             </div>
+          </div>
+
+          {/* Privacy Note */}
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 pt-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>100% Client-Side Privacy: Bebas Upload ke Server</span>
           </div>
         </div>
       )}
