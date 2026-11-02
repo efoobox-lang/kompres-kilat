@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
+import ThemeToggle from '@/components/ThemeToggle';
 import { ALL_TOOLS, CATEGORY_TABS, ToolCategoryKey, ToolItem } from '@/lib/tools-data';
 import {
   Sparkles,
@@ -60,7 +61,12 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-12 sm:py-16">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 pb-12 sm:py-16">
+      {/* Khusus Mobile: Dark Mode Toggle Switch di kanan atas persis sesuai posisi tanda merah */}
+      <div className="flex md:hidden justify-end items-center mb-2">
+        <ThemeToggle compact={true} />
+      </div>
+
       {/* ============================================================ */}
       {/* 1. HERO SECTION                                              */}
       {/* ============================================================ */}

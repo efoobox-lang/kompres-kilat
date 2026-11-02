@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import { validateUploadedFile, downloadBlobSafely } from '@/lib/file-security';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import {
   Upload,
@@ -18,7 +19,13 @@ import {
   ChevronRight,
   Sparkles,
   Layers,
-  Move
+  Move,
+  RotateCcw,
+  Check,
+  ShieldCheck,
+  Bold,
+  RefreshCw,
+  FileText,
 } from 'lucide-react';
 
 interface TextEditItem {
@@ -26,19 +33,20 @@ interface TextEditItem {
   pageNum: number;
   originalText: string;
   currentText: string;
-  // Posisi asli teks pada PDF
+  // Posisi asli teks pada PDF (PDF coordinates: origin di kiri-bawah)
   origPdfX: number;
   origPdfY: number;
   origPdfWidth: number;
   origPdfHeight: number;
-  // Posisi saat ini (dapat digeser / drag-and-drop)
+  // Posisi saat ini (dapat diedit & digeser)
   pdfX: number;
   pdfY: number;
   fontSize: number;
   fontFamily: string;
   color: string;
-  isDeleted: boolean; // Jika true, teks lama ditutup putih (redacted/dihapus)
-  isCustomAdd?: boolean; // Jika true, teks baru yang disisipkan pengguna
+  isBold?: boolean;
+  isDeleted: boolean; // Jika true, teks lama ditutup putih
+  isCustomAdd?: boolean; // Jika true, teks baru buatan pengguna
 }
 
 const COLOR_OPTIONS = [
@@ -58,6 +66,7 @@ export default function DirectPdfEditorPage() {
   const [scale, setScale] = useState<number>(1.25);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Dimensi Halaman PDF Aktif
   const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number }>({
@@ -74,6 +83,7 @@ export default function DirectPdfEditorPage() {
   const [editTextValue, setEditTextValue] = useState<string>('');
   const [editTextColor, setEditTextColor] = useState<string>('#000000');
   const [editTextSize, setEditTextSize] = useState<number>(12);
+  const [editTextBold, setEditTextBold] = useState<boolean>(false);
 
   // Status Download & Notifikasi
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -82,14 +92,17 @@ export default function DirectPdfEditorPage() {
   // References
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const pdfJsDocRef = useRef<unknown>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfJsDocRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activeRenderTaskRef = useRef<any>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 1. Inisialisasi & Muat PDF.js secara Dinamis (Menggunakan Worker Lokal)
+  // 1. Inisialisasi & Muat PDF.js secara Dinamis
   const loadPdfJs = async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     if (typeof window !== 'undefined') {
@@ -98,72 +111,103 @@ export default function DirectPdfEditorPage() {
     return pdfjs;
   };
 
-  // 2. Render Halaman PDF ke Canvas
+  // 2. Render Halaman PDF ke Canvas & Ekstrak Teks
   const renderPdfPage = useCallback(
-    async (doc: unknown, pageNum: number, currentScale: number) => {
-      if (!doc || !canvasRef.current) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (doc: any, pageNum: number, currentScale: number) => {
+      if (!doc) return;
+
       setIsLoading(true);
-      setStatusMessage('Merender tampilan halaman PDF...');
+      setStatusMessage('Merender tampilan visual halaman PDF...');
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pdf = doc as any;
-        const page = await pdf.getPage(pageNum);
+        // Batalkan tugas render sebelumnya jika masih berjalan
+        if (activeRenderTaskRef.current) {
+          try {
+            activeRenderTaskRef.current.cancel();
+          } catch {
+            // Abaikan error pembatalan
+          }
+        }
+
+        const page = await doc.getPage(pageNum);
         const viewport = page.getViewport({ scale: currentScale });
 
         const pageW = page.view[2] - page.view[0];
         const pageH = page.view[3] - page.view[1];
         setPdfPageDimensions({ width: pageW, height: pageH });
 
+        // Tunggu hingga canvas terpasang jika belum siap
         const canvas = canvasRef.current;
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        if (!canvas) {
+          setIsLoading(false);
+          return;
+        }
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+          setIsLoading(false);
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Render visual PDF ke canvas
-        const renderContext = {
+        const renderTask = page.render({
           canvasContext: ctx,
           viewport,
-        };
-        await page.render(renderContext).promise;
+        });
+        activeRenderTaskRef.current = renderTask;
+        await renderTask.promise;
+        activeRenderTaskRef.current = null;
 
         // Ekstraksi posisi teks asli di halaman menggunakan PDF.js
+        setStatusMessage('Mengekstrak lapisan teks dokumen...');
         const textContent = await page.getTextContent();
         const detected: TextEditItem[] = [];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        textContent.items.forEach((item: any, idx: number) => {
-          if (!item.str || !item.str.trim()) return;
+        if (textContent && textContent.items) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          textContent.items.forEach((item: any, idx: number) => {
+            if (!item.str || !item.str.trim()) return;
 
-          const transX = item.transform[4];
-          const transY = item.transform[5];
-          const itemHeight = Math.abs(item.transform[0] || item.height || 12);
-          const itemWidth = item.width || ctx.measureText(item.str).width;
+            const trans = item.transform;
+            const pdfX = trans[4];
+            const pdfY = trans[5];
+            const itemHeight = Math.abs(trans[0] || trans[3] || item.height || 12);
+            const itemWidth = item.width || ctx.measureText(item.str).width || 40;
 
-          detected.push({
-            id: `p${pageNum}_i${idx}`,
-            pageNum,
-            originalText: item.str,
-            currentText: item.str,
-            origPdfX: transX,
-            origPdfY: transY,
-            origPdfWidth: itemWidth,
-            origPdfHeight: itemHeight,
-            pdfX: transX,
-            pdfY: transY,
-            fontSize: Math.round(itemHeight),
-            fontFamily: item.fontName || 'Helvetica',
-            color: '#000000',
-            isDeleted: false,
+            detected.push({
+              id: `p${pageNum}_i${idx}`,
+              pageNum,
+              originalText: item.str,
+              currentText: item.str,
+              origPdfX: pdfX,
+              origPdfY: pdfY,
+              origPdfWidth: itemWidth,
+              origPdfHeight: itemHeight,
+              pdfX,
+              pdfY,
+              fontSize: Math.round(itemHeight),
+              fontFamily: item.fontName || 'Helvetica',
+              color: '#000000',
+              isBold: item.fontName?.toLowerCase().includes('bold') || false,
+              isDeleted: false,
+            });
           });
-        });
+        }
 
         setPageDetectedItems(detected);
         setStatusMessage('');
-      } catch (err) {
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((err as any)?.name === 'RenderingCancelledException') {
+          return; // Abaikan pembatalan render normal
+        }
         console.error('Error saat merender PDF:', err);
-        setStatusMessage('Gagal merender halaman PDF.');
+        setErrorMessage('Gagal merender halaman PDF. Pastikan berkas tidak rusak.');
       } finally {
         setIsLoading(false);
       }
@@ -171,45 +215,76 @@ export default function DirectPdfEditorPage() {
     []
   );
 
-  // 3. Tangani Upload File PDF Pengguna
-  const handleFileUpload = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-      alert('Harap pilih berkas PDF yang valid.');
-      return;
+  // Re-render saat PDF doc, currentPage, atau scale berubah
+  useEffect(() => {
+    if (pdfJsDocRef.current) {
+      renderPdfPage(pdfJsDocRef.current, currentPage, scale);
     }
+  }, [currentPage, scale, renderPdfPage]);
 
+  // 3. Tangani Upload File PDF Pengguna dengan Validasi Keamanan
+  const handleFileUpload = async (file: File) => {
+    setErrorMessage('');
     setIsLoading(true);
-    setStatusMessage('Membaca berkas PDF ke dalam memori peramban...');
+    setStatusMessage('Memvalidasi dan memuat berkas PDF...');
     setSelectedFile(file);
     setEditedItems([]);
     setActiveEditingId(null);
+    setPageDetectedItems([]);
 
     try {
+      // Validasi berkas client-side
+      const validation = await validateUploadedFile(file, {
+        allowedExtensions: ['pdf', '.pdf'],
+        allowedMimeTypes: ['application/pdf'],
+        maxSizeBytes: 50 * 1024 * 1024,
+        checkMagicBytes: true,
+      });
+
+      if (!validation.valid) {
+        setErrorMessage(validation.error || 'Berkas PDF tidak valid.');
+        setIsLoading(false);
+        return;
+      }
+
       const buffer = await file.arrayBuffer();
       const bytes = new Uint8Array(buffer);
       setOriginalBytes(bytes);
 
       const pdfjs = await loadPdfJs();
-      const loadingTask = pdfjs.getDocument({ data: bytes });
+      const loadingTask = pdfjs.getDocument({
+        data: bytes,
+        cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
+        cMapPacked: true,
+      });
+
       const pdfDoc = await loadingTask.promise;
       pdfJsDocRef.current = pdfDoc;
       setTotalPages(pdfDoc.numPages);
       setCurrentPage(1);
 
+      // Render pertama kali (tunggu render selesai)
       await renderPdfPage(pdfDoc, 1, scale);
       showToast(`Dokumen "${file.name}" siap diedit!`);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Gagal membuka PDF:', err);
-      alert('Gagal memuat dokumen PDF. Pastikan file tidak terkunci kata sandi.');
+      const msg = err instanceof Error ? err.message : '';
+      setErrorMessage(
+        msg.includes('password')
+          ? 'Dokumen PDF dilindungi kata sandi. Harap buka enkripsi terlebih dahulu.'
+          : 'Gagal memuat dokumen PDF. Pastikan file dalam format PDF standar yang tidak rusak.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 4. Buat Contoh Dokumen Surat Dummy jika Pengguna Ingin Coba Cepat
+  // 4. Contoh Dokumen PDF Siap Edit
   const handleLoadSamplePdf = async () => {
     setIsLoading(true);
     setStatusMessage('Menghasilkan contoh dokumen surat bisnis...');
+    setErrorMessage('');
+
     try {
       const samplePdf = await PDFDocument.create();
       const page = samplePdf.addPage([595, 842]); // Standar A4
@@ -264,7 +339,7 @@ export default function DirectPdfEditorPage() {
         color: rgb(0.2, 0.2, 0.2),
       });
 
-      page.drawText('Catatan: Klik kalimat mana saja untuk edit, hapus, atau geser posisinya!', {
+      page.drawText('Catatan: Klik kalimat mana saja untuk edit teks, hapus, atau seret posisinya!', {
         x: 60,
         y: 520,
         size: 11,
@@ -282,36 +357,38 @@ export default function DirectPdfEditorPage() {
       setActiveEditingId(null);
 
       const pdfjs = await loadPdfJs();
-      const loadingTask = pdfjs.getDocument({ data: bytes });
+      const loadingTask = pdfjs.getDocument({
+        data: bytes,
+        cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
+        cMapPacked: true,
+      });
+
       const pdfDoc = await loadingTask.promise;
       pdfJsDocRef.current = pdfDoc;
       setTotalPages(pdfDoc.numPages);
       setCurrentPage(1);
 
       await renderPdfPage(pdfDoc, 1, scale);
-      showToast('Contoh dokumen berhasil dimuat! Silakan klik teks untuk mengedit atau menggeser.');
+      showToast('Contoh surat berhasil dimuat! Klik kalimat mana pun untuk mengedit.');
     } catch (err) {
       console.error('Gagal membuat contoh PDF:', err);
+      setErrorMessage('Terjadi kendala saat memuat contoh dokumen.');
     } finally {
       setIsLoading(false);
     }
   };
 
   // Navigasi Halaman
-  const handlePageChange = async (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages || !pdfJsDocRef.current) return;
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
     setActiveEditingId(null);
-    await renderPdfPage(pdfJsDocRef.current, newPage, scale);
   };
 
   // Zoom Kanvas
-  const handleZoomChange = async (newScale: number) => {
-    const clamped = Math.min(Math.max(newScale, 0.8), 2.2);
+  const handleZoomChange = (newScale: number) => {
+    const clamped = Math.min(Math.max(newScale, 0.75), 2.0);
     setScale(clamped);
-    if (pdfJsDocRef.current) {
-      await renderPdfPage(pdfJsDocRef.current, currentPage, clamped);
-    }
   };
 
   // Klik Item Teks untuk Mulai Edit
@@ -321,6 +398,7 @@ export default function DirectPdfEditorPage() {
     setEditTextValue(existing ? existing.currentText : item.originalText);
     setEditTextColor(existing ? existing.color : item.color);
     setEditTextSize(existing ? existing.fontSize : item.fontSize);
+    setEditTextBold(existing ? !!existing.isBold : !!item.isBold);
   };
 
   // Simpan Perubahan Teks
@@ -342,6 +420,7 @@ export default function DirectPdfEditorPage() {
       currentText: editTextValue,
       color: editTextColor,
       fontSize: editTextSize,
+      isBold: editTextBold,
       isDeleted: false,
     };
 
@@ -362,11 +441,9 @@ export default function DirectPdfEditorPage() {
 
     if (!baseItem) return;
 
-    // Jika ini adalah teks yang baru dibuat pengguna (bukan teks asli PDF), langsung buang dari state
     if (baseItem.isCustomAdd) {
       setEditedItems((prev) => prev.filter((i) => i.id !== itemId));
     } else {
-      // Jika teks asli PDF: tandai sebagai isDeleted agar ditutup patch putih saat diekspor
       const deletedItem: TextEditItem = {
         ...baseItem,
         isDeleted: true,
@@ -390,7 +467,7 @@ export default function DirectPdfEditorPage() {
     showToast('Teks asli dikembalikan.');
   };
 
-  // Tambahkan Teks Baru di Tengah Halaman saat tombol diklik
+  // Tambahkan Teks Baru di Tengah Halaman
   const handleAddNewTextBlock = () => {
     const pdfPageH = pdfPageDimensions.height;
     const initialPdfX = 60;
@@ -410,6 +487,7 @@ export default function DirectPdfEditorPage() {
       fontSize: 14,
       fontFamily: 'Helvetica',
       color: '#000000',
+      isBold: false,
       isDeleted: false,
       isCustomAdd: true,
     };
@@ -419,7 +497,8 @@ export default function DirectPdfEditorPage() {
     setEditTextValue('Ketik Teks Baru di Sini');
     setEditTextColor('#000000');
     setEditTextSize(14);
-    showToast('Kotak teks baru ditambahkan! Anda dapat menggeser posisinya.');
+    setEditTextBold(false);
+    showToast('Kotak teks baru ditambahkan! Anda dapat menyeret posisinya.');
   };
 
   // 5. Fitur Geser Teks (Drag & Drop Repositioning)
@@ -433,7 +512,6 @@ export default function DirectPdfEditorPage() {
     const startClientX = isTouch ? e.touches[0].clientX : e.clientX;
     const startClientY = isTouch ? e.touches[0].clientY : e.clientY;
 
-    // Cari item di editedItems atau dari pageDetectedItems
     const existing = editedItems.find((i) => i.id === itemId);
     const base = pageDetectedItems.find((i) => i.id === itemId);
     const targetItem = existing || base;
@@ -442,7 +520,6 @@ export default function DirectPdfEditorPage() {
     const initialPdfX = targetItem.pdfX;
     const initialPdfY = targetItem.pdfY;
 
-    // Pastikan item terdaftar di editedItems saat mulai digeser
     if (!existing && base) {
       setEditedItems((prev) => [...prev, { ...base }]);
     }
@@ -454,7 +531,7 @@ export default function DirectPdfEditorPage() {
       const deltaX = (moveClientX - startClientX) / scale;
       const deltaY = (moveClientY - startClientY) / scale;
 
-      // Pada koordinat PDF, Y berawal dari bawah; sehingga pergerakan ke bawah di layar mengurangi nilai Y
+      // Pada koordinat PDF, Y berawal dari bawah (bawah ke atas); sehingga gerakan ke bawah mengurangi Y
       const newPdfX = Math.round(initialPdfX + deltaX);
       const newPdfY = Math.round(initialPdfY - deltaY);
 
@@ -503,25 +580,25 @@ export default function DirectPdfEditorPage() {
 
         const page = pdfDoc.getPage(pageIndex);
 
-        // 1. Jika ini teks asli PDF: Tutup lokasi aslinya dengan blok putih bersih
+        // 1. Jika ini teks asli PDF yang diedit atau dihapus: Tutup teks lama dengan blok putih
         if (!item.isCustomAdd && item.origPdfWidth > 0 && item.origPdfHeight > 0) {
           page.drawRectangle({
             x: Math.max(0, item.origPdfX - 1.5),
             y: Math.max(0, item.origPdfY - 1.5),
             width: item.origPdfWidth + 3,
             height: item.origPdfHeight + 3,
-            color: rgb(1, 1, 1), // Menghapus teks asli secara visual
+            color: rgb(1, 1, 1), // Redact visual
           });
         }
 
-        // 2. Jika tidak dihapus: Tulis teks baru pada koordinat pdfX dan pdfY (posisi hasil geser)
+        // 2. Jika tidak dihapus: Tulis teks baru pada koordinat pdfX dan pdfY
         if (!item.isDeleted && item.currentText.trim()) {
           const matchedColor = COLOR_OPTIONS.find((c) => c.value === item.color)?.rgb || [0, 0, 0];
           page.drawText(item.currentText, {
             x: Math.max(0, item.pdfX),
             y: Math.max(0, item.pdfY),
-            size: Math.max(8, item.fontSize),
-            font: item.fontSize >= 15 ? helveticaBold : helvetica,
+            size: Math.max(7, item.fontSize),
+            font: item.isBold || item.fontSize >= 15 ? helveticaBold : helvetica,
             color: rgb(matchedColor[0], matchedColor[1], matchedColor[2]),
           });
         }
@@ -529,17 +606,9 @@ export default function DirectPdfEditorPage() {
 
       const modifiedPdfBytes = await pdfDoc.save();
       const blob = new Blob([modifiedPdfBytes as unknown as BlobPart], { type: 'application/pdf' });
-      const downloadUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
       const baseName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'dokumen';
-      link.download = `${baseName}_edited_${Date.now()}.pdf`;
-      link.href = downloadUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
 
+      downloadBlobSafely(blob, `${baseName}_edited.pdf`);
       showToast('PDF hasil edit berhasil disimpan dan diunduh!');
     } catch (err) {
       console.error('Gagal menyimpan PDF:', err);
@@ -550,53 +619,83 @@ export default function DirectPdfEditorPage() {
     }
   };
 
-  const schemaData = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: 'Direct PDF Text Editor - KompresKilat',
-    description: 'Aplikasi online gratis untuk edit teks, hapus kalimat, tambah tulisan baru, dan geser posisi teks langsung di dokumen PDF tanpa konversi.',
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'All',
+  const handleResetDocument = () => {
+    setSelectedFile(null);
+    setOriginalBytes(null);
+    setTotalPages(0);
+    setCurrentPage(1);
+    setPageDetectedItems([]);
+    setEditedItems([]);
+    setActiveEditingId(null);
+    pdfJsDocRef.current = null;
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
-      <JsonLd data={schemaData} />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans flex flex-col transition-colors">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: 'Direct PDF Text Editor - KompresKilat',
+          description:
+            'Aplikasi online gratis untuk edit teks, hapus kalimat, tambah tulisan baru, dan geser posisi teks langsung di dokumen PDF tanpa konversi.',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'All',
+        }}
+      />
       <Navbar />
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200 border border-slate-700">
           <Sparkles className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
         {/* Header Hero */}
-        <div className="mb-8 text-center">
-          <span className="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-800 text-xs px-3.5 py-1 rounded-full font-bold mb-3 shadow-xs">
-            <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
-            📄 Direct PDF Text Editor (100% Client-Side)
-          </span>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">
+        <div className="mb-8 text-center max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-bold mb-3 shadow-2xs">
+            <Edit3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>Direct PDF Text Editor (100% Client-Side)</span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
             Edit, Hapus &amp; Geser Teks PDF di Browser
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Koreksi typo teks asli, hapus kalimat, tambahkan teks baru, dan <b>geser posisinya secara bebas</b> pada dokumen PDF Anda tanpa merusak tata letak. 100% aman di browser tanpa upload server.
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Koreksi salah ketik (typo) teks asli, hapus kalimat, tambahkan tulisan baru, dan{' '}
+            <b>geser posisinya secara bebas</b> langsung pada lembar dokumen PDF Anda tanpa konversi.
           </p>
+
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Privasi 100%: Berkas tidak pernah diunggah atau disimpan ke server luar.</span>
+          </div>
         </div>
 
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs sm:text-sm flex items-center justify-between gap-3">
+            <span>{errorMessage}</span>
+            <button
+              onClick={() => setErrorMessage('')}
+              className="font-bold underline cursor-pointer text-xs"
+            >
+              Tutup
+            </button>
+          </div>
+        )}
+
         {/* Toolbar Utama */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
-          
+        <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-6 flex flex-wrap items-center justify-between gap-3">
           {/* Pilihan File / Upload */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Buka Dokumen PDF</span>
@@ -607,7 +706,7 @@ export default function DirectPdfEditorPage() {
                 type="button"
                 onClick={handleLoadSamplePdf}
                 disabled={isLoading}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>Coba Contoh Surat PDF</span>
@@ -626,9 +725,19 @@ export default function DirectPdfEditorPage() {
             />
 
             {selectedFile && (
-              <span className="text-xs font-semibold text-slate-700 truncate max-w-[180px] sm:max-w-xs bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg">
-                📄 {selectedFile.name}
-              </span>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
+                <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[160px] sm:max-w-xs">
+                  {selectedFile.name}
+                </span>
+                <button
+                  onClick={handleResetDocument}
+                  className="text-slate-400 hover:text-red-500 ml-1 p-0.5 rounded cursor-pointer"
+                  title="Ganti Dokumen"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -638,9 +747,9 @@ export default function DirectPdfEditorPage() {
               <button
                 type="button"
                 onClick={handleAddNewTextBlock}
-                className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
               >
-                <PlusCircle className="w-3.5 h-3.5 text-indigo-600" />
+                <PlusCircle className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Tambah Teks Baru (+)</span>
               </button>
 
@@ -648,10 +757,19 @@ export default function DirectPdfEditorPage() {
                 type="button"
                 onClick={handleSaveAndDownloadPdf}
                 disabled={isSaving || editedItems.length === 0}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs disabled:cursor-not-allowed"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{isSaving ? 'Menyimpan...' : `Simpan & Unduh (${editedItems.length})`}</span>
+                {isSaving ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Simpan &amp; Unduh ({editedItems.length})</span>
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -659,8 +777,8 @@ export default function DirectPdfEditorPage() {
 
         {/* Notifikasi Status Loading */}
         {statusMessage && (
-          <div className="p-3 mb-6 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800 font-semibold flex items-center gap-2 animate-pulse">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
+          <div className="p-3 mb-6 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs text-indigo-800 dark:text-indigo-200 font-semibold flex items-center gap-2 animate-pulse">
+            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>{statusMessage}</span>
           </div>
         )}
@@ -668,17 +786,15 @@ export default function DirectPdfEditorPage() {
         {/* Layout Area Editor & Pratinjau Interaktif */}
         {totalPages > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mb-12">
-            
-            {/* Kolom Kiri: Navigasi & Panel Edit & Daftar Modifikasi (4 Kolom) */}
+            {/* Kolom Kiri: Navigasi, Form Edit & Riwayat Modifikasi (4 Kolom) */}
             <div className="lg:col-span-4 space-y-4">
-              
               {/* Box Navigasi Halaman & Zoom */}
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     Navigasi Halaman
                   </span>
-                  <span className="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/70 px-2 py-0.5 rounded-md">
                     Hal. {currentPage} / {totalPages}
                   </span>
                 </div>
@@ -688,7 +804,7 @@ export default function DirectPdfEditorPage() {
                     type="button"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage <= 1 || isLoading}
-                    className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span>Sebelumnya</span>
@@ -698,7 +814,7 @@ export default function DirectPdfEditorPage() {
                     type="button"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage >= totalPages || isLoading}
-                    className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
                   >
                     <span>Berikutnya</span>
                     <ChevronRight className="w-4 h-4" />
@@ -706,24 +822,24 @@ export default function DirectPdfEditorPage() {
                 </div>
 
                 {/* Kontrol Zoom */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                  <span className="font-semibold text-slate-600">Skala Tampilan:</span>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">Skala Tampilan:</span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => handleZoomChange(scale - 0.2)}
-                      className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 cursor-pointer"
+                      className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300 cursor-pointer"
                       title="Perkecil"
                     >
                       <ZoomOut className="w-3.5 h-3.5" />
                     </button>
-                    <span className="font-mono font-bold w-12 text-center text-slate-800">
+                    <span className="font-mono font-bold w-12 text-center text-slate-800 dark:text-slate-200">
                       {Math.round(scale * 100)}%
                     </span>
                     <button
                       type="button"
                       onClick={() => handleZoomChange(scale + 0.2)}
-                      className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 cursor-pointer"
+                      className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300 cursor-pointer"
                       title="Perbesar"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
@@ -734,39 +850,41 @@ export default function DirectPdfEditorPage() {
 
               {/* Panel Edit Aktif jika ada teks yang dipilih */}
               {activeEditingId && (
-                <div className="bg-white p-5 rounded-2xl border-2 border-indigo-500 shadow-md space-y-3.5 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <span className="text-xs font-bold text-indigo-700 flex items-center gap-1">
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-indigo-500 shadow-lg space-y-3.5 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                       <Edit3 className="w-3.5 h-3.5" /> Edit Kalimat Terpilih
                     </span>
                     <button
                       type="button"
                       onClick={() => setActiveEditingId(null)}
-                      className="text-[11px] text-slate-400 hover:text-slate-600 font-semibold cursor-pointer"
+                      className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold cursor-pointer"
                     >
                       Tutup ✕
                     </button>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                      Ketik Ulang Teks Baru:
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Teks Baru:
                     </label>
                     <textarea
                       rows={2}
                       value={editTextValue}
                       onChange={(e) => setEditTextValue(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-sans"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Warna Teks:</label>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        Warna:
+                      </label>
                       <select
                         value={editTextColor}
                         onChange={(e) => setEditTextColor(e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-xl bg-white"
+                        className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                       >
                         {COLOR_OPTIONS.map((c, i) => (
                           <option key={i} value={c.value}>
@@ -777,15 +895,31 @@ export default function DirectPdfEditorPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Ukuran Font:</label>
-                      <input
-                        type="number"
-                        min="8"
-                        max="72"
-                        value={editTextSize}
-                        onChange={(e) => setEditTextSize(Number(e.target.value))}
-                        className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-xl"
-                      />
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        Ukuran:
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="8"
+                          max="72"
+                          value={editTextSize}
+                          onChange={(e) => setEditTextSize(Number(e.target.value))}
+                          className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEditTextBold(!editTextBold)}
+                          className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                            editTextBold
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                          }`}
+                          title="Tebalkan Teks (Bold)"
+                        >
+                          <Bold className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -793,38 +927,39 @@ export default function DirectPdfEditorPage() {
                     <button
                       type="button"
                       onClick={handleApplyTextEdit}
-                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs"
+                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs flex items-center justify-center gap-1"
                     >
-                      Terapkan Teks Ini ✓
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Terapkan Teks Ini</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleDeleteTextItem(activeEditingId)}
-                      className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition cursor-pointer"
+                      className="py-2 px-3 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 font-bold text-xs rounded-xl transition cursor-pointer border border-red-200 dark:border-red-800"
                       title="Hapus / Tutup Teks Ini"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <p className="text-[10px] text-slate-500 italic">
-                    💡 Tips: Anda dapat langsung menggeser teks ini di pratinjau kanvas menggunakan mouse atau sentuhan jari.
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                    💡 Tips: Anda dapat langsung menggeser teks ini pada lembar dokumen menggunakan tetikus atau sentuhan jari.
                   </p>
                 </div>
               )}
 
-              {/* Daftar Perubahan Teks (History Edit & Delete) */}
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              {/* Daftar Perubahan Teks (History Modifikasi) */}
+              <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-indigo-600" /> Riwayat Modifikasi ({editedItems.length})
                   </span>
                 </div>
 
                 {editedItems.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">
-                    Belum ada teks yang dimodifikasi. Klik kalimat pada halaman PDF di samping untuk mengedit, menghapus, atau menggeser posisinya.
+                  <p className="text-xs text-slate-400 italic leading-relaxed">
+                    Belum ada teks yang dimodifikasi. Klik kalimat mana saja pada dokumen di samping untuk mengedit, menghapus, atau menggeser posisinya.
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -833,14 +968,14 @@ export default function DirectPdfEditorPage() {
                         key={item.id}
                         className={`p-2.5 rounded-xl border flex items-start justify-between gap-2 text-xs ${
                           item.isDeleted
-                            ? 'bg-red-50/60 border-red-200'
-                            : 'bg-slate-50 border-slate-200'
+                            ? 'bg-red-50/60 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
+                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
                         }`}
                       >
                         <div className="min-w-0">
                           <span
                             className={`text-[10px] font-bold block ${
-                              item.isDeleted ? 'text-red-600' : 'text-indigo-600'
+                              item.isDeleted ? 'text-red-600 dark:text-red-400' : 'text-indigo-600 dark:text-indigo-400'
                             }`}
                           >
                             Hal. {item.pageNum} •{' '}
@@ -862,7 +997,7 @@ export default function DirectPdfEditorPage() {
                                   {item.originalText}
                                 </p>
                               )}
-                              <p className="font-semibold text-slate-800 truncate max-w-[190px]">
+                              <p className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[190px]">
                                 {item.currentText}
                               </p>
                             </>
@@ -874,10 +1009,10 @@ export default function DirectPdfEditorPage() {
                             <button
                               type="button"
                               onClick={() => handleRestoreTextItem(item.id)}
-                              className="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded cursor-pointer"
+                              className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded cursor-pointer"
                               title="Kembalikan Teks Asli"
                             >
-                              Kembalikan
+                              Batal
                             </button>
                           ) : (
                             <button
@@ -899,29 +1034,33 @@ export default function DirectPdfEditorPage() {
 
             {/* Kolom Kanan: Area Kanvas PDF & Lapisan Teks Interaktif yang Bisa Digeser (8 Kolom) */}
             <div className="lg:col-span-8 space-y-3">
-              
-              <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 px-1 gap-2">
+              <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 gap-2">
                 <span className="flex items-center gap-1">
-                  <Move className="w-3.5 h-3.5 text-indigo-600" />
+                  <Move className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                   <span>
                     Klik teks untuk mengedit atau <b>seret teks untuk memindahkan posisinya</b>.
                   </span>
                 </span>
-                <span className="font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
-                  {pageDetectedItems.length} Elemen Teks
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
+                  {pageDetectedItems.length} Elemen Teks Terdeteksi
                 </span>
               </div>
 
+              {/* Notice jika PDF berupa scan tanpa teks digital */}
+              {pageDetectedItems.length === 0 && !isLoading && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-200">
+                  ℹ️ Dokumen ini berupa gambar/scan tanpa lapisan teks digital (0 elemen teks asli). Anda tetap dapat menggunakan tombol <b>&quot;Tambah Teks Baru (+)&quot;</b> untuk menambahkan tulisan, paraf, atau stempel di atas halaman ini.
+                </div>
+              )}
+
               {/* Kontainer Kanvas Scrollable */}
-              <div className="relative bg-slate-200 border-2 border-slate-300 rounded-2xl p-2 sm:p-4 flex justify-center items-start overflow-auto max-h-[780px] shadow-inner select-none">
-                <div className="relative shadow-xl bg-white rounded-lg overflow-hidden">
-                  
+              <div className="relative bg-slate-200/80 dark:bg-slate-900/90 border-2 border-slate-300 dark:border-slate-800 rounded-2xl p-2 sm:p-4 flex justify-center items-start overflow-auto max-h-[780px] shadow-inner select-none">
+                <div className="relative shadow-2xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800">
                   {/* Kanvas PDF.js Asli */}
                   <canvas ref={canvasRef} className="block max-w-none" />
 
                   {/* Lapisan Interaktif: Deteksi, Edit, Hapus & Geser */}
                   <div className="absolute inset-0 pointer-events-none">
-                    
                     {/* A. Teks Asli yang Terdeteksi di Halaman */}
                     {pageDetectedItems.map((item) => {
                       const edited = editedItems.find((e) => e.id === item.id);
@@ -933,13 +1072,12 @@ export default function DirectPdfEditorPage() {
 
                       const posX = targetPdfX * scale;
                       const posY = (pdfPageDimensions.height - targetPdfY - item.origPdfHeight) * scale;
-                      const itemW = Math.max(item.origPdfWidth * scale, 30);
-                      const itemH = Math.max(item.origPdfHeight * scale, 14);
+                      const itemW = Math.max(item.origPdfWidth * scale, 24);
+                      const itemH = Math.max(item.origPdfHeight * scale, 12);
 
                       const isSelected = activeEditingId === item.id;
 
                       if (isDeleted) {
-                        // Tampilan saat teks ditandai dihapus (ditutup blok putih transparan)
                         return (
                           <div
                             key={item.id}
@@ -949,7 +1087,7 @@ export default function DirectPdfEditorPage() {
                               width: `${itemW}px`,
                               height: `${itemH}px`,
                             }}
-                            className="absolute pointer-events-auto bg-white/90 border border-red-300 text-red-500 rounded-xs flex items-center justify-between px-1 z-10"
+                            className="absolute pointer-events-auto bg-white/95 border border-red-300 text-red-500 rounded-xs flex items-center justify-between px-1 z-10 shadow-2xs"
                           >
                             <span className="text-[9px] font-bold truncate">[Dihapus]</span>
                             <button
@@ -1003,19 +1141,20 @@ export default function DirectPdfEditorPage() {
                               style={{
                                 color: edited.color,
                                 fontSize: `${edited.fontSize * scale}px`,
+                                fontWeight: edited.isBold ? 'bold' : 'normal',
                               }}
-                              className="font-semibold whitespace-nowrap"
+                              className="whitespace-nowrap"
                             >
                               {edited.currentText}
                             </span>
                           ) : (
-                            <span className="opacity-0">{item.originalText}</span>
+                            <span className="opacity-0 select-none">{item.originalText}</span>
                           )}
                         </div>
                       );
                     })}
 
-                    {/* B. Teks Kustom yang Ditambahkan Pengguna */}
+                    {/* B. Teks Kustom Baru yang Ditambahkan Pengguna */}
                     {editedItems
                       .filter((e) => e.pageNum === currentPage && e.isCustomAdd && !e.isDeleted)
                       .map((item) => {
@@ -1034,14 +1173,14 @@ export default function DirectPdfEditorPage() {
                               left: `${posX}px`,
                               top: `${posY}px`,
                             }}
-                            className={`absolute pointer-events-auto p-1.5 bg-white/95 border rounded-lg shadow-md cursor-pointer flex items-center gap-1.5 z-25 group ${
+                            className={`absolute pointer-events-auto p-1.5 bg-white/95 dark:bg-slate-900 border rounded-lg shadow-md cursor-pointer flex items-center gap-1.5 z-25 group ${
                               isSelected ? 'ring-2 ring-indigo-600 border-indigo-600' : 'border-indigo-400'
                             }`}
                           >
                             <div
                               onMouseDown={(e) => handleStartDrag(e, item.id)}
                               onTouchStart={(e) => handleStartDrag(e, item.id)}
-                              className="cursor-move p-0.5 rounded text-indigo-600 bg-indigo-50 hover:bg-indigo-100 shadow-xs"
+                              className="cursor-move p-0.5 rounded text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 shadow-xs"
                               title="Seret untuk memindahkan posisi"
                             >
                               <Move className="w-3 h-3" />
@@ -1051,8 +1190,9 @@ export default function DirectPdfEditorPage() {
                               style={{
                                 color: item.color,
                                 fontSize: `${item.fontSize * scale}px`,
+                                fontWeight: item.isBold ? 'bold' : 'normal',
                               }}
-                              className="font-semibold whitespace-nowrap"
+                              className="whitespace-nowrap"
                             >
                               {item.currentText}
                             </span>
@@ -1078,16 +1218,16 @@ export default function DirectPdfEditorPage() {
           </div>
         ) : (
           /* Dropzone PDF Kosong */
-          <div className="bg-white p-8 sm:p-14 rounded-2xl border-2 border-dashed border-slate-300 hover:border-indigo-500 transition text-center space-y-4 mb-12">
-            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+          <div className="bg-white dark:bg-slate-900 p-8 sm:p-14 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-indigo-500 transition text-center space-y-4 mb-12 shadow-xs">
+            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-2xs">
               📄
             </div>
             <div className="space-y-1">
-              <h3 className="text-base sm:text-lg font-bold text-slate-900">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 Pilih Berkas PDF yang Ingin Diedit
               </h3>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Unggah dokumen surat, sertifikat, laporan invoice, atau formulir PDF. Seluruh teks akan dideteksi dan dapat diedit, dihapus, atau digeser posisinya langsung.
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                Unggah dokumen surat, sertifikat, laporan invoice, atau formulir PDF. Seluruh teks akan dideteksi dan dapat langsung diedit, dihapus, atau digeser posisinya secara bebas.
               </p>
             </div>
 
@@ -1095,7 +1235,7 @@ export default function DirectPdfEditorPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm rounded-xl transition duration-150 shadow-sm cursor-pointer"
+                className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-xs sm:text-sm rounded-xl transition duration-150 shadow-sm cursor-pointer"
               >
                 Pilih Berkas PDF dari Komputer / HP
               </button>
@@ -1104,14 +1244,14 @@ export default function DirectPdfEditorPage() {
                 type="button"
                 onClick={handleLoadSamplePdf}
                 disabled={isLoading}
-                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm rounded-xl transition cursor-pointer flex items-center gap-1.5"
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Buka Contoh Surat PDF</span>
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400 pt-3">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 pt-3">
               🛡️ Privasi 100% Terjamin: Dokumen diproses murni pada memori browser Anda menggunakan teknologi PDF.js dan pdf-lib tanpa dikirim ke server.
             </p>
           </div>
@@ -1123,9 +1263,9 @@ export default function DirectPdfEditorPage() {
         </div>
 
         {/* Konten Edukasi & SEO: Panduan Cara Mengedit Teks PDF */}
-        <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-slate-600 text-xs sm:text-sm leading-relaxed">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
           <div>
-            <h2 className="text-base sm:text-xl font-bold text-slate-900 mb-2">
+            <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
               💡 Cara Kerja Direct PDF Text Editor di Browser (Tanpa Install Aplikasi)
             </h2>
             <p>
@@ -1134,37 +1274,37 @@ export default function DirectPdfEditorPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
                 <span>🔍</span> 1. Deteksi &amp; Klik Teks
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Mesin <b>PDF.js</b> membaca matriks tipografi pada dokumen dan memetakan setiap kalimat ke koordinat piksel yang presisi di atas layar browser Anda.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
                 <span>🖐️</span> 2. Bebas Geser Posisi
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Teks yang Anda edit atau tambahkan dapat langsung <b>diseret (drag-and-drop)</b> ke koordinat yang diinginkan agar sejajar rapi dengan garis formulir atau tanda tangan.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
                 <span>🔒</span> 3. Tanpa Risiko Kebocoran Data
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Surat perjanjian, nilai kontrak, nomor rekening, atau ijazah Anda aman dari pencurian data karena seluruh pemrosesan kode berjalan 100% di peramban lokal pengunjung.
               </p>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-5 space-y-2 text-xs">
-            <h4 className="font-bold text-slate-800">Tips Penggunaan:</h4>
-            <ul className="space-y-1.5 list-disc pl-5 text-slate-500">
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-2 text-xs">
+            <h4 className="font-bold text-slate-800 dark:text-slate-200">Tips Penggunaan:</h4>
+            <ul className="space-y-1.5 list-disc pl-5 text-slate-500 dark:text-slate-400">
               <li><b>Koreksi Typo Cepat:</b> Klik kalimat yang ingin Anda perbaiki, ganti kata yang salah, lalu klik tombol <b>Terapkan Teks Ini</b>.</li>
               <li><b>Menghapus Kalimat:</b> Pilih kalimat yang ingin dihilangkan, lalu klik ikon tempat sampah (Hapus) untuk menutup teks lama dengan blok putih rapi.</li>
               <li><b>Menambahkan &amp; Menggeser Teks:</b> Klik tombol <b>Tambah Teks Baru (+)</b>, kemudian gunakan ikon panah empat arah untuk menggeser teks ke posisi yang Anda kehendaki.</li>
@@ -1172,9 +1312,9 @@ export default function DirectPdfEditorPage() {
             </ul>
           </div>
         </div>
-      </section>
+      </main>
 
       <Footer />
-    </main>
+    </div>
   );
 }

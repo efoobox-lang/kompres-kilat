@@ -226,7 +226,7 @@ export default function Navbar() {
         </div>
 
         {/* ========================================================== */}
-        {/* MOBILE CONTROLS: Search Icon, Language, Theme & Hamburger */}
+        {/* MOBILE CONTROLS: Search Icon, Language & Hamburger         */}
         {/* ========================================================== */}
         <div className="flex md:hidden items-center gap-1 sm:gap-1.5">
           {/* Mobile Search Icon Trigger */}
@@ -234,9 +234,6 @@ export default function Navbar() {
 
           {/* Language Selector di Main Mobile Header Bar */}
           <LanguageToggle className="px-2 py-1 text-xs" />
-
-          {/* Dark Mode Toggle Tunggal di Main Mobile Header Bar */}
-          <ThemeToggle compact={true} />
 
           {/* Hamburger Menu Toggle Button */}
           <button
