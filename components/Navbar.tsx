@@ -1,249 +1,399 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
 import ThemeToggle from '@/components/ThemeToggle';
 import SearchBar from '@/components/SearchBar';
+import {
+  ChevronDown,
+  ArrowRight,
+  Sparkles,
+  FileText,
+  Image as ImageIcon,
+  Calculator,
+  X,
+  Menu,
+  BookOpen,
+  Home,
+  Layers,
+  ShieldCheck,
+} from 'lucide-react';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Mobile drawer state
+  const [isToolsOpen, setIsToolsOpen] = useState(false); // Desktop "Semua Alat" dropdown
+  const toolsDropdownRef = useRef<HTMLDivElement | null>(null);
+
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  const navLinks = [
-    { href: '/', label: t('nav_home') },
-    { href: '/tools/image', label: t('nav_compress') },
-    { href: '/ai-image-tools', label: t('nav_ai_image') },
-    { href: '/ai-presentation-maker', label: t('nav_ai_slide') },
-    { href: '/tools/tracking', label: t('nav_track') },
-    { href: '/blog', label: t('nav_blog') },
+  // Highlighted features inside the "Semua Alat" mega dropdown
+  const dropdownCategories = [
+    {
+      title: 'Dokumen & PDF',
+      icon: <FileText className="w-4 h-4 text-indigo-500" />,
+      items: [
+        { label: 'Direct PDF Editor', href: '/tools/pdf-editor', badge: 'Baru' },
+        { label: 'Kompres PDF', href: '/tools/pdf' },
+        { label: 'Penggabung PDF', href: '/tools/pdf-merge', badge: 'Populer' },
+        { label: 'PDF ke Word (OCR)', href: '/tools/pdf-to-word' },
+        { label: 'Smart Scan & Fotocopy', href: '/tools/scan-dokumen' },
+      ],
+    },
+    {
+      title: 'Foto & Gambar',
+      icon: <ImageIcon className="w-4 h-4 text-purple-500" />,
+      items: [
+        { label: 'Kompres & Konversi Foto', href: '/tools/image', badge: 'Utama' },
+        { label: 'Ganti Background Pas Foto', href: '/tools/remove-bg', badge: 'AI' },
+        { label: 'Hapus Objek di Foto', href: '/tools/object-eraser' },
+        { label: 'Resize Pas Foto 2x3 3x4 4x6', href: '/tools/resize-pasfoto' },
+        { label: 'Sensor & Blur KTP', href: '/tools/censor-ktp' },
+      ],
+    },
+    {
+      title: 'AI & Kreatif',
+      icon: <Sparkles className="w-4 h-4 text-amber-500" />,
+      items: [
+        { label: 'AI Photo Enhancer & 4K', href: '/ai-image-tools', badge: 'Ultra' },
+        { label: 'AI Presentation Generator', href: '/ai-presentation-maker' },
+        { label: 'AI Resume & ATS Checker', href: '/tools/ats-resume', badge: 'CV' },
+        { label: 'AI Document Summarizer', href: '/tools/document-summarizer' },
+        { label: 'AI Poster & Brosur', href: '/tools/poster-generator' },
+      ],
+    },
+    {
+      title: 'Bisnis & Utilitas',
+      icon: <Calculator className="w-4 h-4 text-emerald-500" />,
+      items: [
+        { label: 'Kalkulator Diskon & PPh 21', href: '/tools/kalkulator-finansial' },
+        { label: 'Kalkulator Bisnis & UMKM', href: '/tools/kalkulator-umkm' },
+        { label: 'Cek Resi & Lacak Paket', href: '/tools/tracking', badge: 'Resi' },
+        { label: 'QR Code Generator', href: '/tools/qr-generator' },
+        { label: 'Arsip ZIP Multi-File', href: '/tools/zip' },
+      ],
+    },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
-  };
+  // Click outside to close desktop tools dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(e.target as Node)) {
+        setIsToolsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+
+  const isHomeActive = pathname === '/';
+  const isBlogActive = pathname.startsWith('/blog');
+  const isToolsActive = pathname.startsWith('/tools') || pathname.startsWith('/ai-');
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Logo Brand */}
-        <Link 
-          href="/" 
-          className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl tracking-tight whitespace-nowrap shrink-0"
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-4">
+        {/* ========================================================== */}
+        {/* SISI KIRI: Brand Logo                                      */}
+        {/* ========================================================== */}
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl tracking-tight whitespace-nowrap shrink-0 group"
         >
-          <span className="text-xl sm:text-2xl">⚡</span>
+          <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform">⚡</span>
           <span>KompresKilat</span>
         </Link>
 
-        {/* Desktop Search Bar (Tengah & Proporsional) */}
-        <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm justify-center px-2">
-          <SearchBar variant="desktop" />
-        </div>
+        {/* ========================================================== */}
+        {/* SISI TENGAH: Simplified Core Navigation Links (Desktop)    */}
+        {/* ========================================================== */}
+        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-xs sm:text-sm font-semibold">
+          {/* 1. Core Link: Beranda */}
+          <Link
+            href="/"
+            className={`px-3 py-1.5 rounded-xl transition ${
+              isHomeActive
+                ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            {t('nav_home')}
+          </Link>
 
-        {/* Desktop Navigation Links */}
-        <div className="hidden md:flex items-center space-x-2 lg:space-x-3 shrink-0">
-          <nav className="flex items-center space-x-1 lg:space-x-1.5 text-xs sm:text-sm font-semibold">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-2.5 lg:px-3 py-1.5 rounded-xl transition ${
-                  isActive(link.href)
-                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+          {/* 2. Dropdown: "Semua Alat" / Fitur */}
+          <div ref={toolsDropdownRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setIsToolsOpen(!isToolsOpen)}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                isToolsActive || isToolsOpen
+                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              aria-expanded={isToolsOpen}
+              aria-haspopup="true"
+            >
+              <span>Semua Alat</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isToolsOpen ? 'rotate-180 text-indigo-600' : 'text-slate-400'
                 }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-1.5 pl-1">
+              />
+            </button>
+
+            {/* Desktop Mega Dropdown Panel */}
+            {isToolsOpen && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[720px] bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="grid grid-cols-4 gap-4">
+                  {dropdownCategories.map((cat) => (
+                    <div key={cat.title} className="space-y-2.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white pb-1 border-b border-slate-100 dark:border-slate-800">
+                        {cat.icon}
+                        <span className="truncate">{cat.title}</span>
+                      </div>
+                      <ul className="space-y-1 text-xs">
+                        {cat.items.map((item) => (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              onClick={() => setIsToolsOpen(false)}
+                              className="group flex items-center justify-between py-1 px-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-slate-800 transition"
+                            >
+                              <span className="truncate">{item.label}</span>
+                              {item.badge && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Dropdown Bottom Bar */}
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 text-[11px] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    31+ alat produktivitas gratis &amp; 100% lokal
+                  </span>
+                  <Link
+                    href="/#tools"
+                    onClick={() => setIsToolsOpen(false)}
+                    className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 group"
+                  >
+                    <span>Lihat Seluruh Fitur di Beranda</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Core Link: Blog */}
+          <Link
+            href="/blog"
+            className={`px-3 py-1.5 rounded-xl transition ${
+              isBlogActive
+                ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            {t('nav_blog')}
+          </Link>
+        </nav>
+
+        {/* ========================================================== */}
+        {/* SISI KANAN: Compact Search Trigger & Utilities (Desktop)   */}
+        {/* ========================================================== */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Sleek Search Button Trigger (Hemat Ruang Horizontal) */}
+          <SearchBar variant="desktop-button" placeholder="Cari alat... (⌘K)" />
+
+          {/* Subtle Vertical Divider */}
+          <div className="h-5 w-px bg-slate-200 dark:border-slate-800 bg-slate-200 dark:bg-slate-700/80 mx-1" />
+
+          {/* Grouped Secondary Controls: Language & Theme */}
+          <div className="flex items-center gap-1.5">
             <LanguageToggle />
             <ThemeToggle />
           </div>
         </div>
 
-        {/* Mobile Quick Action & Hamburger Toggle */}
-        <div className="flex md:hidden items-center gap-1 sm:gap-1.5">
-          {/* Tombol Search Icon Mobile */}
-          <SearchBar variant="mobile" />
+        {/* ========================================================== */}
+        {/* MOBILE CONTROLS: Search Icon & Hamburger Trigger           */}
+        {/* ========================================================== */}
+        <div className="flex md:hidden items-center gap-1">
+          {/* Mobile Search Icon Trigger */}
+          <SearchBar variant="mobile-icon" />
 
-          <LanguageToggle className="px-2 py-0.5 text-[11px]" />
-          <Link
-            href="/blog"
-            className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition whitespace-nowrap"
-          >
-            {t('nav_blog')}
-          </Link>
+          {/* Hamburger Menu Toggle Button */}
           <button
+            type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer"
-            aria-label="Buka Menu"
+            className="p-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition focus:outline-none cursor-pointer"
+            aria-label={isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            aria-expanded={isOpen}
           >
-            {isOpen ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown Accordion */}
+      {/* ========================================================== */}
+      {/* MOBILE RESPONSIVE SLIDE-OVER DRAWER                        */}
+      {/* ========================================================== */}
       {isOpen && (
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-lg space-y-1.5 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Quick search input button inside accordion */}
-          <div className="pb-1">
-            <SearchBar variant="mobile" mobileTriggerLabel="Cari 30+ Alat & Fitur..." className="w-full" />
-          </div>
+        <div className="fixed inset-0 z-50 md:hidden bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs flex justify-end animate-in fade-in duration-150">
+          {/* Backdrop Click to Close */}
+          <div
+            className="fixed inset-0 -z-10"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
 
-          <div className="flex items-center justify-between p-2 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
-            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{t('theme_toggle')}</span>
-            <ThemeToggle compact={true} />
+          {/* Drawer Panel */}
+          <div className="w-[85%] max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-200 border-l border-slate-200 dark:border-slate-800">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <Link
+                href="/"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg tracking-tight"
+              >
+                <span>⚡</span>
+                <span>KompresKilat</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                aria-label="Tutup menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Full Width Search Trigger */}
+              <SearchBar
+                variant="full-input"
+                mobileTriggerLabel="Cari 30+ Alat &amp; Fitur..."
+                className="w-full"
+              />
+
+              {/* Core Navigation Links */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+                  Navigasi Utama
+                </p>
+                <Link
+                  href="/"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    isHomeActive
+                      ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Home className="w-4 h-4 text-indigo-500" />
+                  <span>{t('nav_home')}</span>
+                </Link>
+                <Link
+                  href="/blog"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
+                    isBlogActive
+                      ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 text-purple-500" />
+                  <span>{t('nav_blog')}</span>
+                </Link>
+                <Link
+                  href="/#tools"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition"
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Jelajahi Seluruh 31+ Alat &rarr;</span>
+                </Link>
+              </div>
+
+              {/* Grouped Feature Sections */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+                  Kategori Alat Populer
+                </p>
+
+                {dropdownCategories.map((cat) => (
+                  <div
+                    key={cat.title}
+                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2"
+                  >
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                      {cat.icon}
+                      <span>{cat.title}</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1 text-xs">
+                      {cat.items.slice(0, 3).map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-between py-1 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-750 transition"
+                        >
+                          <span className="truncate">{item.label}</span>
+                          {item.badge && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Drawer Footer Controls */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Bahasa &amp; Tema:
+                </span>
+                <div className="flex items-center gap-2">
+                  <LanguageToggle className="px-2 py-1 text-xs" />
+                  <ThemeToggle compact={true} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>100% Client-Side Privacy: Bebas Upload ke Server</span>
+              </div>
+            </div>
           </div>
-          <Link
-            href="/"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname === '/' ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🏠 {t('nav_home')}
-          </Link>
-          <Link
-            href="/tools/image"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/image') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🖼️ {t('tool_image_title')}
-          </Link>
-          <Link
-            href="/ai-image-tools"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/ai-image-tools') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            ✨ {t('tool_ai_image_title')}
-          </Link>
-          <Link
-            href="/ai-presentation-maker"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/ai-presentation-maker') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            📊 {t('tool_ai_slide_title')}
-          </Link>
-          <Link
-            href="/tools/remove-bg"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/remove-bg') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🎨 {t('tool_bg_title')}
-          </Link>
-          <Link
-            href="/tools/object-eraser"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/object-eraser') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🪄 {t('tool_eraser_title')}
-          </Link>
-          <Link
-            href="/tools/scan-dokumen"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/scan-dokumen') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🖨️ {t('tool_smart_scan_title')}
-          </Link>
-          <Link
-            href="/tools/pro-editor"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pro-editor') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🎨 {t('tool_pro_editor_title')}
-          </Link>
-          <Link
-            href="/tools/meme-generator"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/meme-generator') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            😂 {t('tool_meme_title')}
-          </Link>
-          <Link
-            href="/tools/tanda-tangan"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/tanda-tangan') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            ✍️ {t('tool_signature_title')}
-          </Link>
-          <Link
-            href="/tools/pdf-editor"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pdf-editor') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            📝 {t('tool_pdf_editor_title')}
-          </Link>
-          <Link
-            href="/tools/pdf"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/pdf') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            📄 {t('tool_pdf_title')}
-          </Link>
-          <Link
-            href="/tools/tracking"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/tracking') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            📦 {t('tool_track_title')}
-          </Link>
-          <Link
-            href="/tools/zip"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/tools/zip') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            🗜️ {t('tool_zip_title')}
-          </Link>
-          <Link
-            href="/blog"
-            onClick={() => setIsOpen(false)}
-            className={`block px-3 py-2.5 rounded-xl transition ${
-              pathname.startsWith('/blog') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            📚 {t('footer_link_all_blogs')}
-          </Link>
         </div>
       )}
     </header>
