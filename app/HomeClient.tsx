@@ -78,7 +78,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
 
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-3 sm:mb-4 leading-tight sm:leading-tight">
           {t('hero_title_1')}{' '}
-          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-sky-400 dark:to-indigo-300 bg-clip-text text-transparent hero-gradient-text inline-block">
             {t('hero_title_highlight')}
           </span>
         </h1>

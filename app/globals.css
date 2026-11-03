@@ -81,16 +81,28 @@ body {
   border-color: #1e293b !important;
 }
 
-/* Ensure all gradient cards in dark mode inherit uniform dark background */
+/* Ensure all gradient cards in dark mode inherit uniform dark background, excluding text clips */
 .dark .to-white,
 .dark [class*="to-white"] {
   --tw-gradient-to: #0f172a !important;
 }
 
-.dark [class*="bg-gradient-to-br"],
-.dark [class*="bg-gradient-to-r"] {
+.dark [class*="bg-gradient-to-br"]:not([class*="bg-clip-text"]):not(.hero-gradient-text),
+.dark [class*="bg-gradient-to-r"]:not([class*="bg-clip-text"]):not(.hero-gradient-text) {
   background-image: none !important;
   background-color: #0f172a !important;
+}
+
+/* Explicit high-contrast text gradients in dark mode */
+.dark .hero-gradient-text,
+.dark [class*="bg-clip-text"] {
+  background-image: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%) !important;
+  background-color: transparent !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
 }
 
 .dark .border-indigo-200,
