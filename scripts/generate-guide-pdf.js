@@ -288,10 +288,10 @@ async function createGuidePdf() {
     { font: fontRegular, size: 9 }
   );
 
-  drawBullet('Langkah 1: Submit Peta Situs (Sitemap)', 'Buka Google Search Console -> Pilih Peta Situs -> Masukkan URL "sitemap.xml" -> Klik Kirim. Pastikan statusnya "Sukses".');
+  drawBullet('Langkah 1: Submit Peta Situs di GSC', 'Buka Google Search Console -> Pilih Peta Situs -> Masukkan URL "sitemap.xml" -> Klik Kirim. Google akan mengonfirmasi status "Sukses".');
   drawBullet('Langkah 2: Inspeksi URL & Request Indexing', 'Masukkan URL halaman prioritas pada kolom pencarian GSC -> Klik "Uji URL Aktif" (Test Live URL) -> Klik "Minta Pengindeksan" (Request Indexing).');
   drawBullet('Daftar URL Prioritas Pengindeksan Harian', '1) Homepage (https://kompreskilat.site/), 2) /tools/pdf-editor, 3) /tools/image, 4) /tools/remove-bg, 5) /tools/kalkulator-pajak, 6) /tools/currency-converter, 7) /tools/tracking.');
-  drawBullet('Langkah 3: Google Ping Sitemap API', 'Kunjungi sekali tautan: https://www.google.com/ping?sitemap=https://kompreskilat.site/sitemap.xml untuk memberi sinyal perayapan ulang otomatis.');
+  drawBullet('Langkah 3: Pembaruan Otomatis via robots.txt & lastmod', 'Google telah memensiunkan endpoint sitemap ping lama. Sistem KompresKilat kini menggunakan tag <lastmod> dinamis dan tautan sitemap resmi di robots.txt yang otomatis dibaca perayap Google setiap hari.');
 
   // Section 3: Organic Traffic
   drawSectionTitle('3. STRATEGI MENDATANGKAN TRAFIK ORGANIK HARIAN (50 - 200+ VISITOR)', 'ACTION PLAN');
