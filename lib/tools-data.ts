@@ -422,6 +422,19 @@ export const ALL_TOOLS: ToolItem[] = [
   // 4. Bisnis & Kalkulator
   // ==========================================
   {
+    id: 'currency-converter',
+    title: 'Konverter Mata Uang Global',
+    description: 'Hitung nilai tukar kurs valas (USD, SAR, EUR, SGD, MYR, JPY ke IDR) real-time & estimasi biaya riyal Haji/Umroh.',
+    href: '/tools/currency-converter',
+    category: 'Bisnis & Kalkulator',
+    categoryKey: 'business',
+    icon: '💱',
+    badge: 'POPULER',
+    badgeColor: 'emerald',
+    isPopular: true,
+    keywords: ['kurs', 'mata uang', 'dollar', 'rupiah', 'riyal', 'sar', 'haji', 'umroh', 'euro', 'ringgit', 'sgd', 'valas'],
+  },
+  {
     id: 'kalkulator-finansial',
     title: 'Kalkulator Finansial & Satuan',
     description: 'Hitung diskon bertingkat (50%+20%), simulasi pajak PPh 21 terbaru, zakat mal 85g emas, dan konversi satuan.',
