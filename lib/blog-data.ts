@@ -31,6 +31,294 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'cara-memberi-nomor-halaman-pdf-online-gratis-lewati-cover',
+    title: 'Cara Memberi Nomor Halaman PDF Online Gratis & Praktis (Lewati Halaman Cover Skripsi & Laporan)',
+    excerpt: 'Panduan lengkap cara menambahkan nomor halaman pada berkas PDF skripsi, jurnal, dan laporan kantor secara otomatis. Mendukung posisi Header/Footer, format kustom, dan lewati halaman cover tanpa aplikasi tambahan.',
+    category: 'Dokumen PDF',
+    date: '3 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Kebutuhan Penomoran Halaman pada Dokumen Resmi & Akademik
+Dalam penyusunan karya ilmiah, tugas akhir skripsi, tesis, modul pembelajaran, maupun laporan pertanggungjawaban kantor, penomoran halaman yang rapi dan konsisten merupakan syarat administratif mutlak. 
+
+Sering kali dokumen digital yang sudah diekspor ke format PDF belum memiliki nomor halaman, atau beberapa dokumen gabungan memiliki penomoran yang terputus-putus. Masalah bertambah rumit ketika pedoman akademik mewajibkan **lembar sampul (cover depan) tidak boleh diberi nomor**, sementara penomoran baru dimulai pada halaman berikutnya.
+
+Sebelumnya, banyak orang terpaksa membuka kembali aplikasi pengolah kata seperti Microsoft Word, mengatur *Section Break (Next Page)* yang rumit, lalu mengekspor ulang dokumen ke PDF. Langkah ini tidak hanya memakan waktu, namun sering kali merusak susunan tata letak tabel dan gambar yang sudah final.
+
+---
+
+### Solusi Praktis: Stempel Penomoran Presisi dengan Fitur Beri Nomor PDF KompresKilat
+Melalui fitur terbaru **[Beri Nomor Halaman PDF](/tools/page-number-pdf)** di KompresKilat, Anda dapat membubuhkan nomor urut halaman secara otomatis langsung di peramban (browser) dengan fleksibilitas penuh:
+
+1. **Pilihan 6 Titik Posisi Fleksibel**:
+   - Bawah Tengah (standar karya ilmiah & skripsi Indonesia)
+   - Bawah Kanan & Bawah Kiri
+   - Atas Tengah (Header)
+   - Atas Kanan & Atas Kiri
+2. **Beragam Format Penomoran Standar & Kustom**:
+   - \`Halaman {n} dari {total}\` (Contoh: *Halaman 1 dari 45*)
+   - \`Hal. {n}\` (Contoh: *Hal. 1*)
+   - \`{n} / {total}\` (Contoh: *1 / 45*)
+   - \`{n}\` (Angka polos tanpa imbuhan kata)
+   - Pola kustom teks bebas menggunakan variabel \`{n}\` dan \`{total}\`.
+3. **Fitur Khusus: Lewati Halaman Sampul (Cover)**:
+   - Cukup ubah opsi *"Mulai dari Halaman"* menjadi angka 2. Halaman pertama (cover) akan dibiarkan bersih tanpa stempel angka, sementara halaman kedua otomatis dimulai dari angka 1 atau angka yang Anda kehendaki.
+4. **Pilihan Font Vektor Standar ISO**:
+   - Mendukung jenis huruf *Helvetica* (modern & bersih), *Times Roman* (formal akademik), dan *Courier* (monospace).
+   - Teks nomor disematkan langsung sebagai vektor murni, sehingga tidak pecah atau buram saat dicetak dalam resolusi tinggi.
+5. **Pratinjau Interaktif Langsung (Live Canvas Preview)**:
+   - Anda dapat melihat simulasi posisi nomor tepat pada lembar dokumen sebelum berkas diunduh.
+
+---
+
+### Langkah Demi Langkah Memberi Nomor Halaman PDF:
+1. **Akses Alat**: Buka laman perkakas [Beri Nomor Halaman PDF](/tools/page-number-pdf) di KompresKilat.
+2. **Pilih Dokumen**: Tarik dan letakkan (*drag-and-drop*) file PDF Anda atau klik tombol *"Pilih Dokumen PDF"*.
+3. **Atur Posisi & Format**:
+   - Pilih posisi letak (misalnya: *Bawah Tengah*).
+   - Pilih format teks penomoran sesuai pedoman instansi Anda.
+   - Jika ingin melewati sampul judul, isi *"Mulai dari Halaman"* dengan angka 2.
+4. **Periksa Pratinjau**: Geser tombol navigasi halaman untuk memastikan posisi nomor tidak menabrak catatan kaki (*footnote*) atau tabel dokumen.
+5. **Klik "Beri Nomor & Unduh PDF"**: Sistem memproses berkas secara lokal dalam sekejap tanpa menunggu antrean server.
+
+---
+
+### Jaminan Keamanan & Privasi Data
+Seluruh berkas PDF Anda dibaca dan dimanipulasi seutuhnya di memori peramban menggunakan teknologi *WebAssembly* dan *pdf-lib*. Tidak ada satu byte pun dokumen rahasia Anda yang dikirim ke server internet luar, menjamin keamanan berkas tugas negara maupun dokumen kantor Anda.
+`,
+    relatedTool: {
+      title: 'Beri Nomor Halaman PDF Online',
+      description: 'Bubuhkan nomor halaman otomatis di header/footer, lewati cover depan, dan atur format font dengan aman di browser.',
+      url: '/tools/page-number-pdf',
+      icon: '🔢',
+      buttonText: 'Buka Alat Penomoran PDF',
+    },
+    en: {
+      title: 'How to Add Page Numbers to PDF Online for Free (Skip Cover Page Easily)',
+      excerpt: 'Step-by-step guide on how to automatically add header or footer page numbers to PDF documents. Support custom numbering formats and skip title/cover pages 100% locally.',
+      category: 'PDF Documents',
+      date: 'November 3, 2026',
+      readTime: '5 min read',
+      content: 'Add page numbers directly in your browser without uploading files to remote servers. Customizable font, size, alignment, and skip cover page options.',
+      relatedTool: {
+        title: 'Add Page Numbers to PDF',
+        description: 'Stamp dynamic page numbers onto PDF pages securely in your web browser.',
+        buttonText: 'Open PDF Page Numberer',
+      },
+    },
+  },
+  {
+    slug: 'cara-membuat-watermark-ktp-dan-resize-pasfoto-paspor-standar-global',
+    title: 'Cara Membuat Watermark KTP Anti-Pinjol & Resize Pasfoto Paspor Standar Internasional (100% Aman di Browser)',
+    excerpt: 'Amankan dokumen KTP, SIM, dan Paspor Anda dari penyalahgunaan pinjol dengan stempel watermark miring anti-crop. Lengkap dengan panduan resize pasfoto paspor 35x45mm dan 2x2 inci standar biometrik ICAO.',
+    category: 'Keamanan Data',
+    date: '3 November 2026',
+    readTime: '6 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Bahaya Pencurian Identitas (Identity Theft) & Mengapa Watermark KTP Sangat Krusial
+Di era digital, hampir seluruh layanan publik dan finansial mewajibkan unggah foto kartu identitas (KTP, SIM, atau Paspor) sebagai syarat verifikasi *Know Your Customer* (KYC). Sayangnya, marak terjadi kebocoran data pindaian identitas warga yang disalahgunakan oleh pihak tidak bertanggung jawab untuk:
+- Mengajukan pinjaman online (pinjol) ilegal atas nama korban.
+- Membuka rekening bank penampung hasil penipuan.
+- Pendaftaran kartu SIM bodong dan verifikasi akun media sosial palsu.
+
+Otoritas keamanan siber dan Kementerian Kominfo RI telah berulang kali mengimbau: **Jangan pernah mengirim foto KTP atau Paspor polos tanpa stempel tanda air (watermark) yang menyebutkan tujuan transaksi dan tanggal pembuatan secara spesifik.**
+
+---
+
+### Solusi Baru: Global ID & Passport Utility di KompresKilat
+Untuk melindungi masyarakat dari ancaman kejahatan siber sekaligus mempermudah persiapan administrasi internasional, KompresKilat merilis modul khusus **[Global ID & Passport Utility](/tools/passport-id-utility)** yang menggabungkan dua fitur keamanan unggulan:
+
+#### 1. Secure Watermarker Dokumen Identitas (Anti-Misuse)
+- **Pola Miring Berulang Anti-Crop**: Stempel teks semi-transparan dicetak melintang berulang-ulang di seluruh bidang dokumen. Jika oknum mencoba memotong (*crop*) bagian tepi, watermark tetap melekat kuat pada bagian tengah identitas.
+- **Preset Tujuan Resmi**:
+  - *"HANYA UNTUK VERIFIKASI REKENING BANK - [TANGGAL]"*
+  - *"FOR VISA APPLICATION PURPOSES ONLY - [DATE]"*
+  - *"HANYA UNTUK PENDAFTARAN KERJA / REKRUTMEN - [TANGGAL]"*
+  - *"HANYA UNTUK SEWA KENDARAAN / HOTEL - [TANGGAL]"*
+- **Fleksibilitas Gaya & Warna**: Sesuaikan tingkat transparansi (30-50% agar NIK tetap terbaca oleh verifikator resmi namun tidak bisa diduplikasi), ukuran font, dan sudut kemiringan.
+- **Dukungan Format Lengkap**: Mendukung foto dokumen (JPG/PNG/WebP) dan berkas **PDF multi-halaman**.
+
+#### 2. Paspor & Visa Photo Resizer Standar Biometrik ICAO Doc 9303
+Selain keamanan dokumen, modul ini menyediakan alat penyesuaian pasfoto paspor dan visa dunia:
+- **Standar Internasional ICAO (35 × 45 mm)**: Digunakan resmi untuk Paspor Republik Indonesia, Visa Eropa (Schengen), Inggris Raya, Australia, dan Jepang.
+- **Standar Kedutaan Amerika Serikat (2 × 2 inci / 51 × 51 mm)**: Format bujur sangkar wajib untuk formulir visa AS (DS-160) dan Visa India.
+- **Standar Visa China (33 × 48 mm)** & **Singapura/Malaysia (35 × 50 mm)**.
+- **Panduan Biometrik Wajah**: Garis bantu oval kepala dan ketinggian mata agar rasio wajah memenuhi syarat biometrik 70%-80%.
+- **Paket Lembar Cetak 4×6 Inci (10×15 cm)**: Unduh lembar cetak siap bawa ke studio foto berisi 6-8 pasfoto sekaligus dengan resolusi cetak 300 DPI.
+
+---
+
+### Cara Membubuhkan Watermark KTP Agar Aman:
+1. Masuk ke menu [Global ID & Passport Utility](/tools/passport-id-utility) dan pilih tab **"2. Secure Watermarker Dokumen"**.
+2. Unggah foto scan KTP atau paspor Anda.
+3. Pada kotak teks, tuliskan tujuan transaksi Anda secara spesifik, misalnya: \`HANYA UNTUK VERIFIKASI SEWA MOBIL BALI - 03/11/2026\`.
+4. Pilih pola **"Pola Miring Anti-Crop"** dan atur transparansi ke 35%.
+5. Klik **"Unduh Dokumen Ber-Watermark Aman"**. File hasil siap dikirimkan ke pihak terkait dengan proteksi maksimal.
+
+---
+
+### Mengapa Menggunakan KompresKilat Lebih Aman daripada Aplikasi Lain?
+Banyak situs watermark online mengirim foto KTP Anda ke server mereka untuk diproses. Praktik ini sangat berbahaya karena jika server situs tersebut diretas, foto identitas Anda ikut bocor.
+
+Di KompresKilat, **100% proses manipulasi kanvas dan penyematan stempel terjadi di peramban komputer/ponsel Anda sendiri**. Tidak ada satu byte pun foto identitas Anda yang terkirim ke server internet.
+`,
+    relatedTool: {
+      title: 'Global ID & Passport Utility',
+      description: 'Resize pasfoto standar paspor ICAO 35x45mm dan bubuhkan watermark anti-pinjol pada pindaian KTP secara 100% lokal.',
+      url: '/tools/passport-id-utility',
+      icon: '🌐',
+      buttonText: 'Buka Alat Paspor & Watermark ID',
+    },
+    en: {
+      title: 'How to Watermark ID Cards to Prevent Fraud & Resize Passport Photos to Global Standards',
+      excerpt: 'Protect your ID cards and passports from misuse with repeat anti-crop watermarks. Resize photos to official 35x45mm and 2x2 inch ICAO biometric standards locally.',
+      category: 'Data Security',
+      date: 'November 3, 2026',
+      readTime: '6 min read',
+      content: 'Learn how to protect your national identity cards and passport scans with clear transaction watermarks and crop photos to international visa standards.',
+      relatedTool: {
+        title: 'Global ID & Passport Utility',
+        description: 'Secure ID watermarker and ICAO passport photo resizer tool in browser.',
+        buttonText: 'Open ID & Passport Utility',
+      },
+    },
+  },
+  {
+    slug: 'cara-hitung-kurs-riyal-arab-saudi-ke-rupiah-estimasi-biaya-haji-umroh',
+    title: 'Cara Menghitung Kurs Riyal Arab Saudi (SAR) ke Rupiah & Panduan Estimasi Biaya Living Cost Haji / Umroh',
+    excerpt: 'Simulasi lengkap konversi mata uang Riyal Saudi (SAR) ke Rupiah (IDR) secara real-time. Ketahui rincian pengeluaran DAM kurban, taksi Makkah-Madinah, paket internet lokal, dan tips hemat belanja di Tanah Suci.',
+    category: 'Bisnis & UMKM',
+    date: '3 November 2026',
+    readTime: '6 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Fluktuasi Kurs Riyal Saudi (SAR) & Tantangan Finansial Jemaah Haji/Umroh
+Bagi calon jemaah haji dan umroh asal Indonesia, mempersiapkan anggaran keuangan dalam mata uang Riyal Arab Saudi (SAR) merupakan langkah krusial sebelum bertolak ke Tanah Suci (Makkah dan Madinah).
+
+Fluktuasi nilai tukar Rupiah terhadap Riyal sering kali membuat jemaah bingung saat menghitung kebutuhan uang saku (*living cost*), biaya dam/kurban, transportasi taksi, hingga alokasi oleh-oleh keluarga. Terlebih lagi, kurs penukaran di loket *Money Changer* bandara sering kali jauh lebih mahal karena tingginya selisih kurs (*spread*).
+
+---
+
+### Solusi Real-Time: Konverter Mata Uang Global & Kalkulator Haji/Umroh KompresKilat
+Untuk membantu para pelancong dan jemaah ibadah, KompresKilat menghadirkan perkakas **[Konverter Mata Uang Global](/tools/currency-converter)** yang dilengkapi modul khusus **Kalkulator Haji & Umroh**:
+
+#### 1. Konversi Real-Time Tanpa Markup
+- Mengambil kurs pasar valas (*mid-market exchange rate*) internasional secara langsung dan transparan.
+- Dilengkapi tombol penukar mata uang (*swap button*) untuk membalik konversi dari Riyal ke Rupiah atau sebaliknya dengan satu ketukan.
+- Fitur salin hasil instan untuk membagikan rincian harga ke keluarga via WhatsApp.
+
+#### 2. Estimasi Pengeluaran Nyata di Tanah Suci (Makkah & Madinah)
+Berikut adalah daftar estimasi pengeluaran umum jemaah yang dapat disimulasikan secara otomatis:
+- **DAM / Kurban Kambing Resmi**: Rata-rata 600 - 700 SAR (sekitar Rp 2,6 juta - Rp 3 juta melalui saluran resmi Adahi / Bank Pembangunan Islam).
+- **Taksi Antarkota Makkah - Madinah**: Sekitar 400 - 550 SAR untuk kendaraan pribadi sedan/MPV.
+- **Uang Saku Harian / Makanan**: Menu nasi biryani, ayam albaik, atau nasi mandhi berkisar antara 18 - 30 SAR per porsi.
+- **Paket Data & Kartu SIM Lokal (STC / Mobily / Zain)**: Sekitar 80 - 120 SAR untuk kuota 20 GB - 30 GB selama masa ibadah.
+- **Oleh-oleh Kurma Ajwa Madinah**: Berkisar 50 - 70 SAR per kilogram kualitas premium di pasar kurma.
+
+---
+
+### Tips Cerdas Menukar & Membawa Uang Saat Ibadah di Arab Saudi:
+1. **Jangan Tukar Seluruh Uang Tunai di Bandara**:
+   * Loket penukaran uang di bandara keberangkatan maupun bandara kedatangan Jeddah/Madinah memiliki kurs terendah. Tukarkan uang secukupnya saja (misal 200 - 300 SAR) untuk kebutuhan darurat di hari pertama.
+2. **Manfaatkan Tarik Tunai di ATM Lokal Arab Saudi**:
+   * Kartu ATM debit bank Indonesia berlogo *Visa* atau *Mastercard* dapat digunakan untuk menarik uang tunai Riyal langsung di mesin ATM bank ternama Arab Saudi (seperti *Al Rajhi Bank* atau *SNB/Al Ahli*). Kursnya sering kali jauh lebih bersahabat mengikuti kurs resmi harian perbankan internasional.
+3. **Gunakan Pembayaran Kartu Nirsentuh (Contactless)**:
+   * Sebagian besar minimarket (Bin Dawood), restoran, dan toko farmasi di sekitar Masjidil Haram dan Masjid Nabawi telah menerima pembayaran non-tunai via kartu debit berlogo nirkontak (*contactless*).
+
+---
+
+### Coba Sekarang di KompresKilat
+Gunakan alat [Konverter Mata Uang Global](/tools/currency-converter) sekarang untuk merencanakan anggaran perjalanan Anda dengan akurat, cepat, dan 100% bebas biaya.
+`,
+    relatedTool: {
+      title: 'Konverter Mata Uang Global & Riyal Haji',
+      description: 'Hitung nilai tukar kurs valas (USD, SAR, EUR, SGD, MYR ke IDR) real-time & estimasi biaya ibadah Tanah Suci.',
+      url: '/tools/currency-converter',
+      icon: '💱',
+      buttonText: 'Buka Kalkulator Kurs Mata Uang',
+    },
+    en: {
+      title: 'How to Calculate Saudi Riyal (SAR) to Indonesian Rupiah & Hajj/Umrah Living Cost Guide',
+      excerpt: 'Comprehensive real-time currency conversion guide between Saudi Riyal (SAR) and IDR. Estimate pilgrimage living costs, qurban dam, and travel expenses easily.',
+      category: 'Business & Economy',
+      date: 'November 3, 2026',
+      readTime: '6 min read',
+      content: 'Real-time exchange rate guide between Saudi Riyal and Indonesian Rupiah with pilgrimage living cost estimation.',
+      relatedTool: {
+        title: 'Global Currency Converter',
+        description: 'Instant foreign exchange rate calculator with zero server storage.',
+        buttonText: 'Open Currency Converter',
+      },
+    },
+  },
+  {
+    slug: 'cara-mengatur-urutan-menghapus-dan-mengekstrak-halaman-pdf-online',
+    title: 'Cara Mengatur Urutan, Menghapus, & Mengekstrak Halaman PDF Online (Drag & Drop Cepat Tanpa Software)',
+    excerpt: 'Solusi praktis menyusun ulang lembar PDF yang tertukar susunannya, membuang halaman kosong yang tak diinginkan, serta mengekstrak halaman tertentu menjadi berkas PDF baru atau arsip ZIP langsung di browser.',
+    category: 'Dokumen PDF',
+    date: '3 November 2026',
+    readTime: '5 menit',
+    author: 'Tim KompresKilat',
+    content: `
+### Masalah Susunan Halaman Dokumen PDF yang Sering Dialami
+Saat memindai dokumen berkas lamaran CPNS, tugas akhir kuliah, berkas akreditasi, atau laporan audit kantor, kita kerap menemui beberapa kendala menjengkelkan:
+- **Urutan Lembar Terbalik**: Halaman hasil pindaian mesin scanner tersusun dari belakang ke depan, atau lembar lampiran berada sebelum surat permohonan.
+- **Halaman Kosong / Salah Cetak**: Ada lembaran kosong yang tidak sengaja ter-scan dan membuat dokumen terlihat tidak profesional.
+- **Hanya Membutuhkan Halaman Tertentu**: Anda memiliki dokumen PDF setebal 100 halaman, tetapi hanya perlu mengambil 3 lembar sertifikat atau halaman bukti kwitansi untuk dikirimkan melalui surel.
+
+Mengunduh software desktop berat berbayar seperti Adobe Acrobat Pro hanya untuk memindahkan dua lembar halaman tentu merepotkan.
+
+---
+
+### Solusi Praktis: Atur, Hapus & Ekstrak PDF KompresKilat
+Kini Anda dapat menyelesaikan masalah penataan halaman dalam hitungan detik menggunakan perkakas **[Atur, Hapus & Ekstrak PDF](/tools/organize-pdf)** dari KompresKilat.
+
+Fitur ini dirancang dengan antarmuka visual berbasis kartu thumbnail interaktif:
+1. **Atur Ulang Urutan (Reorder Drag & Drop)**:
+   - Geser kartu halaman langsung ke posisi urutan baru yang Anda inginkan, atau gunakan tombol panah geser kiri/kanan.
+2. **Hapus Halaman Sekali Klik**:
+   - Cukup klik ikon tempat sampah pada lembar yang salah atau kosong. Halaman yang ditandai merah tidak akan disertakan saat dokumen diunduh.
+3. **Ekstrak Halaman Terpilih**:
+   - Pilih halaman secara spesifik (misalnya halaman ganjil, halaman genap, atau ketik rentang seperti \`1-3, 5, 8-10\`).
+   - Ekspor lembar terpilih menjadi **1 berkas PDF baru**, ATAU pisahkan setiap lembar menjadi file PDF individual dalam format arsip **ZIP**.
+4. **Putar Orientasi Halaman 90 Derajat**:
+   - Perbaiki lembar pindaian yang miring atau terbalik tanpa merusak halaman lainnya.
+
+---
+
+### Langkah Mudah Menata Halaman PDF:
+1. Buka laman [Atur, Hapus & Ekstrak PDF](/tools/organize-pdf).
+2. Tarik berkas PDF Anda ke area kotak unggah. Sistem akan membuatkan pratinjau thumbnail untuk setiap halaman secara otomatis.
+3. Geser posisi thumbnail untuk merapikan urutan berkas.
+4. Klik ikon tempat sampah jika ada halaman kosong yang ingin disingkirkan.
+5. Klik **"Unduh PDF Hasil Penataan"** untuk menyimpan dokumen yang sudah rapi ke perangkat Anda.
+
+Semua proses berlangsung 100% di memori peramban Anda dengan jaminan privasi data tanpa upload ke server luar.
+`,
+    relatedTool: {
+      title: 'Atur, Hapus & Ekstrak PDF',
+      description: 'Susun ulang lembaran PDF (drag & drop), hapus halaman kosong, atau ekstrak halaman penting ke berkas baru secara instan.',
+      url: '/tools/organize-pdf',
+      icon: '📑',
+      buttonText: 'Buka Alat Atur Halaman PDF',
+    },
+    en: {
+      title: 'How to Organize, Reorder, Delete, and Extract PDF Pages Online for Free',
+      excerpt: 'Visual drag-and-drop tool to arrange PDF page sequences, delete blank pages, or extract specific pages to a new PDF or ZIP archive in browser.',
+      category: 'PDF Documents',
+      date: 'November 3, 2026',
+      readTime: '5 min read',
+      content: 'Easily rearrange, delete unwanted pages, or extract important sheets from any PDF file using a visual drag-and-drop grid interface.',
+      relatedTool: {
+        title: 'Organize & Extract PDF',
+        description: 'Reorder, delete, and extract PDF pages securely in your browser.',
+        buttonText: 'Open PDF Organizer',
+      },
+    },
+  },
+  {
     slug: 'cara-edit-teks-pdf-hasil-scan-dan-dokumen-digital-online-gratis',
     title: 'Cara Edit Teks PDF Hasil Scan & Dokumen Digital Online Gratis Tanpa Aplikasi (Fitur Whiteout & Ganti Tulisan)',
     excerpt: 'Panduan praktis mengedit teks typo di PDF digital maupun PDF hasil scan fotocopy/kamera HP. Tutup kalimat lama dengan fitur Whiteout dan tulis kalimat perbaikan secara presisi 100% lokal di browser.',
