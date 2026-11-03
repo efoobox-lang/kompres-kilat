@@ -2,7 +2,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { BadgeCheck, Sparkles } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -76,13 +76,8 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* Meet the Founder Section */}
-        <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 shadow-sm text-center space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Meet the Founder</span>
-          </div>
-
+        {/* Founder Profile Section */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm text-center">
           <div className="flex flex-col items-center justify-center">
             {/* Circular Frame for Founder's Photo */}
             <div className="relative group inline-block">
@@ -111,11 +106,8 @@ export default function AboutPage() {
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-4 tracking-tight">
               R. Ridhoulloh
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
               Web Developer
-            </p>
-            <p className="max-w-md mx-auto text-xs sm:text-sm text-slate-600 leading-relaxed mt-2.5">
-              Pengembang di balik KompresKilat yang berkomitmen menghadirkan perkakas web gratis, cepat, dan aman berbasis pemrosesan lokal (client-side) untuk masyarakat Indonesia.
             </p>
           </div>
         </div>
