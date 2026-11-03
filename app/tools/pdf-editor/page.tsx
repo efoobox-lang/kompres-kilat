@@ -29,6 +29,7 @@ import {
   Eraser,
   Square,
   AlertCircle,
+  Pipette,
 } from 'lucide-react';
 
 interface TextEditItem {
@@ -52,7 +53,7 @@ interface TextEditItem {
   isCustomAdd?: boolean; // Jika true, teks baru buatan pengguna
 }
 
-// Kotak Penutup Putih (Whiteout / Redact Box) untuk PDF scan maupun digital
+// Kotak Penutup Putih/Kustom (Smart Whiteout & Color Patch Box)
 interface WhiteoutBox {
   id: string;
   pageNum: number;
@@ -60,6 +61,7 @@ interface WhiteoutBox {
   pdfY: number; // Koordinat Y kiri-bawah dalam PDF
   width: number; // Lebar dalam poin PDF
   height: number; // Tinggi dalam poin PDF
+  color?: string; // HEX color latar belakang penutup, e.g. '#FFFFFF' atau warna sampel
 }
 
 const COLOR_OPTIONS = [
@@ -96,6 +98,8 @@ export default function DirectPdfEditorPage() {
   const [whiteoutBoxes, setWhiteoutBoxes] = useState<WhiteoutBox[]>([]);
   const [isWhiteoutMode, setIsWhiteoutMode] = useState<boolean>(false);
   const [activeWhiteoutId, setActiveWhiteoutId] = useState<string | null>(null);
+  const [whiteoutColor, setWhiteoutColor] = useState<string>('#FFFFFF');
+  const [isEyedropperActive, setIsEyedropperActive] = useState<boolean>(false);
 
   // State Interaktif Menggambar Kotak Whiteout di Kanvas
   const [isDrawingWhiteout, setIsDrawingWhiteout] = useState<boolean>(false);
@@ -494,11 +498,102 @@ export default function DirectPdfEditorPage() {
   };
 
   // ==========================================================================
-  // FITUR KHUSUS PDF SCAN / GAMBAR: WHITEOUT & CUSTOM TEXT OVERLAY
+  // FITUR KHUSUS PDF SCAN / GAMBAR: SMART WHITEOUT & COLOR SAMPLING
   // ==========================================================================
 
-  // Tambahkan Kotak Whiteout Cepat (Default 120 x 24 point)
-  const handleAddWhiteoutBox = (customX?: number, customY?: number, customW = 140, customH = 26) => {
+  // Helper: Ambil warna RGB dari piksel canvas PDF pada koordinat layar tertentu
+  const sampleColorAtCanvasPoint = (screenX: number, screenY: number): string | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const px = Math.min(Math.max(0, Math.floor(screenX)), canvas.width - 1);
+    const py = Math.min(Math.max(0, Math.floor(screenY)), canvas.height - 1);
+
+    try {
+      const pixel = ctx.getImageData(px, py, 1, 1).data;
+      const r = pixel[0].toString(16).padStart(2, '0');
+      const g = pixel[1].toString(16).padStart(2, '0');
+      const b = pixel[2].toString(16).padStart(2, '0');
+      return `#${r}${g}${b}`.toUpperCase();
+    } catch (e) {
+      console.warn('Gagal membaca piksel canvas:', e);
+      return null;
+    }
+  };
+
+  // Helper: Auto-sample warna latar belakang di sekeliling kotak whiteout dari canvas
+  const autoSampleAroundBox = useCallback((box: WhiteoutBox): string => {
+    const canvas = canvasRef.current;
+    if (!canvas) return '#FFFFFF';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '#FFFFFF';
+
+    const startX = Math.round(box.pdfX * scale);
+    const startY = Math.round((pdfPageDimensions.height - box.pdfY - box.height) * scale);
+    const boxW = Math.round(box.width * scale);
+    const boxH = Math.round(box.height * scale);
+
+    const offset = 4;
+    const samples: number[][] = [];
+
+    // Tepi atas luar
+    const topY = Math.max(0, startY - offset);
+    for (let x = startX; x <= startX + boxW; x += Math.max(2, Math.floor(boxW / 8))) {
+      if (x >= 0 && x < canvas.width && topY < canvas.height) {
+        const p = ctx.getImageData(x, topY, 1, 1).data;
+        samples.push([p[0], p[1], p[2]]);
+      }
+    }
+
+    // Tepi bawah luar
+    const btmY = Math.min(canvas.height - 1, startY + boxH + offset);
+    for (let x = startX; x <= startX + boxW; x += Math.max(2, Math.floor(boxW / 8))) {
+      if (x >= 0 && x < canvas.width && btmY < canvas.height) {
+        const p = ctx.getImageData(x, btmY, 1, 1).data;
+        samples.push([p[0], p[1], p[2]]);
+      }
+    }
+
+    // Tepi kiri & kanan luar
+    const leftX = Math.max(0, startX - offset);
+    const rightX = Math.min(canvas.width - 1, startX + boxW + offset);
+    for (let y = startY; y <= startY + boxH; y += Math.max(2, Math.floor(boxH / 6))) {
+      if (y >= 0 && y < canvas.height) {
+        if (leftX < canvas.width) {
+          const p1 = ctx.getImageData(leftX, y, 1, 1).data;
+          samples.push([p1[0], p1[1], p1[2]]);
+        }
+        if (rightX < canvas.width) {
+          const p2 = ctx.getImageData(rightX, y, 1, 1).data;
+          samples.push([p2[0], p2[1], p2[2]]);
+        }
+      }
+    }
+
+    if (samples.length === 0) return '#FFFFFF';
+
+    let sumR = 0, sumG = 0, sumB = 0;
+    for (const s of samples) {
+      sumR += s[0];
+      sumG += s[1];
+      sumB += s[2];
+    }
+    const avgR = Math.round(sumR / samples.length).toString(16).padStart(2, '0');
+    const avgG = Math.round(sumG / samples.length).toString(16).padStart(2, '0');
+    const avgB = Math.round(sumB / samples.length).toString(16).padStart(2, '0');
+    return `#${avgR}${avgG}${avgB}`.toUpperCase();
+  }, [pdfPageDimensions.height, scale]);
+
+  // Tambahkan Kotak Whiteout Cepat dengan Warna Sampel / Kustom
+  const handleAddWhiteoutBox = (
+    customX?: number,
+    customY?: number,
+    customW = 140,
+    customH = 26,
+    customColor?: string
+  ) => {
     const pdfPageH = pdfPageDimensions.height;
     const initialPdfX = customX !== undefined ? customX : 60;
     const initialPdfY = customY !== undefined ? customY : Math.round(pdfPageH * 0.5);
@@ -510,12 +605,98 @@ export default function DirectPdfEditorPage() {
       pdfY: Math.round(initialPdfY),
       width: Math.round(customW),
       height: Math.round(customH),
+      color: customColor || whiteoutColor || '#FFFFFF',
     };
+
+    // Jika belum ada customColor dan warna default masih putih, coba auto-sample sekitar kotak
+    if (!customColor && whiteoutColor === '#FFFFFF') {
+      const sampled = autoSampleAroundBox(newBox);
+      if (sampled) newBox.color = sampled;
+    }
 
     setWhiteoutBoxes((prev) => [...prev, newBox]);
     setActiveWhiteoutId(newBox.id);
     setActiveEditingId(null);
-    showToast('Kotak penutup putih (whiteout) ditambahkan! Seret ke teks yang ingin ditutupi.');
+    showToast(`Kotak koreksi ditambahkan (Warna Latar: ${newBox.color})!`);
+  };
+
+  // Update Warna Kotak Whiteout Aktif
+  const handleUpdateBoxColor = (boxId: string, newColor: string) => {
+    setWhiteoutColor(newColor);
+    setWhiteoutBoxes((prev) =>
+      prev.map((b) => (b.id === boxId ? { ...b, color: newColor } : b))
+    );
+  };
+
+  // Auto-sample warna latar sekeliling kotak terpilih
+  const handleAutoSampleActiveBox = (boxId: string) => {
+    const targetBox = whiteoutBoxes.find((b) => b.id === boxId);
+    if (!targetBox) return;
+
+    const sampled = autoSampleAroundBox(targetBox);
+    handleUpdateBoxColor(boxId, sampled);
+    showToast(`Warna latar sekitar kotak disampel: ${sampled}`);
+  };
+
+  // Pipet Warna (Eyedropper)
+  const handlePickColorWithEyedropper = async (targetBoxId?: string | null) => {
+    // 1. Coba Native EyeDropper API jika didukung browser
+    if (typeof window !== 'undefined' && 'EyeDropper' in window) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const eyeDropper = new (window as any).EyeDropper();
+        const result = await eyeDropper.open();
+        if (result && result.sRGBHex) {
+          const hex = result.sRGBHex.toUpperCase();
+          setWhiteoutColor(hex);
+          if (targetBoxId) {
+            handleUpdateBoxColor(targetBoxId, hex);
+          }
+          showToast(`Warna berhasil diambil: ${hex}`);
+          return;
+        }
+      } catch {
+        return;
+      }
+    }
+
+    // 2. Fallback interaktif: Mode klik pada canvas
+    setIsEyedropperActive(true);
+    showToast('Mode Pipet Aktif: Klik area dokumen di kanvas untuk mengambil warna latar!');
+  };
+
+  // Tambah Teks Baru Tepat di Atas Kotak Whiteout yang Terpilih
+  const handleAddTextOnWhiteoutBox = (boxId: string) => {
+    const box = whiteoutBoxes.find((b) => b.id === boxId);
+    if (!box) return;
+
+    const newCustomItem: TextEditItem = {
+      id: `custom_${Date.now()}`,
+      pageNum: box.pageNum,
+      originalText: '',
+      currentText: 'Ketik Teks Pengganti',
+      origPdfX: box.pdfX + 4,
+      origPdfY: box.pdfY + 4,
+      origPdfWidth: Math.max(80, box.width - 8),
+      origPdfHeight: Math.min(16, box.height),
+      pdfX: box.pdfX + 4,
+      pdfY: box.pdfY + 4,
+      fontSize: Math.min(14, Math.max(9, Math.round(box.height * 0.65))),
+      fontFamily: 'Helvetica',
+      color: '#000000',
+      isBold: false,
+      isDeleted: false,
+      isCustomAdd: true,
+    };
+
+    setEditedItems((prev) => [...prev, newCustomItem]);
+    setActiveEditingId(newCustomItem.id);
+    setActiveWhiteoutId(null);
+    setEditTextValue('Ketik Teks Pengganti');
+    setEditTextColor('#000000');
+    setEditTextSize(newCustomItem.fontSize);
+    setEditTextBold(false);
+    showToast('Teks pengganti ditempatkan di atas kotak koreksi!');
   };
 
   // Hapus Kotak Whiteout
@@ -567,17 +748,32 @@ export default function DirectPdfEditorPage() {
   // FITUR INTERAKTIF: MENGGAMBAR KOTAK WHITEOUT DENGAN MOUSE/SENTUHAN
   // ==========================================================================
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isWhiteoutMode) return;
     const container = overlayContainerRef.current;
     if (!container) return;
 
     const rect = container.getBoundingClientRect();
-    const startX = e.clientX - rect.left;
-    const startY = e.clientY - rect.top;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Mode Pipet Warna (Eyedropper) dari Canvas
+    if (isEyedropperActive) {
+      const sampled = sampleColorAtCanvasPoint(clickX, clickY);
+      if (sampled) {
+        setWhiteoutColor(sampled);
+        if (activeWhiteoutId) {
+          handleUpdateBoxColor(activeWhiteoutId, sampled);
+        }
+        showToast(`Warna latar berhasil diambil: ${sampled}`);
+      }
+      setIsEyedropperActive(false);
+      return;
+    }
+
+    if (!isWhiteoutMode) return;
 
     setIsDrawingWhiteout(true);
-    setDrawStartPos({ x: startX, y: startY });
-    setDrawCurrentPos({ x: startX, y: startY });
+    setDrawStartPos({ x: clickX, y: clickY });
+    setDrawCurrentPos({ x: clickX, y: clickY });
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -604,11 +800,17 @@ export default function DirectPdfEditorPage() {
     setDrawStartPos(null);
     setDrawCurrentPos(null);
 
+    // Auto-sample warna latar dari tepi gambar
+    const sampledColor =
+      sampleColorAtCanvasPoint(minScreenX - 3, minScreenY - 3) ||
+      sampleColorAtCanvasPoint(minScreenX + screenW / 2, minScreenY + screenH / 2) ||
+      whiteoutColor;
+
     // Jika jarak drag sangat kecil (hanya klik biasa), buat ukuran default
     if (screenW < 8 && screenH < 8) {
       const clickPdfX = (minScreenX / scale) - 60;
       const clickPdfY = pdfPageDimensions.height - (minScreenY / scale) - 12;
-      handleAddWhiteoutBox(Math.max(0, clickPdfX), Math.max(0, clickPdfY), 120, 24);
+      handleAddWhiteoutBox(Math.max(0, clickPdfX), Math.max(0, clickPdfY), 120, 24, sampledColor);
       return;
     }
 
@@ -618,7 +820,7 @@ export default function DirectPdfEditorPage() {
     const pdfX = Math.max(0, minScreenX / scale);
     const pdfY = Math.max(0, pdfPageDimensions.height - (minScreenY / scale) - pdfH);
 
-    handleAddWhiteoutBox(pdfX, pdfY, pdfW, pdfH);
+    handleAddWhiteoutBox(pdfX, pdfY, pdfW, pdfH, sampledColor);
   };
 
   // ==========================================================================
@@ -801,15 +1003,24 @@ export default function DirectPdfEditorPage() {
         const pageNum = pIdx + 1;
         const page = pdfDoc.getPage(pIdx);
 
-        // LANGKAH 1: Gambar seluruh kotak Whiteout pada halaman ini
+        // LANGKAH 1: Gambar seluruh kotak Whiteout pada halaman ini dengan warna kustomnya
         const pageWhiteouts = whiteoutBoxes.filter((b) => b.pageNum === pageNum);
         for (const box of pageWhiteouts) {
+          const hex = (box.color || '#FFFFFF').replace('#', '');
+          const r = parseInt(hex.substring(0, 2), 16) / 255;
+          const g = parseInt(hex.substring(2, 4), 16) / 255;
+          const b = parseInt(hex.substring(4, 6), 16) / 255;
+
           page.drawRectangle({
             x: Math.max(0, box.pdfX),
             y: Math.max(0, box.pdfY),
             width: Math.max(5, box.width),
             height: Math.max(5, box.height),
-            color: rgb(1, 1, 1), // Putih murni 100% untuk menutupi teks scan/gambar
+            color: rgb(
+              isNaN(r) ? 1 : r,
+              isNaN(g) ? 1 : g,
+              isNaN(b) ? 1 : b
+            ),
           });
         }
 
@@ -991,10 +1202,30 @@ export default function DirectPdfEditorPage() {
                     ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-400/30'
                     : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                 }`}
-                title="Aktifkan kursor koreksi untuk menggambar kotak penutup putih di atas teks dokumen"
+                title="Aktifkan kursor koreksi untuk menggambar kotak penutup di atas teks dokumen"
               >
                 <Eraser className="w-3.5 h-3.5" />
                 <span>{isWhiteoutMode ? 'Mode Koreksi (Aktif)' : 'Mode Whiteout'}</span>
+              </button>
+
+              {/* Pipet Sample Warna Latar */}
+              <button
+                type="button"
+                onClick={() => handlePickColorWithEyedropper(activeWhiteoutId)}
+                className={`px-3 py-2 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                  isEyedropperActive
+                    ? 'bg-purple-600 text-white border-purple-700 ring-2 ring-purple-400/30'
+                    : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                }`}
+                title="Ambil warna dari area mana pun di dokumen PDF"
+              >
+                <Pipette className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="hidden sm:inline">Pipet Warna</span>
+                <span
+                  className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs shrink-0"
+                  style={{ backgroundColor: whiteoutColor }}
+                  title={`Warna patch saat ini: ${whiteoutColor}`}
+                />
               </button>
 
               {/* Tambah Kotak Whiteout Cepat */}
@@ -1216,43 +1447,125 @@ export default function DirectPdfEditorPage() {
               )}
 
               {/* Panel Info Whiteout jika ada kotak whiteout yang dipilih */}
-              {activeWhiteoutId && (
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-amber-500 shadow-md space-y-2 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                      <Square className="w-3.5 h-3.5" /> Kotak Whiteout Terpilih
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveWhiteoutId(null)}
-                      className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      Tutup ✕
-                    </button>
+              {activeWhiteoutId && (() => {
+                const activeBox = whiteoutBoxes.find((b) => b.id === activeWhiteoutId);
+                const currentColor = activeBox?.color || '#FFFFFF';
+
+                return (
+                  <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-amber-500 shadow-md space-y-3 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Kotak Koreksi / Patch Terpilih</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveWhiteoutId(null)}
+                        className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        Tutup ✕
+                      </button>
+                    </div>
+
+                    {/* Smart Color Sampling & Background Matcher */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                          Warna Patch (Latar Belakang):
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-4 h-4 rounded-full border border-slate-400 shadow-inner shrink-0"
+                            style={{ backgroundColor: currentColor }}
+                          />
+                          <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200">
+                            {currentColor}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Tombol Pipet Warna (Eyedropper) */}
+                        <button
+                          type="button"
+                          onClick={() => handlePickColorWithEyedropper(activeWhiteoutId)}
+                          className="flex-1 py-1.5 px-2 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          title="Ambil warna dari area mana pun di dokumen"
+                        >
+                          <Pipette className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          <span>Pipet Warna</span>
+                        </button>
+
+                        {/* Tombol Auto-Sample Sekitar Kotak */}
+                        <button
+                          type="button"
+                          onClick={() => handleAutoSampleActiveBox(activeWhiteoutId)}
+                          className="flex-1 py-1.5 px-2 bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          title="Baca otomatis warna latar belakang di sekeliling kotak ini"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span>Auto-Sample</span>
+                        </button>
+
+                        {/* Color Picker Manual */}
+                        <input
+                          type="color"
+                          value={currentColor}
+                          onChange={(e) => handleUpdateBoxColor(activeWhiteoutId, e.target.value.toUpperCase())}
+                          className="w-7 h-7 rounded-lg cursor-pointer border border-slate-300 p-0.5 shrink-0"
+                          title="Pilih warna bebas"
+                        />
+                      </div>
+
+                      {/* Quick Color Presets */}
+                      <div className="grid grid-cols-4 gap-1 pt-0.5">
+                        {[
+                          { label: 'Putih', hex: '#FFFFFF' },
+                          { label: 'Krem', hex: '#FBF8EE' },
+                          { label: 'Abu Form', hex: '#F1F5F9' },
+                          { label: 'Sepia', hex: '#FEF9C3' },
+                        ].map((cp) => (
+                          <button
+                            key={cp.hex}
+                            type="button"
+                            onClick={() => handleUpdateBoxColor(activeWhiteoutId, cp.hex)}
+                            className="py-1 px-1 rounded-md border text-[10px] font-medium transition cursor-pointer flex items-center justify-center gap-1 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-400"
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border border-slate-300 shrink-0"
+                              style={{ backgroundColor: cp.hex }}
+                            />
+                            <span className="truncate">{cp.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Warna patch akan menyatu dengan latar dokumen. Seret kotak ke atas kalimat yang ingin ditutupi dan tarik sudut kanan-bawah kotak untuk mengatur ukuran.
+                    </p>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAddTextOnWhiteoutBox(activeWhiteoutId)}
+                        className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>Tambah Teks di Atas Kotak (+)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteWhiteoutBox(activeWhiteoutId)}
+                        className="py-2 px-2.5 bg-red-100 hover:bg-red-200 dark:bg-red-950/70 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition cursor-pointer"
+                        title="Hapus Kotak Whiteout Ini"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Seret kotak ini ke atas kalimat yang ingin ditutupi. Tarik sudut kanan-bawah kotak untuk memperbesar/memperkecil ukurannya.
-                  </p>
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleAddNewTextBlock}
-                      className="flex-1 py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      <span>Tambah Teks di Sini</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteWhiteoutBox(activeWhiteoutId)}
-                      className="py-1.5 px-2.5 bg-red-100 hover:bg-red-200 dark:bg-red-950/70 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition cursor-pointer"
-                      title="Hapus Kotak Whiteout Ini"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Daftar Perubahan Teks & Whiteout (History Modifikasi) */}
               <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
@@ -1284,11 +1597,17 @@ export default function DirectPdfEditorPage() {
                       >
                         <div className="min-w-0">
                           <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block">
-                            Hal. {box.pageNum} • Kotak Whiteout #{bIdx + 1}
+                            Hal. {box.pageNum} • Kotak Patch #{bIdx + 1}
                           </span>
-                          <span className="text-[10px] text-slate-500">
-                            Ukuran: {box.width} × {box.height} pt
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border border-slate-300 shadow-2xs shrink-0"
+                              style={{ backgroundColor: box.color || '#FFFFFF' }}
+                            />
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              {box.color || '#FFFFFF'} • {box.width} × {box.height} pt
+                            </span>
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -1446,9 +1765,21 @@ export default function DirectPdfEditorPage() {
                   onMouseMove={handleCanvasMouseMove}
                   onMouseUp={handleCanvasMouseUp}
                   className={`relative shadow-2xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 ${
-                    isWhiteoutMode ? 'cursor-crosshair' : 'cursor-default'
+                    isEyedropperActive
+                      ? 'cursor-crosshair ring-2 ring-purple-500'
+                      : isWhiteoutMode
+                      ? 'cursor-crosshair'
+                      : 'cursor-default'
                   }`}
                 >
+                  {/* Floating Indicator Eyedropper Active */}
+                  {isEyedropperActive && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 pointer-events-none border border-white/20">
+                      <Pipette className="w-3.5 h-3.5 animate-pulse" />
+                      <span>Mode Pipet: Klik area latar belakang dokumen untuk menyalin warna</span>
+                    </div>
+                  )}
+
                   {/* Kanvas PDF.js Asli */}
                   <canvas ref={canvasRef} className="block max-w-none" />
 
@@ -1490,11 +1821,12 @@ export default function DirectPdfEditorPage() {
                               top: `${posY}px`,
                               width: `${boxW}px`,
                               height: `${boxH}px`,
+                              backgroundColor: box.color || '#FFFFFF',
                             }}
-                            className={`absolute pointer-events-auto bg-white rounded-xs transition-all z-20 flex items-center justify-between group ${
+                            className={`absolute pointer-events-auto rounded-xs transition-all z-20 flex items-center justify-between group ${
                               isSelected
                                 ? 'ring-2 ring-amber-500 shadow-md border border-amber-400'
-                                : 'border border-slate-300/80 hover:border-amber-400/90 shadow-2xs'
+                                : 'border border-slate-300/60 hover:border-amber-400/90 shadow-2xs'
                             }`}
                           >
                             {/* Tombol Drag Kotak Whiteout */}
