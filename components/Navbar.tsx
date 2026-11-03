@@ -70,8 +70,10 @@ export default function Navbar() {
       title: 'Bisnis & Utilitas',
       icon: <Calculator className="w-4 h-4 text-emerald-500" />,
       items: [
-        { label: 'Kalkulator Diskon & PPh 21', href: '/tools/kalkulator-finansial' },
+        { label: 'Kalkulator Pajak (PPh 21, 23, 4(2))', href: '/tools/kalkulator-pajak', badge: 'Baru' },
+        { label: 'Konverter Kurs Valas & Haji', href: '/tools/currency-converter' },
         { label: 'Kalkulator Bisnis & UMKM', href: '/tools/kalkulator-umkm' },
+        { label: 'Kalkulator Diskon & Finansial', href: '/tools/kalkulator-finansial' },
         { label: 'Cek Resi & Lacak Paket', href: '/tools/tracking', badge: 'Resi' },
         { label: 'QR Code Generator', href: '/tools/qr-generator' },
         { label: 'Arsip ZIP Multi-File', href: '/tools/zip' },

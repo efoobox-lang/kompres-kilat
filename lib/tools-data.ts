@@ -422,6 +422,19 @@ export const ALL_TOOLS: ToolItem[] = [
   // 4. Bisnis & Kalkulator
   // ==========================================
   {
+    id: 'kalkulator-pajak',
+    title: 'Kalkulator Pajak PPh 21, 23 & 4(2)',
+    description: 'Hitung simulasi PPh 21 Karyawan (Skema TER & UU HPP), PPh 23 Jasa & Modal, dan PPh 4(2) Final 100% akurat.',
+    href: '/tools/kalkulator-pajak',
+    category: 'Bisnis & Kalkulator',
+    categoryKey: 'business',
+    icon: '🧾',
+    badge: 'BARU',
+    badgeColor: 'emerald',
+    isPopular: true,
+    keywords: ['pajak', 'pph 21', 'pph 23', 'pph 4(2)', 'ter', 'karyawan', 'gaji', 'ptkp', 'hitung pajak', 'dpp', 'pesangon', 'sewa'],
+  },
+  {
     id: 'currency-converter',
     title: 'Konverter Mata Uang Global',
     description: 'Hitung nilai tukar kurs valas (USD, SAR, EUR, SGD, MYR, JPY ke IDR) real-time & estimasi biaya riyal Haji/Umroh.',
