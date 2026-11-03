@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -90,65 +90,122 @@ export default function CurrencyConverterPage() {
   const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES_BASE_USD);
   const [isLoadingRates, setIsLoadingRates] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('Memuat kurs terkini...');
+  const [refreshNotification, setRefreshNotification] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'converter' | 'umroh' | 'matrix'>('converter');
 
-  // Manual Refresh Handler
-  const handleRefreshRates = async () => {
-    setIsLoadingRates(true);
+  // Specific state for Hajj/Umrah custom calculator
+  const [customSarAmount, setCustomSarAmount] = useState<number>(500);
+  const [customSarStr, setCustomSarStr] = useState<string>('500');
+
+  // Bulletproof number formatter: safely guarantees safeMin <= safeMax
+  const formatNumber = useCallback((num: number, maxDecimals = 2): string => {
+    if (isNaN(num) || num === null || num === undefined) return '0';
+    const safeMax = Math.max(0, Math.min(20, Math.floor(maxDecimals)));
+    const safeMin = Math.min(num % 1 === 0 ? 0 : Math.min(2, safeMax), safeMax);
+    try {
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: safeMin,
+        maximumFractionDigits: safeMax,
+      }).format(num);
+    } catch {
+      return num.toFixed(safeMax);
+    }
+  }, []);
+
+  // Fetch exchange rates from primary with fallback support
+  const fetchRatesFromApi = useCallback(async () => {
+    // Primary API
     try {
       const res = await fetch('https://open.er-api.com/v6/latest/USD', {
         headers: { Accept: 'application/json' },
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.rates && typeof data.rates === 'object') {
+          return { rates: data.rates, source: 'open.er-api' };
+        }
+      }
+    } catch {
+      // Ignore and proceed to secondary
+    }
 
-      if (!res.ok) throw new Error('Failed to fetch from primary currency API');
-      const data = await res.json();
+    // Secondary Fallback API: Frankfurter
+    try {
+      const res2 = await fetch('https://api.frankfurter.app/latest?from=USD', {
+        headers: { Accept: 'application/json' },
+      });
+      if (res2.ok) {
+        const data2 = await res2.json();
+        if (data2 && data2.rates) {
+          return { rates: { ...data2.rates, USD: 1 }, source: 'frankfurter' };
+        }
+      }
+    } catch {
+      // Ignore
+    }
 
-      if (data && data.rates) {
-        setRates((prev) => ({ ...prev, ...data.rates }));
-        const dateStr = data.time_last_update_utc
-          ? new Date(data.time_last_update_utc).toLocaleString('id-ID', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })
-          : new Date().toLocaleTimeString('id-ID');
-        setLastUpdated(`Diperbarui: ${dateStr}`);
+    return null;
+  }, []);
+
+  // Manual Refresh Handler with guaranteed visual feedback
+  const handleRefreshRates = async () => {
+    setIsLoadingRates(true);
+    setRefreshNotification(null);
+
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 600));
+
+    try {
+      const [apiResult] = await Promise.all([fetchRatesFromApi(), minDelay]);
+
+      const nowTimeStr = new Date().toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+
+      if (apiResult && apiResult.rates) {
+        setRates((prev) => ({ ...prev, ...apiResult.rates }));
+        setLastUpdated(`Diperbarui: Hari ini, ${nowTimeStr} WIB (Live Sync)`);
+        setRefreshNotification('Kurs valuta asing berhasil diperbarui!');
+      } else {
+        setLastUpdated(`Mode Cadangan Stabil (${nowTimeStr} WIB)`);
+        setRefreshNotification('Menggunakan data kurs acuan terverifikasi.');
       }
     } catch (err) {
-      console.warn('Using baseline fallback exchange rates:', err);
+      console.warn('Refresh error:', err);
       setLastUpdated('Mode Offline (Menggunakan Kurs Acuan Stabil)');
+      setRefreshNotification('Koneksi terhambat, mode cadangan aktif.');
     } finally {
       setIsLoadingRates(false);
+      setTimeout(() => setRefreshNotification(null), 3000);
     }
   };
 
-  // Initial Fetch on Client Mount (Async to prevent cascading renders)
+  // Initial Fetch on Client Mount
   useEffect(() => {
     let isMounted = true;
 
-    fetch('https://open.er-api.com/v6/latest/USD')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!isMounted || !data?.rates) return;
-        setRates((prev) => ({ ...prev, ...data.rates }));
-        const dateStr = data.time_last_update_utc
-          ? new Date(data.time_last_update_utc).toLocaleString('id-ID', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })
-          : new Date().toLocaleTimeString('id-ID');
-        setLastUpdated(`Diperbarui: ${dateStr}`);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setLastUpdated('Mode Offline (Menggunakan Kurs Acuan Stabil)');
+    fetchRatesFromApi().then((result) => {
+      if (!isMounted) return;
+      const nowTimeStr = new Date().toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
       });
+
+      if (result && result.rates) {
+        setRates((prev) => ({ ...prev, ...result.rates }));
+        setLastUpdated(`Diperbarui: Hari ini, ${nowTimeStr} WIB (Live Sync)`);
+      } else {
+        setLastUpdated(`Mode Acuan Stabil (${nowTimeStr} WIB)`);
+      }
+    });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [fetchRatesFromApi]);
 
   // Compute exchange rate between any two currencies through USD base
   const exchangeRate = useMemo(() => {
@@ -166,18 +223,16 @@ export default function CurrencyConverterPage() {
     return exchangeRate > 0 ? 1 / exchangeRate : 0;
   }, [exchangeRate]);
 
+  // Riyal to IDR conversion rate for Hajj/Umrah tab
+  const sarToIdrRate = useMemo(() => {
+    const usdToIdr = rates.IDR || FALLBACK_RATES_BASE_USD.IDR || 16250;
+    const usdToSar = rates.SAR || FALLBACK_RATES_BASE_USD.SAR || 3.75;
+    return usdToIdr / usdToSar;
+  }, [rates]);
+
   // Currency lookup metadata
   const fromMeta = useMemo(() => CURRENCIES.find((c) => c.code === fromCurrency) || CURRENCIES[0], [fromCurrency]);
   const toMeta = useMemo(() => CURRENCIES.find((c) => c.code === toCurrency) || CURRENCIES[1], [toCurrency]);
-
-  // Format numbers nicely
-  const formatNumber = (num: number, maxDecimals = 2) => {
-    if (isNaN(num)) return '0';
-    return new Intl.NumberFormat('id-ID', {
-      maximumFractionDigits: maxDecimals,
-      minimumFractionDigits: num % 1 === 0 ? 0 : 2,
-    }).format(num);
-  };
 
   const handleSwapCurrencies = () => {
     const temp = fromCurrency;
@@ -192,6 +247,16 @@ export default function CurrencyConverterPage() {
       setAmount(parsed);
     } else if (val === '') {
       setAmount(0);
+    }
+  };
+
+  const handleCustomSarChange = (val: string) => {
+    setCustomSarStr(val);
+    const parsed = parseFloat(val.replace(/,/g, '.'));
+    if (!isNaN(parsed) && parsed >= 0) {
+      setCustomSarAmount(parsed);
+    } else if (val === '') {
+      setCustomSarAmount(0);
     }
   };
 
@@ -232,6 +297,34 @@ export default function CurrencyConverterPage() {
           </p>
         </div>
 
+        {/* Global Rates Status & Refresh Bar (Visible across all tabs) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm px-4 py-3 mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="font-medium text-slate-600 dark:text-slate-300">
+              {lastUpdated}
+            </span>
+            {refreshNotification && (
+              <span className="hidden sm:inline-block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 animate-fade-in">
+                {refreshNotification}
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            disabled={isLoadingRates}
+            onClick={handleRefreshRates}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-200 dark:border-indigo-800/60 transition-all disabled:opacity-50 text-xs shadow-sm active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingRates ? 'animate-spin' : ''}`} />
+            <span>{isLoadingRates ? 'Menyinkronkan...' : 'Segarkan Kurs'}</span>
+          </button>
+        </div>
+
         {/* Tab Selector */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-1.5 mb-6 flex items-center justify-center gap-1.5 max-w-md mx-auto">
           <button
@@ -240,7 +333,7 @@ export default function CurrencyConverterPage() {
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'converter'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
@@ -252,7 +345,7 @@ export default function CurrencyConverterPage() {
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'umroh'
                 ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Plane className="w-3.5 h-3.5" />
@@ -264,7 +357,7 @@ export default function CurrencyConverterPage() {
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'matrix'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
@@ -277,23 +370,6 @@ export default function CurrencyConverterPage() {
         {/* ========================================================================= */}
         {activeTab === 'converter' && (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 mb-8">
-            {/* Rates Status & Refresh Button */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 text-xs">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{lastUpdated}</span>
-              </div>
-              <button
-                type="button"
-                disabled={isLoadingRates}
-                onClick={handleRefreshRates}
-                className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-semibold disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingRates ? 'animate-spin' : ''}`} />
-                <span>Segarkan Kurs</span>
-              </button>
-            </div>
-
             {/* Input & Currencies Grid */}
             <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
               {/* Left: From Amount & Currency */}
@@ -316,37 +392,35 @@ export default function CurrencyConverterPage() {
                   />
                 </div>
 
-                <div className="pt-1">
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    Dari Mata Uang:
-                  </label>
+                <div className="relative">
                   <select
                     value={fromCurrency}
                     onChange={(e) => setFromCurrency(e.target.value)}
-                    className="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none pr-8 cursor-pointer"
                   >
                     {CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>
-                        {c.flag} {c.code} - {c.name} ({c.symbol})
+                        {c.flag} {c.code} - {c.name}
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
-              {/* Middle: Swap Button */}
+              {/* Center: Swap Button */}
               <div className="md:col-span-1 flex justify-center py-2 md:py-0">
                 <button
                   type="button"
                   onClick={handleSwapCurrencies}
-                  className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:border-indigo-500 shadow-sm flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-                  title="Tukar Posisi Mata Uang"
+                  title="Tukar Mata Uang"
+                  className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all border border-slate-200 dark:border-slate-700 active:scale-95 cursor-pointer shadow-sm"
                 >
-                  <ArrowRightLeft className="w-4 h-4" />
+                  <ArrowRightLeft className="w-4 h-4 md:rotate-90" />
                 </button>
               </div>
 
-              {/* Right: Converted Amount Display & Target Currency */}
+              {/* Right: Converted Amount & Currency */}
               <div className="md:col-span-5 space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   Hasil Konversi ({toCurrency}):
@@ -355,26 +429,24 @@ export default function CurrencyConverterPage() {
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
                     {toMeta.symbol}
                   </span>
-                  <div className="w-full pl-10 pr-4 py-3 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 rounded-xl text-lg font-extrabold text-indigo-900 dark:text-indigo-200 overflow-hidden text-ellipsis whitespace-nowrap">
+                  <div className="w-full pl-10 pr-4 py-3 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 rounded-xl text-lg font-extrabold text-indigo-700 dark:text-indigo-300 truncate">
                     {formatNumber(convertedAmount, 2)}
                   </div>
                 </div>
 
-                <div className="pt-1">
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    Ke Mata Uang:
-                  </label>
+                <div className="relative">
                   <select
                     value={toCurrency}
                     onChange={(e) => setToCurrency(e.target.value)}
-                    className="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none pr-8 cursor-pointer"
                   >
                     {CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>
-                        {c.flag} {c.code} - {c.name} ({c.symbol})
+                        {c.flag} {c.code} - {c.name}
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -390,7 +462,7 @@ export default function CurrencyConverterPage() {
                     setAmount(val);
                     setAmountStr(String(val));
                   }}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition-colors ${
+                  className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition-colors cursor-pointer ${
                     amount === val
                       ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
                       : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -415,7 +487,7 @@ export default function CurrencyConverterPage() {
               <button
                 type="button"
                 onClick={handleCopyResult}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all cursor-pointer"
               >
                 {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{isCopied ? 'Tersalin!' : 'Salin Hasil'}</span>
@@ -438,21 +510,74 @@ export default function CurrencyConverterPage() {
                 Estimasi Biaya Riyal Arab Saudi (SAR) ke Rupiah (IDR)
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Kurs acuan 1 SAR = <strong>{formatNumber(rates.IDR ? rates.IDR / (rates.SAR || 3.75) : 4350, 0)} IDR</strong>. Membantu menghitung living cost, DAM/kurban, taksi, dan uang saku di Tanah Suci.
+                Kurs acuan 1 SAR = <strong>Rp {formatNumber(sarToIdrRate, 2)}</strong>. Membantu menghitung living cost, DAM/kurban, taksi, dan uang saku di Tanah Suci Makkah & Madinah.
               </p>
             </div>
 
-            {/* Quick Estimator Grid */}
+            {/* Interactive Custom Riyal Converter */}
+            <div className="p-4 sm:p-6 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40">
+              <label className="block text-xs font-bold text-emerald-900 dark:text-emerald-300 mb-2">
+                Hitung Custom Riyal Saudi (SAR) ke Rupiah:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                    ﷼
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={customSarStr}
+                    onChange={(e) => handleCustomSarChange(e.target.value)}
+                    className="w-full pl-10 pr-16 py-2.5 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl text-base font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    SAR
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl flex items-center justify-between">
+                  <span className="text-xs text-slate-500 font-semibold pl-2">Setara:</span>
+                  <span className="text-base font-black text-emerald-700 dark:text-emerald-400 pr-2">
+                    Rp {formatNumber(customSarAmount * sarToIdrRate, 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick SAR Denominations */}
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {[50, 100, 300, 500, 1000, 2500].map((sarVal) => (
+                  <button
+                    key={sarVal}
+                    type="button"
+                    onClick={() => {
+                      setCustomSarAmount(sarVal);
+                      setCustomSarStr(String(sarVal));
+                    }}
+                    className={`text-[11px] px-2 py-0.5 rounded-lg border font-medium transition-colors cursor-pointer ${
+                      customSarAmount === sarVal
+                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                        : 'border-emerald-200 dark:border-emerald-900 bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60'
+                    }`}
+                  >
+                    {sarVal} SAR
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Estimator Grid for Common Expenses */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { title: 'DAM / Kurban Kambing', sar: 650, note: 'Rata-rata hewan sembelihan resmi Bank Pembangunan Islam' },
-                { title: 'Taksi Makkah - Madinah', sar: 450, note: 'Perkiraan kendaraan pribadi antar kota' },
+                { title: 'DAM / Kurban Kambing', sar: 650, note: 'Rata-rata hewan sembelihan resmi Bank Pembangunan Islam (Adahi)' },
+                { title: 'Taksi Makkah - Madinah', sar: 450, note: 'Perkiraan kendaraan pribadi antar kota sekali jalan' },
                 { title: 'Living Cost / Uang Saku', sar: 750, note: 'Uang saku tunai standar jemaah haji reguler RI' },
                 { title: 'Makan Nasi Briyani / Mandhi', sar: 25, note: 'Porsi makan kenyang di sekitar Masjidil Haram' },
                 { title: 'Kartu Perdana & Kuota Internet', sar: 100, note: 'Paket data lokal STC/Mobily/Zain 20GB' },
                 { title: 'Oleh-oleh Kurma Ajwa (1 Kg)', sar: 60, note: 'Pasar Kurma Madinah kualitas super' },
               ].map((item, idx) => {
-                const sarToIdrRate = rates.IDR ? rates.IDR / (rates.SAR || 3.75) : 4350;
                 const costInIdr = item.sar * sarToIdrRate;
 
                 return (
