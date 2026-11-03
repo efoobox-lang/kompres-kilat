@@ -1,6 +1,8 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
+import { BadgeCheck, Sparkles } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -13,7 +15,7 @@ export default function AboutPage() {
     <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
       <Navbar />
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-6 sm:space-y-8">
         <div className="bg-white p-6 sm:p-10 md:p-12 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-xs sm:text-sm leading-relaxed text-slate-700">
           <div className="border-b border-slate-100 pb-4">
             <span className="text-[10px] sm:text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -72,6 +74,50 @@ export default function AboutPage() {
           <p>
             Kami selalu terbuka untuk saran fitur baru, kemitraan, atau laporan kendala. Kunjungi halaman <Link href="/contact" className="text-indigo-600 underline font-semibold">Kontak Kami</Link> untuk berbicara dengan tim pengembang.
           </p>
+        </div>
+
+        {/* Meet the Founder Section */}
+        <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 shadow-sm text-center space-y-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Meet the Founder</span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center">
+            {/* Circular Frame for Founder's Photo */}
+            <div className="relative group inline-block">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-100 ring-2 ring-slate-100">
+                <Image
+                  src="/images/founder.jpg"
+                  alt="R. Ridhoulloh - Web Developer"
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover filter grayscale hover:grayscale-0 group-hover:grayscale-0 transition-all duration-300 cursor-pointer"
+                  priority
+                />
+              </div>
+
+              {/* Small badge icon positioned at bottom right */}
+              <div
+                className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center"
+                title="Verified Web Developer"
+                aria-label="Verified Web Developer"
+              >
+                <BadgeCheck className="w-4 h-4 text-white" />
+              </div>
+            </div>
+
+            {/* Text Details & Styling */}
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-4 tracking-tight">
+              R. Ridhoulloh
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+              Web Developer
+            </p>
+            <p className="max-w-md mx-auto text-xs sm:text-sm text-slate-600 leading-relaxed mt-2.5">
+              Pengembang di balik KompresKilat yang berkomitmen menghadirkan perkakas web gratis, cepat, dan aman berbasis pemrosesan lokal (client-side) untuk masyarakat Indonesia.
+            </p>
+          </div>
         </div>
       </section>
 
