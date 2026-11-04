@@ -1,8 +1,9 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import StickyAd from '@/components/StickyAd';
+import PwaRegister from '@/components/PwaRegister';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 
@@ -18,8 +19,25 @@ const geistMono = Geist_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
 
+export const viewport: Viewport = {
+  themeColor: '#4f46e5',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  manifest: '/manifest.webmanifest',
+  applicationName: 'KompresKilat',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'KompresKilat',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   title: {
     default: 'KompresKilat - Kompres Gambar, PDF & Cek Resi Paket Akurat',
     template: '%s | KompresKilat',
@@ -114,6 +132,8 @@ export default function RootLayout({
             {children}
             {/* Sticky Mobile Anchor Banner Iklan */}
             <StickyAd />
+            {/* Progressive Web App (PWA) Client Service Worker Registration */}
+            <PwaRegister />
           </LanguageProvider>
         </ThemeProvider>
 
