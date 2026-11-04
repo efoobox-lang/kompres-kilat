@@ -176,12 +176,16 @@ export default function PageNumberPdfPage() {
 
     try {
       const arrayBuffer = await selectedFile.arrayBuffer();
+      // Simpan salinan buffer murni untuk pdf-lib
       const bytes = new Uint8Array(arrayBuffer);
       setPdfBytes(bytes);
 
+      // Kloning buffer khusus untuk PDF.js worker agar buffer utama tidak neutered / detached
+      const pdfjsData = new Uint8Array(arrayBuffer.slice(0));
+
       const pdfjs = await loadPdfJs();
       const loadingTask = pdfjs.getDocument({
-        data: bytes,
+        data: pdfjsData,
         cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
         cMapPacked: true,
       });
@@ -216,21 +220,25 @@ export default function PageNumberPdfPage() {
 
   // Stamp and Download Process with Memory Optimization & Progress Updates
   const handleStampAndDownload = async () => {
-    if (!pdfBytes || !file || totalPages === 0) return;
+    if (!file || totalPages === 0) return;
     setIsProcessing(true);
     setProgressPercent(5);
-    setProcessingStepText('Memuat struktur berkas PDF...');
+    setProcessingStepText('Membaca berkas PDF segar dari memori...');
     setErrorMessage('');
     setSuccessMessage('');
 
     try {
-      // 1. Multi-tier resilient PDF loading (handles minor corruptions / lenient encryption)
+      // 1. Selalu muat arrayBuffer baru langsung dari file agar kebal dari detached/neutered ArrayBuffer
+      const freshBuffer = await file.arrayBuffer();
+      const freshBytes = new Uint8Array(freshBuffer);
+
+      // Multi-tier resilient PDF loading (handles non-standard xrefs / lenient encryption)
       let pdfDoc: PDFDocument;
       try {
-        pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true, updateMetadata: false });
+        pdfDoc = await PDFDocument.load(freshBytes, { ignoreEncryption: true, updateMetadata: false });
       } catch (firstErr) {
         console.warn('Strict PDF load failed, trying lenient parse:', firstErr);
-        pdfDoc = await PDFDocument.load(pdfBytes, {
+        pdfDoc = await PDFDocument.load(freshBytes, {
           ignoreEncryption: true,
           updateMetadata: false,
           throwOnInvalidObject: false,
@@ -278,7 +286,9 @@ export default function PageNumberPdfPage() {
         const page = pdfPages[i];
         const { width, height } = page.getSize();
         const currentNumber = pageIdx1Based - config.startFromPage + config.firstNumber;
-        const text = resolvePageString(currentNumber, effectiveTotal);
+        const rawText = resolvePageString(currentNumber, effectiveTotal);
+        // Bersihkan karakter non-WinAnsi agar tidak terjadi crash encoding pada font standar PDF
+        const text = rawText.replace(/[^\x20-\x7E\xA0-\xFF]/g, ' ');
 
         const textWidth = font.widthOfTextAtSize(text, config.fontSize);
         const textHeight = font.heightAtSize(config.fontSize);
