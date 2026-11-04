@@ -39,7 +39,7 @@ function parseSafeDate(dateStr?: string): Date {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kompreskilat.site';
   const now = new Date();
 
   // 1. Core Static Pages (Home, Blog, Forum, About, Legal, Contact)

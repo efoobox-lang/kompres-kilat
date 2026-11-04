@@ -64,6 +64,8 @@ export default function PageNumberPdfPage() {
   const [config, setConfig] = useState<NumberingConfig>(DEFAULT_CONFIG);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+  const [processingStepText, setProcessingStepText] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
@@ -212,22 +214,45 @@ export default function PageNumberPdfPage() {
     return rgb(r, g, b);
   };
 
-  // Stamp and Download Process
+  // Stamp and Download Process with Memory Optimization & Progress Updates
   const handleStampAndDownload = async () => {
     if (!pdfBytes || !file || totalPages === 0) return;
     setIsProcessing(true);
+    setProgressPercent(5);
+    setProcessingStepText('Memuat struktur berkas PDF...');
     setErrorMessage('');
     setSuccessMessage('');
 
     try {
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-      const font = await pdfDoc.embedFont(
-        config.fontFamily === 'TimesRoman'
-          ? StandardFonts.TimesRoman
-          : config.fontFamily === 'Courier'
-          ? StandardFonts.Courier
-          : StandardFonts.Helvetica
-      );
+      // 1. Multi-tier resilient PDF loading (handles minor corruptions / lenient encryption)
+      let pdfDoc: PDFDocument;
+      try {
+        pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true, updateMetadata: false });
+      } catch (firstErr) {
+        console.warn('Strict PDF load failed, trying lenient parse:', firstErr);
+        pdfDoc = await PDFDocument.load(pdfBytes, {
+          ignoreEncryption: true,
+          updateMetadata: false,
+          throwOnInvalidObject: false,
+        });
+      }
+
+      setProcessingStepText('Memuat font & konfigurasi...');
+      setProgressPercent(15);
+
+      // 2. Embed standard PDF font with fallback
+      let font;
+      try {
+        font = await pdfDoc.embedFont(
+          config.fontFamily === 'TimesRoman'
+            ? StandardFonts.TimesRoman
+            : config.fontFamily === 'Courier'
+            ? StandardFonts.Courier
+            : StandardFonts.Helvetica
+        );
+      } catch {
+        font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      }
 
       const textColor = hexToRgb01(config.color);
       const pdfPages = pdfDoc.getPages();
@@ -236,8 +261,16 @@ export default function PageNumberPdfPage() {
 
       let stampedCount = 0;
 
+      // 3. Process pages sequentially with event-loop yielding to prevent UI freezes
       for (let i = 0; i < pdfPages.length; i++) {
         const pageIdx1Based = i + 1;
+        const percent = Math.round(15 + ((i + 1) / pdfPages.length) * 70);
+        setProgressPercent(percent);
+        setProcessingStepText(`Membubuhi nomor halaman ${pageIdx1Based} dari ${effectiveTotal} (${percent}%)...`);
+
+        // Yield event loop every page so browser UI can repaint and stay responsive
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
         if (pageIdx1Based < config.startFromPage || pageIdx1Based > endPage) {
           continue; // Skip pages outside range (e.g. cover page)
         }
@@ -279,16 +312,33 @@ export default function PageNumberPdfPage() {
         stampedCount++;
       }
 
-      const outBytes = await pdfDoc.save();
+      // 4. Memory-optimized serialization: useObjectStreams: false prevents high memory spikes
+      setProcessingStepText('Mengompilasi dan mengoptimasi berkas PDF...');
+      setProgressPercent(90);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      const outBytes = await pdfDoc.save({ useObjectStreams: false, addDefaultPage: false });
+      setProgressPercent(100);
+      setProcessingStepText('Selesai! Mengunduh berkas...');
+
       const baseName = file.name.replace(/\.[^/.]+$/, '');
       const outBlob = new Blob([outBytes as unknown as BlobPart], { type: 'application/pdf' });
       downloadBlobSafely(outBlob, `${baseName}_Beri_Nomor.pdf`);
       setSuccessMessage(`Berhasil membubuhi nomor pada ${stampedCount} halaman PDF.`);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error stamping page numbers:', err);
-      setErrorMessage('Terjadi kesalahan saat memproses penomoran halaman PDF.');
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.toLowerCase().includes('password') || errMsg.toLowerCase().includes('encrypted')) {
+        setErrorMessage('Berkas PDF terkunci kata sandi. Harap buka proteksi PDF terlebih dahulu.');
+      } else if (errMsg.toLowerCase().includes('memory') || errMsg.toLowerCase().includes('buffer')) {
+        setErrorMessage('Memori peramban tidak mencukupi untuk file sebesar ini. Silakan coba kompres PDF terlebih dahulu.');
+      } else {
+        setErrorMessage(`Terjadi kendala saat memproses PDF (${errMsg.slice(0, 80)}). Pastikan file tidak rusak.`);
+      }
     } finally {
       setIsProcessing(false);
+      setProgressPercent(0);
+      setProcessingStepText('');
     }
   };
 
@@ -617,6 +667,22 @@ export default function PageNumberPdfPage() {
                     />
                   </div>
                 </div>
+
+                {/* Progress Bar & Status Text */}
+                {isProcessing && (
+                  <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                    <div className="flex justify-between items-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                      <span className="truncate pr-2">{processingStepText}</span>
+                      <span className="shrink-0">{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-indigo-200 dark:bg-indigo-900 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-indigo-600 h-2 rounded-full transition-all duration-150 ease-out"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Export Button */}
                 <button

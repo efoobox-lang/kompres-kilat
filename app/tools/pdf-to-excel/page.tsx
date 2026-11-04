@@ -110,55 +110,160 @@ export default function PdfToExcelPage() {
       // Pastikan urutan baris dari atas ke bawah
       lines.sort((a, b) => b.y - a.y);
 
-      for (const line of lines) {
-        // Urutkan sel dalam satu baris dari kiri ke kanan
-        line.items.sort((a, b) => a.x - b.x);
+      if (selectedDelimiter === 'auto') {
+        // --- 1. Gabungkan kata/frasa yang berdekatan secara horizontal pada setiap baris ---
+        interface ConsolidatedItem {
+          str: string;
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+        }
 
-        let rowCells: string[] = [];
+        const consolidatedLines: { y: number; items: ConsolidatedItem[] }[] = [];
 
-        if (selectedDelimiter === 'auto') {
-          // Deteksi kolom spasial cerdas berdasarkan jarak horizontal (X-gap)
-          let currentCell = '';
-          let lastItemRight = -1;
+        for (const line of lines) {
+          line.items.sort((a, b) => a.x - b.x);
+          const cItems: ConsolidatedItem[] = [];
+          let current: ConsolidatedItem | null = null;
 
           for (const it of line.items) {
-            // Jika item mengandung pemisah eksplisit seperti tab, pipa, atau spasi ganda
-            if (it.str.includes('|') || it.str.includes('\t') || /\s{2,}/.test(it.str)) {
-              if (currentCell.trim()) {
-                rowCells.push(currentCell.trim());
-                currentCell = '';
-              }
-              const subCols = it.str.split(/[\t|]|\s{2,}/).map((s) => s.trim()).filter(Boolean);
-              rowCells.push(...subCols);
-              lastItemRight = it.x + it.width;
-              continue;
-            }
-
-            if (lastItemRight === -1) {
-              currentCell = it.str;
+            if (!current) {
+              current = { ...it };
             } else {
-              const gap = it.x - lastItemRight;
-              // Jika jarak antar teks melebihi ambang batas kolom (14px), pisahkan ke kolom baru
-              if (gap > 14) {
-                if (currentCell.trim()) rowCells.push(currentCell.trim());
-                currentCell = it.str;
+              const gap = it.x - (current.x + current.width);
+              // Jika gap kecil (misal spasi dalam kata atau satu frasa), gabungkan
+              if (gap <= 4) {
+                current.str += (gap > 1 && !current.str.endsWith(' ') && !it.str.startsWith(' ') ? ' ' : '') + it.str;
+                current.width = (it.x + it.width) - current.x;
               } else {
-                // Masih dalam sel yang sama (misal kalimat panjang atau kata terpisah spasi)
-                if (gap > 2 && !currentCell.endsWith(' ') && !it.str.startsWith(' ')) {
-                  currentCell += ' ' + it.str;
+                cItems.push(current);
+                current = { ...it };
+              }
+            }
+          }
+          if (current) cItems.push(current);
+
+          if (cItems.length > 0) {
+            consolidatedLines.push({ y: line.y, items: cItems });
+          }
+        }
+
+        // --- 2. Deteksi Batas Kolom Spasial (Spatial Column Boundaries) ---
+        const multiItemLines = consolidatedLines.filter((l) => l.items.length >= 2);
+        const boundaries: number[] = [];
+        let numCols = 1;
+
+        if (multiItemLines.length > 0) {
+          const maxItems = Math.max(...multiItemLines.map((l) => l.items.length));
+          const candidates = multiItemLines.filter((l) => l.items.length === maxItems);
+
+          // Pilih baris kunci dengan bentang horizontal (span) terlebar (misal header tabel utama)
+          let bestLine = candidates[0];
+          let maxSpan = 0;
+          for (const cand of candidates) {
+            const span = (cand.items[cand.items.length - 1].x + cand.items[cand.items.length - 1].width) - cand.items[0].x;
+            if (span > maxSpan) {
+              maxSpan = span;
+              bestLine = cand;
+            }
+          }
+
+          for (let i = 0; i < bestLine.items.length - 1; i++) {
+            const right = bestLine.items[i].x + (bestLine.items[i].width || 10);
+            const nextLeft = bestLine.items[i + 1].x;
+            boundaries.push(Number(((right + nextLeft) / 2).toFixed(2)));
+          }
+          numCols = boundaries.length + 1;
+        }
+
+        const getColIndex = (x: number, width: number): number => {
+          if (boundaries.length === 0) return 0;
+          const mid = x + (width || 0) / 2;
+          for (let i = 0; i < boundaries.length; i++) {
+            if (mid < boundaries[i]) return i;
+          }
+          return boundaries.length;
+        };
+
+        // --- 3. Pemetaan ke Grid Kolom & Penggabungan Teks Multi-baris (Multiline Merging) ---
+        interface WorkingRow {
+          cells: string[];
+          isHeader: boolean;
+          hasItemNumber: boolean;
+        }
+
+        let currentRow: WorkingRow | null = null;
+        let lastY = -1;
+
+        for (const line of consolidatedLines) {
+          const lineCols: string[] = new Array(numCols).fill('');
+          for (const it of line.items) {
+            const colIdx = getColIndex(it.x, it.width);
+            lineCols[colIdx] = lineCols[colIdx] ? `${lineCols[colIdx]} ${it.str}`.trim() : it.str.trim();
+          }
+
+          if (!lineCols.some((c) => c.length > 0)) continue;
+
+          const firstCol = lineCols[0] || '';
+          const hasCol0Number = /^\d+$/.test(firstCol.trim());
+          const joinedLine = lineCols.filter(Boolean).join(' ');
+          const isSummaryRow = /^(jumlah|total|diskon|subtotal|pajak|ppn|grand total|ringkasan)/i.test(joinedLine);
+          const isHeaderRow = /^(no|nomor|kode|item|nama|deskripsi|keterangan|unit|qty|harga|satuan)/i.test(
+            `${lineCols[0] || ''} ${lineCols[1] || ''}`
+          );
+
+          let shouldMerge = false;
+          if (currentRow && !currentRow.isHeader && !isHeaderRow && !isSummaryRow && lastY !== -1) {
+            const deltaY = Math.abs(line.y - lastY);
+            if (deltaY <= 24) {
+              if (hasCol0Number) {
+                // Jika baris saat ini belum memiliki nomor urut di kolom 0 (misal nama barang berada di atas angka 1)
+                if (!currentRow.hasItemNumber) {
+                  shouldMerge = true;
                 } else {
-                  currentCell += it.str;
+                  shouldMerge = false; // Baris data nomor berikutnya
+                }
+              } else {
+                // Baris lanjutan spesifikasi (Tipe, Merek, Catatan tambahan)
+                shouldMerge = true;
+              }
+            }
+          }
+
+          if (shouldMerge && currentRow) {
+            for (let c = 0; c < numCols; c++) {
+              if (lineCols[c]) {
+                if (!currentRow.cells[c]) {
+                  currentRow.cells[c] = lineCols[c];
+                } else {
+                  // Pisahkan baris dalam sel yang sama dengan \r\n standar Excel
+                  currentRow.cells[c] += '\r\n' + lineCols[c];
                 }
               }
             }
-            lastItemRight = it.x + it.width;
+            if (hasCol0Number) currentRow.hasItemNumber = true;
+            lastY = line.y;
+          } else {
+            if (currentRow) {
+              allRows.push(currentRow.cells);
+            }
+            currentRow = {
+              cells: [...lineCols],
+              isHeader: isHeaderRow,
+              hasItemNumber: hasCol0Number,
+            };
+            lastY = line.y;
           }
+        }
 
-          if (currentCell.trim()) {
-            rowCells.push(currentCell.trim());
-          }
-        } else {
-          // Pemisah manual yang dipilih oleh pengguna
+        if (currentRow) {
+          allRows.push(currentRow.cells);
+        }
+      } else {
+        // Pemisah manual yang dipilih oleh pengguna (Koma, Titik Koma, Tab, Spasi)
+        for (const line of lines) {
+          line.items.sort((a, b) => a.x - b.x);
           let lineText = '';
           let lastRight = -1;
           for (const it of line.items) {
@@ -169,6 +274,7 @@ export default function PdfToExcelPage() {
             lastRight = it.x + it.width;
           }
 
+          let rowCells: string[] = [];
           if (selectedDelimiter === 'comma') {
             rowCells = lineText.split(',').map((c) => c.trim());
           } else if (selectedDelimiter === 'semicolon') {
@@ -178,10 +284,10 @@ export default function PdfToExcelPage() {
           } else if (selectedDelimiter === 'space') {
             rowCells = lineText.split(/\s{2,}/).map((c) => c.trim());
           }
-        }
 
-        if (rowCells.length > 0 && rowCells.some((c) => c.length > 0)) {
-          allRows.push(rowCells);
+          if (rowCells.length > 0 && rowCells.some((c) => c.length > 0)) {
+            allRows.push(rowCells);
+          }
         }
       }
     }
@@ -244,11 +350,12 @@ export default function PdfToExcelPage() {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(rows);
 
-      // Hitung lebar kolom dinamis berdasarkan sel terpanjang
+      // Hitung lebar kolom dinamis berdasarkan baris terpanjang dalam sel multiline
       const colWidths = rows.reduce((acc, row) => {
         row.forEach((cell, idx) => {
-          const len = cell ? String(cell).length : 5;
-          acc[idx] = Math.max(acc[idx] || 12, Math.min(len + 3, 50));
+          const lines = cell ? String(cell).split(/\r?\n/) : [''];
+          const maxLineLen = Math.max(...lines.map((l) => l.length), 5);
+          acc[idx] = Math.max(acc[idx] || 12, Math.min(maxLineLen + 4, 60));
         });
         return acc;
       }, [] as number[]);
@@ -475,7 +582,7 @@ export default function PdfToExcelPage() {
                           }
                         >
                           {row.map((cell, cIdx) => (
-                            <td key={cIdx} className="p-2.5 border-r border-slate-100 whitespace-nowrap max-w-[240px] truncate">
+                            <td key={cIdx} className="p-2.5 border-r border-slate-100 whitespace-pre-line max-w-[260px] align-top text-slate-700">
                               {cell || '-'}
                             </td>
                           ))}
