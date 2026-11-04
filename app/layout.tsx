@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kompreskilat.site';
 
 export const viewport: Viewport = {
   themeColor: '#4f46e5',
