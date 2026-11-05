@@ -1852,22 +1852,61 @@ export default function InvoiceGeneratorPage() {
                 __html: `
                   @media print {
                     @page {
-                      size: ${paperSize.startsWith('thermal') ? 'auto' : `${paperSize} ${orientation}`};
-                      margin: 0;
+                      ${
+                        paperSize === 'a4'
+                          ? `size: a4 ${orientation}; margin: 10mm;`
+                          : paperSize === 'a5'
+                          ? `size: a5 ${orientation}; margin: 10mm;`
+                          : paperSize === 'thermal80' || (paperSize as string) === 'thermal-80'
+                          ? 'size: 80mm auto; margin: 2mm 0;'
+                          : 'size: 58mm auto; margin: 2mm 0;'
+                      }
                     }
-                    body, main {
+                    html, body, main {
                       background: #ffffff !important;
                       padding: 0 !important;
                       margin: 0 !important;
+                      width: 100% !important;
+                      box-sizing: border-box !important;
+                      -webkit-print-color-adjust: exact !important;
+                      print-color-adjust: exact !important;
                     }
-                    .print\\:hidden, nav, footer {
+                    .print\\:hidden, nav, footer, header {
                       display: none !important;
+                    }
+                    .print-container-wrapper {
+                      padding: 0 !important;
+                      margin: 0 !important;
+                      background: transparent !important;
+                      border: none !important;
+                      box-shadow: none !important;
+                      display: block !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      overflow: visible !important;
                     }
                     #invoice-preview-sheet {
                       box-shadow: none !important;
                       border: none !important;
                       margin: 0 auto !important;
                       page-break-inside: avoid;
+                      break-inside: avoid;
+                      ${
+                        paperSize.startsWith('thermal')
+                          ? `
+                            width: 100% !important;
+                            max-width: ${paperSize === 'thermal80' || (paperSize as string) === 'thermal-80' ? '76mm' : '54mm'} !important;
+                            padding: 2mm 3mm !important;
+                            font-size: 10px !important;
+                            line-height: 1.25 !important;
+                          `
+                          : `
+                            width: 100% !important;
+                            max-width: 100% !important;
+                            min-height: auto !important;
+                            padding: 0 !important;
+                          `
+                      }
                     }
                   }
                 `,
@@ -1875,7 +1914,7 @@ export default function InvoiceGeneratorPage() {
             />
 
             {/* Container Lembar Kertas Preview */}
-            <div className={`w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex ${
+            <div className={`print-container-wrapper w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex ${
               isLandscape ? 'justify-start sm:justify-center' : 'justify-center'
             } shadow-inner transition-all duration-300`}>
               <div
