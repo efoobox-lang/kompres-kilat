@@ -20,8 +20,13 @@ import {
   Building2,
   CreditCard,
   Sliders,
-  ChevronDown
+  ChevronDown,
+  Move,
+  RotateCcw,
+  MousePointerClick,
+  Layout
 } from 'lucide-react';
+import DraggableCanvasElement, { ElementPosition } from '@/components/DraggableCanvasElement';
 
 export type DocumentType = 'invoice' | 'nota' | 'kwitansi';
 export type PaperSize = 'a4' | 'a5' | 'thermal80' | 'thermal58';
@@ -154,6 +159,52 @@ export default function InvoiceGeneratorPage() {
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // ==========================================
+  // Free-Form Drag & Drop Elements State
+  // ==========================================
+  const [isFreeLayout, setIsFreeLayout] = useState<boolean>(true);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+
+  const [logoPos, setLogoPos] = useState<ElementPosition>({
+    x: 48,
+    y: 48,
+    width: 90,
+  });
+
+  const [signaturePos, setSignaturePos] = useState<ElementPosition>({
+    x: 520,
+    y: 920,
+    width: 160,
+  });
+
+  const [stampPos, setStampPos] = useState<ElementPosition>({
+    x: 550,
+    y: 880,
+    width: 115,
+    rotation: -12,
+  });
+
+  const resetElementPositions = useCallback((paper: PaperSize) => {
+    if (paper === 'a5') {
+      setLogoPos({ x: 32, y: 32, width: 75 });
+      setSignaturePos({ x: 360, y: 640, width: 140 });
+      setStampPos({ x: 385, y: 610, width: 100, rotation: -12 });
+    } else if (paper === 'thermal80') {
+      setLogoPos({ x: 106, y: 16, width: 90 });
+      setSignaturePos({ x: 76, y: 560, width: 150 });
+      setStampPos({ x: 96, y: 530, width: 95, rotation: -12 });
+    } else if (paper === 'thermal58') {
+      setLogoPos({ x: 75, y: 12, width: 70 });
+      setSignaturePos({ x: 45, y: 520, width: 130 });
+      setStampPos({ x: 60, y: 490, width: 85, rotation: -12 });
+    } else {
+      // Default A4
+      setLogoPos({ x: 48, y: 48, width: 90 });
+      setSignaturePos({ x: 520, y: 920, width: 160 });
+      setStampPos({ x: 550, y: 880, width: 115, rotation: -12 });
+    }
+  }, []);
+
   // Refs
   const previewRef = useRef<HTMLDivElement>(null);
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -225,6 +276,7 @@ export default function InvoiceGeneratorPage() {
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
     setSignatureDataUrl(canvas.toDataURL('image/png'));
+    setSelectedElementId('signature');
   };
 
   const clearCanvas = () => {
@@ -243,6 +295,7 @@ export default function InvoiceGeneratorPage() {
       const reader = new FileReader();
       reader.onload = (ev) => {
         setLogoUrl(ev.target?.result as string);
+        setSelectedElementId('logo');
       };
       reader.readAsDataURL(file);
     }
@@ -255,6 +308,7 @@ export default function InvoiceGeneratorPage() {
       const reader = new FileReader();
       reader.onload = (ev) => {
         setSignatureDataUrl(ev.target?.result as string);
+        setSelectedElementId('signature');
       };
       reader.readAsDataURL(file);
     }
@@ -295,16 +349,19 @@ export default function InvoiceGeneratorPage() {
     setDocType(type);
     if (type === 'invoice') {
       setPaperSize('a4');
+      resetElementPositions('a4');
       setDocNumber(`INV-2026/XI/${Math.floor(1000 + Math.random() * 9000)}`);
       setStampStatusText('LUNAS');
       setStampColor('blue');
     } else if (type === 'nota') {
       setPaperSize('a5');
+      resetElementPositions('a5');
       setDocNumber(`NOTA-${Math.floor(100 + Math.random() * 900)}`);
       setStampStatusText('LUNAS');
       setStampColor('red');
     } else if (type === 'kwitansi') {
       setPaperSize('a5');
+      resetElementPositions('a5');
       setDocNumber(`KWT-2026/${Math.floor(10 + Math.random() * 90)}`);
       setStampStatusText('DITERIMA');
       setStampColor('green');
@@ -312,13 +369,17 @@ export default function InvoiceGeneratorPage() {
   };
 
   // Cetak Dokumen via Browser Print
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    setSelectedElementId(null);
+    await new Promise((r) => setTimeout(r, 60));
     window.print();
   };
 
   // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF)
   const handleDownloadPdf = async () => {
     if (!previewRef.current) return;
+    setSelectedElementId(null);
+    await new Promise((r) => setTimeout(r, 60));
     setIsExporting(true);
 
     try {
@@ -372,6 +433,56 @@ export default function InvoiceGeneratorPage() {
     red: { border: 'border-red-600 text-red-600', text: 'text-red-600', hex: '#dc2626' },
     purple: { border: 'border-purple-700 text-purple-700', text: 'text-purple-700', hex: '#7e22ce' },
     green: { border: 'border-emerald-700 text-emerald-700', text: 'text-emerald-700', hex: '#047857' },
+  };
+
+  // Helper render SVG Cap Stempel Digital
+  const renderStampSvg = (w: number, h: number) => {
+    if (stampShape === 'circle') {
+      return (
+        <svg viewBox="0 0 160 160" width={w} height={h} className="overflow-visible select-none">
+          <defs>
+            <path id="stampCircleTop" d="M 25,80 A 55,55 0 0,1 135,80" fill="none" />
+            <path id="stampCircleBottom" d="M 135,80 A 55,55 0 0,1 25,80" fill="none" />
+          </defs>
+          <circle cx="80" cy="80" r="74" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <circle cx="80" cy="80" r="67" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
+          <text fill="currentColor" fontSize="9" fontWeight="bold" letterSpacing="1">
+            <textPath href="#stampCircleTop" startOffset="50%" textAnchor="middle">
+              {stampTopText}
+            </textPath>
+          </text>
+          <text x="26" y="84" fill="currentColor" fontSize="10">★</text>
+          <text x="124" y="84" fill="currentColor" fontSize="10">★</text>
+          <rect x="22" y="66" width="116" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <text x="80" y="86" fill="currentColor" fontSize="16" fontWeight="900" textAnchor="middle" letterSpacing="2">
+            {stampStatusText}
+          </text>
+          <text fill="currentColor" fontSize="8" fontWeight="600" letterSpacing="1">
+            <textPath href="#stampCircleBottom" startOffset="50%" textAnchor="middle">
+              {stampBottomText}
+            </textPath>
+          </text>
+        </svg>
+      );
+    } else {
+      return (
+        <svg viewBox="0 0 170 90" width={w} height={h} className="overflow-visible select-none">
+          <rect x="3" y="3" width="164" height="84" fill="none" stroke="currentColor" strokeWidth="2.5" rx="3" />
+          <rect x="7" y="7" width="156" height="76" fill="none" stroke="currentColor" strokeWidth="1" rx="2" />
+          <text x="85" y="24" fill="currentColor" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">
+            {stampTopText}
+          </text>
+          <line x1="15" y1="30" x2="155" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
+          <text x="85" y="52" fill="currentColor" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="2">
+            {stampStatusText}
+          </text>
+          <line x1="15" y1="58" x2="155" y2="58" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
+          <text x="85" y="74" fill="currentColor" fontSize="8" fontWeight="700" textAnchor="middle" letterSpacing="1">
+            {stampBottomText}
+          </text>
+        </svg>
+      );
+    }
   };
 
   // Structured Data Schema untuk SEO Google
@@ -584,7 +695,11 @@ export default function InvoiceGeneratorPage() {
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setPaperSize(p.id as PaperSize)}
+                        onClick={() => {
+                          const newPaper = p.id as PaperSize;
+                          setPaperSize(newPaper);
+                          resetElementPositions(newPaper);
+                        }}
                         className={`p-2 rounded-xl border text-center transition cursor-pointer ${
                           paperSize === p.id
                             ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-sm'
@@ -729,38 +844,69 @@ export default function InvoiceGeneratorPage() {
                   </div>
 
                   {logoUrl && (
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div>
-                        <label className="block text-[11px] text-slate-500 mb-1 font-semibold">
-                          Ukuran Logo ({logoSize}px):
-                        </label>
-                        <input
-                          type="range"
-                          min="40"
-                          max="140"
-                          value={logoSize}
-                          onChange={(e) => setLogoSize(parseInt(e.target.value, 10))}
-                          className="w-full accent-indigo-600"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-slate-500 mb-1 font-semibold">
-                          Posisi Logo:
-                        </label>
-                        <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                          {(['left', 'center', 'right'] as LogoPosition[]).map((pos) => (
-                            <button
-                              key={pos}
-                              type="button"
-                              onClick={() => setLogoPosition(pos)}
-                              className={`flex-1 py-1 text-[10px] font-bold uppercase transition ${
-                                logoPosition === pos ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600'
-                              }`}
-                            >
-                              {pos === 'left' ? 'Kiri' : pos === 'center' ? 'Tengah' : 'Kanan'}
-                            </button>
-                          ))}
+                    <div className="space-y-2 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold">
+                            Ukuran Logo ({logoPos.width}px):
+                          </label>
+                          <input
+                            type="range"
+                            min="30"
+                            max="200"
+                            value={logoPos.width}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setLogoSize(val);
+                              setLogoPos((prev) => ({ ...prev, width: val }));
+                            }}
+                            className="w-full accent-indigo-600"
+                          />
                         </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold">
+                            Ratakan Header:
+                          </label>
+                          <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                            {(['left', 'center', 'right'] as LogoPosition[]).map((pos) => (
+                              <button
+                                key={pos}
+                                type="button"
+                                onClick={() => {
+                                  setLogoPosition(pos);
+                                  const cW = paperSize === 'a5' ? 560 : paperSize === 'thermal80' ? 302 : paperSize === 'thermal58' ? 220 : 794;
+                                  let nextX = 48;
+                                  if (pos === 'center') nextX = Math.round((cW - logoPos.width) / 2);
+                                  if (pos === 'right') nextX = cW - logoPos.width - 48;
+                                  setLogoPos((prev) => ({ ...prev, x: nextX, y: 48 }));
+                                  setSelectedElementId('logo');
+                                }}
+                                className={`flex-1 py-1 text-[10px] font-bold uppercase transition ${
+                                  logoPosition === pos ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600'
+                                }`}
+                              >
+                                {pos === 'left' ? 'Kiri' : pos === 'center' ? 'Tengah' : 'Kanan'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                        <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
+                          Koordinat: X={logoPos.x}px, Y={logoPos.y}px
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedElementId('logo');
+                            setMobileTab('preview');
+                          }}
+                          className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <Move className="w-3 h-3" />
+                          <span>Seret di Canvas</span>
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1197,6 +1343,25 @@ export default function InvoiceGeneratorPage() {
                           </button>
                         </div>
                       )}
+
+                      {signatureDataUrl && (
+                        <div className="mt-2 flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                          <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
+                            Posisi: X={signaturePos.x}px, Y={signaturePos.y}px
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedElementId('signature');
+                              setMobileTab('preview');
+                            }}
+                            className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <Move className="w-3 h-3" />
+                            <span>Seret di Canvas</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1331,9 +1496,30 @@ export default function InvoiceGeneratorPage() {
                             min="-25"
                             max="25"
                             value={stampRotation}
-                            onChange={(e) => setStampRotation(parseInt(e.target.value, 10))}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setStampRotation(val);
+                              setStampPos((prev) => ({ ...prev, rotation: val }));
+                            }}
                             className="w-full accent-indigo-600"
                           />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                          <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
+                            Posisi: X={stampPos.x}px, Y={stampPos.y}px ({stampPos.width}px)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedElementId('stamp');
+                              setMobileTab('preview');
+                            }}
+                            className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <Move className="w-3 h-3" />
+                            <span>Seret di Canvas</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1348,15 +1534,58 @@ export default function InvoiceGeneratorPage() {
           {/* ======================================================== */}
           <div className={`lg:col-span-7 flex flex-col items-center w-full ${mobileTab === 'editor' ? 'hidden sm:flex' : 'flex'}`}>
             {/* Action Bar Atas */}
-            <div className="w-full bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
+            <div className="w-full bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3 mb-3 print:hidden">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   Pratinjau {docType.toUpperCase()} ({paperSize.toUpperCase()})
                 </span>
+
+                {/* Switch Mode Tata Letak */}
+                <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl ml-2 border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setIsFreeLayout(true)}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1 transition cursor-pointer ${
+                      isFreeLayout
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <Move className="w-3 h-3" />
+                    <span>Bebas Drag & Drop</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFreeLayout(false);
+                      setSelectedElementId(null);
+                    }}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1 transition cursor-pointer ${
+                      !isFreeLayout
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <Layout className="w-3 h-3" />
+                    <span>Standar Otomatis</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
+                {isFreeLayout && (
+                  <button
+                    type="button"
+                    onClick={() => resetElementPositions(paperSize)}
+                    title="Reset posisi elemen ke koordinat awal"
+                    className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline">Reset Posisi</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={handlePrint}
@@ -1378,15 +1607,40 @@ export default function InvoiceGeneratorPage() {
               </div>
             </div>
 
+            {/* Hint Interaktif Banner */}
+            {isFreeLayout && (
+              <div className="w-full mb-3 px-3.5 py-2 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 print:hidden shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <MousePointerClick className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span className="text-[11px] leading-tight">
+                    <strong>Mode Bebas Aktif:</strong> Klik & seret <strong>Logo</strong>, <strong>Tanda Tangan</strong>, atau <strong>Cap Stempel</strong> ke posisi manapun. Tarik sudut lingkaran biru untuk mengubah ukuran secara visual.
+                  </span>
+                </div>
+                {selectedElementId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedElementId(null)}
+                    className="text-[10px] bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shrink-0 ml-2"
+                  >
+                    Selesai Atur
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Container Lembar Kertas Preview */}
             <div className="w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex justify-center shadow-inner">
               <div
                 ref={previewRef}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('[data-drag-ignore="true"]')) return;
+                  setSelectedElementId(null);
+                }}
                 style={{
                   width: paperSize === 'a4' ? '794px' : paperSize === 'a5' ? '560px' : paperSize === 'thermal80' ? '302px' : '220px',
                   minHeight: paperSize === 'a4' ? '1123px' : paperSize === 'a5' ? '794px' : 'auto',
                 }}
-                className={`bg-white text-slate-900 shadow-2xl transition-all duration-150 box-border ${
+                className={`bg-white text-slate-900 shadow-2xl transition-all duration-150 box-border relative ${
                   paperSize.startsWith('thermal') ? 'p-4 font-mono text-[11px]' : 'p-8 sm:p-12 font-sans text-xs'
                 }`}
               >
@@ -1397,7 +1651,7 @@ export default function InvoiceGeneratorPage() {
                   <div className="space-y-3 leading-tight">
                     {/* Header Toko */}
                     <div className="text-center space-y-1">
-                      {logoUrl && (
+                      {!isFreeLayout && logoUrl && (
                         <div className="flex justify-center mb-1">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={logoUrl} alt="Logo" style={{ height: `${Math.min(logoSize, 50)}px` }} className="object-contain" />
@@ -1523,7 +1777,7 @@ export default function InvoiceGeneratorPage() {
                     {/* Header Kwitansi */}
                     <div className="flex items-start justify-between border-b-2 border-slate-800 pb-4">
                       <div className={`flex items-center gap-3 ${logoPosition === 'right' ? 'order-2' : ''}`}>
-                        {logoUrl && (
+                        {!isFreeLayout && logoUrl && (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img src={logoUrl} alt="Logo" style={{ width: `${logoSize}px` }} className="object-contain" />
                         )}
@@ -1596,64 +1850,29 @@ export default function InvoiceGeneratorPage() {
 
                         {/* Stempel Menimpa Tanda Tangan */}
                         <div className="relative h-20 flex items-center justify-center">
-                          {signatureDataUrl ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={signatureDataUrl} alt="Tanda Tangan" className="max-h-20 max-w-full object-contain relative z-10" />
-                          ) : (
-                            <div className="h-16 w-36 border-b border-dashed border-slate-300" />
-                          )}
-
-                          {enableStamp && (
-                            <div
-                              style={{
-                                color: stampColorMap[stampColor].hex,
-                                transform: `rotate(${stampRotation}deg)`,
-                              }}
-                              className="absolute z-20 pointer-events-none opacity-85 select-none"
-                            >
-                              {stampShape === 'circle' ? (
-                                <svg viewBox="0 0 160 160" width="110" height="110">
-                                  <defs>
-                                    <path id="kwtCircleTop" d="M 25,80 A 55,55 0 0,1 135,80" fill="none" />
-                                    <path id="kwtCircleBottom" d="M 135,80 A 55,55 0 0,1 25,80" fill="none" />
-                                  </defs>
-                                  <circle cx="80" cy="80" r="74" fill="none" stroke="currentColor" strokeWidth="2.5" />
-                                  <circle cx="80" cy="80" r="67" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text fill="currentColor" fontSize="9" fontWeight="bold" letterSpacing="1">
-                                    <textPath href="#kwtCircleTop" startOffset="50%" textAnchor="middle">
-                                      {stampTopText}
-                                    </textPath>
-                                  </text>
-                                  <text x="26" y="84" fill="currentColor" fontSize="10">★</text>
-                                  <text x="124" y="84" fill="currentColor" fontSize="10">★</text>
-                                  <rect x="22" y="66" width="116" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                                  <text x="80" y="86" fill="currentColor" fontSize="16" fontWeight="900" textAnchor="middle" letterSpacing="2">
-                                    {stampStatusText}
-                                  </text>
-                                  <text fill="currentColor" fontSize="8" fontWeight="600" letterSpacing="1">
-                                    <textPath href="#kwtCircleBottom" startOffset="50%" textAnchor="middle">
-                                      {stampBottomText}
-                                    </textPath>
-                                  </text>
-                                </svg>
+                          {!isFreeLayout ? (
+                            <>
+                              {signatureDataUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={signatureDataUrl} alt="Tanda Tangan" className="max-h-20 max-w-full object-contain relative z-10" />
                               ) : (
-                                <svg viewBox="0 0 170 90" width="130" height="70">
-                                  <rect x="3" y="3" width="164" height="84" fill="none" stroke="currentColor" strokeWidth="2.5" rx="3" />
-                                  <rect x="7" y="7" width="156" height="76" fill="none" stroke="currentColor" strokeWidth="1" rx="2" />
-                                  <text x="85" y="24" fill="currentColor" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">
-                                    {stampTopText}
-                                  </text>
-                                  <line x1="15" y1="30" x2="155" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text x="85" y="52" fill="currentColor" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="2">
-                                    {stampStatusText}
-                                  </text>
-                                  <line x1="15" y1="58" x2="155" y2="58" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text x="85" y="72" fill="currentColor" fontSize="9" fontWeight="700" textAnchor="middle">
-                                    {stampBottomText}
-                                  </text>
-                                </svg>
+                                <div className="h-16 w-36 border-b border-dashed border-slate-300" />
                               )}
-                            </div>
+
+                              {enableStamp && (
+                                <div
+                                  style={{
+                                    color: stampColorMap[stampColor].hex,
+                                    transform: `rotate(${stampRotation}deg)`,
+                                  }}
+                                  className="absolute z-20 pointer-events-none opacity-85 select-none"
+                                >
+                                  {renderStampSvg(110, stampShape === 'circle' ? 110 : 60)}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="h-16 w-36 border-b border-dashed border-slate-300 mx-auto" />
                           )}
                         </div>
 
@@ -1672,7 +1891,7 @@ export default function InvoiceGeneratorPage() {
                       logoPosition === 'center' ? 'items-center text-center' : 'items-start'
                     }`}>
                       <div className={`space-y-1.5 ${logoPosition === 'right' ? 'order-2 text-right' : ''}`}>
-                        {logoUrl && (
+                        {!isFreeLayout && logoUrl && (
                           <div className={`flex mb-2 ${
                             logoPosition === 'center' ? 'justify-center' : logoPosition === 'right' ? 'justify-end' : 'justify-start'
                           }`}>
@@ -1838,64 +2057,29 @@ export default function InvoiceGeneratorPage() {
                         <p className="font-bold text-slate-800 text-xs mb-2">Hormat Kami,</p>
 
                         <div className="relative h-24 flex items-center justify-center">
-                          {signatureDataUrl ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={signatureDataUrl} alt="Tanda Tangan" className="max-h-20 max-w-full object-contain relative z-10" />
-                          ) : (
-                            <div className="h-16 w-36 border-b border-dashed border-slate-300" />
-                          )}
-
-                          {enableStamp && (
-                            <div
-                              style={{
-                                color: stampColorMap[stampColor].hex,
-                                transform: `rotate(${stampRotation}deg)`,
-                              }}
-                              className="absolute z-20 pointer-events-none opacity-85 select-none"
-                            >
-                              {stampShape === 'circle' ? (
-                                <svg viewBox="0 0 160 160" width="115" height="115">
-                                  <defs>
-                                    <path id="invCircleTop" d="M 25,80 A 55,55 0 0,1 135,80" fill="none" />
-                                    <path id="invCircleBottom" d="M 135,80 A 55,55 0 0,1 25,80" fill="none" />
-                                  </defs>
-                                  <circle cx="80" cy="80" r="74" fill="none" stroke="currentColor" strokeWidth="2.5" />
-                                  <circle cx="80" cy="80" r="67" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text fill="currentColor" fontSize="9" fontWeight="bold" letterSpacing="1">
-                                    <textPath href="#invCircleTop" startOffset="50%" textAnchor="middle">
-                                      {stampTopText}
-                                    </textPath>
-                                  </text>
-                                  <text x="26" y="84" fill="currentColor" fontSize="10">★</text>
-                                  <text x="124" y="84" fill="currentColor" fontSize="10">★</text>
-                                  <rect x="22" y="66" width="116" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                                  <text x="80" y="86" fill="currentColor" fontSize="16" fontWeight="900" textAnchor="middle" letterSpacing="2">
-                                    {stampStatusText}
-                                  </text>
-                                  <text fill="currentColor" fontSize="8" fontWeight="600" letterSpacing="1">
-                                    <textPath href="#invCircleBottom" startOffset="50%" textAnchor="middle">
-                                      {stampBottomText}
-                                    </textPath>
-                                  </text>
-                                </svg>
+                          {!isFreeLayout ? (
+                            <>
+                              {signatureDataUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={signatureDataUrl} alt="Tanda Tangan" className="max-h-20 max-w-full object-contain relative z-10" />
                               ) : (
-                                <svg viewBox="0 0 170 90" width="130" height="70">
-                                  <rect x="3" y="3" width="164" height="84" fill="none" stroke="currentColor" strokeWidth="2.5" rx="3" />
-                                  <rect x="7" y="7" width="156" height="76" fill="none" stroke="currentColor" strokeWidth="1" rx="2" />
-                                  <text x="85" y="24" fill="currentColor" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">
-                                    {stampTopText}
-                                  </text>
-                                  <line x1="15" y1="30" x2="155" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text x="85" y="52" fill="currentColor" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="2">
-                                    {stampStatusText}
-                                  </text>
-                                  <line x1="15" y1="58" x2="155" y2="58" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                                  <text x="85" y="72" fill="currentColor" fontSize="9" fontWeight="700" textAnchor="middle">
-                                    {stampBottomText}
-                                  </text>
-                                </svg>
+                                <div className="h-16 w-36 border-b border-dashed border-slate-300" />
                               )}
-                            </div>
+
+                              {enableStamp && (
+                                <div
+                                  style={{
+                                    color: stampColorMap[stampColor].hex,
+                                    transform: `rotate(${stampRotation}deg)`,
+                                  }}
+                                  className="absolute z-20 pointer-events-none opacity-85 select-none"
+                                >
+                                  {renderStampSvg(115, stampShape === 'circle' ? 115 : 65)}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="h-16 w-36 border-b border-dashed border-slate-300 mx-auto" />
                           )}
                         </div>
 
@@ -1904,6 +2088,98 @@ export default function InvoiceGeneratorPage() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* ======================================================== */}
+                {/* ELEMEN INTERAKTIF DRAG & DROP (Logo, Tanda Tangan, Stempel) */}
+                {/* ======================================================== */}
+                {isFreeLayout && (
+                  <>
+                    {/* 1. Logo Perusahaan / Toko */}
+                    {logoUrl && (
+                      <DraggableCanvasElement
+                        id="logo"
+                        title="Logo Perusahaan"
+                        position={logoPos}
+                        minWidth={30}
+                        maxWidth={350}
+                        isSelected={selectedElementId === 'logo'}
+                        containerRef={previewRef}
+                        onSelect={(id) => setSelectedElementId(id)}
+                        onChange={(newPos) => {
+                          setLogoPos(newPos);
+                          setLogoSize(newPos.width);
+                        }}
+                        onDelete={() => setLogoUrl('')}
+                        zIndex={25}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={logoUrl}
+                          alt="Logo Perusahaan"
+                          className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-xs"
+                          draggable={false}
+                        />
+                      </DraggableCanvasElement>
+                    )}
+
+                    {/* 2. Tanda Tangan Digital */}
+                    {signatureDataUrl && (
+                      <DraggableCanvasElement
+                        id="signature"
+                        title="Tanda Tangan"
+                        position={signaturePos}
+                        minWidth={60}
+                        maxWidth={360}
+                        isSelected={selectedElementId === 'signature'}
+                        containerRef={previewRef}
+                        onSelect={(id) => setSelectedElementId(id)}
+                        onChange={(newPos) => setSignaturePos(newPos)}
+                        onDelete={() => {
+                          setSignatureDataUrl('');
+                          clearCanvas();
+                        }}
+                        zIndex={28}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={signatureDataUrl}
+                          alt="Tanda Tangan Digital"
+                          className="w-full h-auto max-h-32 object-contain select-none pointer-events-none"
+                          draggable={false}
+                        />
+                      </DraggableCanvasElement>
+                    )}
+
+                    {/* 3. Cap Stempel Digital */}
+                    {enableStamp && (
+                      <DraggableCanvasElement
+                        id="stamp"
+                        title="Cap Stempel"
+                        position={{ ...stampPos, rotation: stampRotation }}
+                        minWidth={60}
+                        maxWidth={240}
+                        aspectRatio={stampShape === 'circle' ? 1 : 170 / 90}
+                        isSelected={selectedElementId === 'stamp'}
+                        containerRef={previewRef}
+                        onSelect={(id) => setSelectedElementId(id)}
+                        onChange={(newPos) => {
+                          setStampPos(newPos);
+                          if (newPos.rotation !== undefined) setStampRotation(newPos.rotation);
+                        }}
+                        onRotate={(rot) => {
+                          setStampRotation(rot);
+                          setStampPos((prev) => ({ ...prev, rotation: rot }));
+                        }}
+                        onDelete={() => setEnableStamp(false)}
+                        zIndex={35}
+                      >
+                        <div style={{ color: stampColorMap[stampColor].hex }} className="opacity-90 select-none pointer-events-none">
+                          {renderStampSvg(stampPos.width, stampShape === 'circle' ? stampPos.width : (stampPos.width * 90) / 170)}
+                        </div>
+                      </DraggableCanvasElement>
+                    )}
+                  </>
                 )}
               </div>
             </div>
