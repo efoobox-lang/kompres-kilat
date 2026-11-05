@@ -9,7 +9,6 @@ import Link from 'next/link';
 import {
   FileText,
   Printer,
-  Download,
   Plus,
   Trash2,
   Upload,
@@ -22,13 +21,8 @@ import {
   Sliders,
   ChevronDown,
   Move,
-  RotateCcw,
   MousePointerClick,
-  Layout,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-  X
+  Layout
 } from 'lucide-react';
 import DraggableCanvasElement, { ElementPosition } from '@/components/DraggableCanvasElement';
 
@@ -189,11 +183,6 @@ export default function InvoiceGeneratorPage() {
   const [stampRotation, setStampRotation] = useState<number>(-12);
 
   // Status & Navigasi
-  const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [exportNotice, setExportNotice] = useState<{
-    type: 'success' | 'warning' | 'info';
-    message: string;
-  } | null>(null);
   const [activeFormTab, setActiveFormTab] = useState<'doc' | 'business' | 'items' | 'stamp'>('doc');
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -429,97 +418,6 @@ export default function InvoiceGeneratorPage() {
     setSelectedElementId(null);
     await new Promise((r) => setTimeout(r, 60));
     window.print();
-  };
-
-  // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF) Langsung ke Perangkat
-  const handleDownloadPdf = async () => {
-    if (!previewRef.current) return;
-    setSelectedElementId(null);
-    setIsExporting(true);
-    setExportNotice(null);
-
-    // Beri jeda singkat agar DOM dan event unselect selesai
-    await new Promise((r) => setTimeout(r, 80));
-
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-
-      const targetElement = previewRef.current;
-
-      // 1. Konfigurasi html2canvas optimal: scale: 2 untuk hasil tajam & useCORS: true untuk logo/gambar
-      const canvas = await html2canvas(targetElement, {
-        scale: 2.0,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      if (!canvas) {
-        throw new Error('Canvas render menghasilkan objek kosong');
-      }
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-      // 2. Sesuaikan perhitungan ukuran halaman pada jsPDF sesuai format dan orientasi (Portrait / Landscape)
-      let pdfWidth = 210;
-      let pdfHeight = 297;
-      let pdfOrient: 'p' | 'l' = orientation === 'landscape' ? 'l' : 'p';
-
-      if (paperSize === 'a4') {
-        if (orientation === 'landscape') {
-          pdfWidth = 297;
-          pdfHeight = 210;
-          pdfOrient = 'l';
-        } else {
-          pdfWidth = 210;
-          pdfHeight = 297;
-          pdfOrient = 'p';
-        }
-      } else if (paperSize === 'a5') {
-        if (orientation === 'landscape') {
-          pdfWidth = 210;
-          pdfHeight = 148;
-          pdfOrient = 'l';
-        } else {
-          pdfWidth = 148;
-          pdfHeight = 210;
-          pdfOrient = 'p';
-        }
-      } else if (paperSize === 'thermal80') {
-        pdfWidth = 80;
-        pdfHeight = Math.max(120, (canvas.height * 80) / canvas.width);
-        pdfOrient = 'p';
-      } else if (paperSize === 'thermal58') {
-        pdfWidth = 58;
-        pdfHeight = Math.max(100, (canvas.height * 58) / canvas.width);
-        pdfOrient = 'p';
-      }
-
-      const pdf = new jsPDF({
-        orientation: pdfOrient,
-        unit: 'mm',
-        format: [pdfWidth, pdfHeight],
-        compress: true,
-      });
-
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-
-      const fileName = `${docType.toUpperCase()}_${docNumber.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`;
-
-      // 3. Unduh instan langsung via pdf.save()
-      pdf.save(fileName);
-
-      setExportNotice({
-        type: 'success',
-        message: `File PDF "${fileName}" berhasil diunduh ke perangkat Anda.`,
-      });
-      setTimeout(() => setExportNotice(null), 4000);
-    } catch (err) {
-      console.error('Ekspor PDF langsung error:', err);
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   // Pilihan Warna Stempel
@@ -1759,71 +1657,19 @@ export default function InvoiceGeneratorPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {isFreeLayout && (
-                  <button
-                    type="button"
-                    onClick={() => resetElementPositions(paperSize)}
-                    title="Reset posisi elemen ke koordinat awal"
-                    className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline">Reset Posisi</span>
-                  </button>
-                )}
-
+              {/* Tombol Aksi Utama: Cetak Dokumen / Simpan sebagai PDF */}
+              <div className="flex items-center">
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-sm cursor-pointer"
+                  title="Cetak dokumen langsung atau simpan sebagai PDF via browser"
                 >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Cetak</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isExporting}
-                  onClick={handleDownloadPdf}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer disabled:opacity-50"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>{isExporting ? 'Mengompilasi...' : 'Unduh PDF'}</span>
+                  <Printer className="w-4 h-4" />
+                  <span>Cetak Dokumen</span>
                 </button>
               </div>
             </div>
-
-            {/* Notifikasi Status Ekspor / Fallback Dialog Cetak */}
-            {exportNotice && (
-              <div
-                className={`w-full mb-3 p-3.5 rounded-xl border flex items-start justify-between gap-3 text-xs shadow-xs animate-in fade-in duration-200 print:hidden ${
-                  exportNotice.type === 'success'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200'
-                    : exportNotice.type === 'warning'
-                    ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-200'
-                    : 'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-200'
-                }`}
-              >
-                <div className="flex items-start gap-2.5">
-                  {exportNotice.type === 'success' ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  ) : exportNotice.type === 'warning' ? (
-                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                  )}
-                  <p className="leading-relaxed font-medium">{exportNotice.message}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setExportNotice(null)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer shrink-0"
-                  title="Tutup Pesan"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
 
             {/* Hint Interaktif Banner */}
             {isFreeLayout && (
