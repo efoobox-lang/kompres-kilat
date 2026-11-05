@@ -262,3 +262,4 @@ export function calculateDynamicAtsScore(text: string, jobTarget: string): AtsEv
     revisedExperiencePoints,
   };
 }
+

@@ -422,6 +422,19 @@ export const ALL_TOOLS: ToolItem[] = [
   // 4. Bisnis & Kalkulator
   // ==========================================
   {
+    id: 'invoice-generator',
+    title: 'Pembuat Invoice, Nota & Kwitansi',
+    description: 'Buat faktur tagihan invoice, nota toko penjualan, dan kwitansi resmi instan dengan logo, tanda tangan, stempel digital, serta unduh PDF ukuran A4, A5, dan thermal.',
+    href: '/tools/invoice-generator',
+    category: 'Bisnis & Kalkulator',
+    categoryKey: 'business',
+    icon: '🧾',
+    badge: 'BARU',
+    badgeColor: 'emerald',
+    isPopular: true,
+    keywords: ['invoice', 'faktur', 'nota', 'kwitansi', 'struk', 'kasir', 'thermal', 'stempel', 'tanda tangan', 'pdf', 'bisnis', 'umkm', 'tagihan'],
+  },
+  {
     id: 'kalkulator-pajak',
     title: 'Kalkulator Pajak PPh 21, 23 & 4(2)',
     description: 'Hitung simulasi PPh 21 Karyawan (Skema TER & UU HPP), PPh 23 Jasa & Modal, dan PPh 4(2) Final 100% akurat.',
