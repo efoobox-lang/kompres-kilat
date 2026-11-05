@@ -30,6 +30,7 @@ export type DocumentType = 'invoice' | 'nota' | 'kwitansi';
 export type PaperSize = 'a4' | 'a5' | 'thermal80' | 'thermal58';
 export type PaperOrientation = 'portrait' | 'landscape';
 export type LogoPosition = 'left' | 'center' | 'right';
+export type StampMode = 'both' | 'status_only' | 'company_only' | 'none';
 export type StampShape = 'circle' | 'rectangle';
 export type StampColor = 'blue' | 'red' | 'purple' | 'green';
 
@@ -173,14 +174,56 @@ export default function InvoiceGeneratorPage() {
   const [signatureMode, setSignatureMode] = useState<'draw' | 'upload' | 'text'>('draw');
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
 
-  // Cap Stempel Digital
-  const [enableStamp, setEnableStamp] = useState<boolean>(true);
-  const [stampShape, setStampShape] = useState<StampShape>('circle');
-  const [stampColor, setStampColor] = useState<StampColor>('blue');
-  const [stampTopText, setStampTopText] = useState<string>('PT KOMPRES KILAT DIGITAL');
-  const [stampStatusText, setStampStatusText] = useState<string>('LUNAS');
-  const [stampBottomText, setStampBottomText] = useState<string>('JAKARTA • 2026');
-  const [stampRotation, setStampRotation] = useState<number>(-12);
+  // Cap Stempel Digital Resmi Perusahaan / Toko
+  const [enableCompanyStamp, setEnableCompanyStamp] = useState<boolean>(true);
+  const [companyStampShape, setCompanyStampShape] = useState<StampShape>('circle');
+  const [companyStampColor, setCompanyStampColor] = useState<StampColor>('blue');
+  const [companyStampText, setCompanyStampText] = useState<string>('PT KOMPRES KILAT DIGITAL');
+  const [companyStampCity, setCompanyStampCity] = useState<string>('JAKARTA • 2026');
+  const [companyStampRotation, setCompanyStampRotation] = useState<number>(-8);
+  const [companyStampPos, setCompanyStampPos] = useState<ElementPosition>({
+    x: 540,
+    y: 880,
+    width: 110,
+    rotation: -8,
+  });
+
+  // Stempel Status Pembayaran (Lunas / Paid / Diterima)
+  const [enableStatusStamp, setEnableStatusStamp] = useState<boolean>(true);
+  const [statusStampText, setStatusStampText] = useState<string>('LUNAS');
+  const [statusStampColor, setStatusStampColor] = useState<StampColor>('red');
+  const [statusStampRotation, setStatusStampRotation] = useState<number>(-12);
+  const [statusStampPos, setStatusStampPos] = useState<ElementPosition>({
+    x: 260,
+    y: 780,
+    width: 130,
+    rotation: -12,
+  });
+
+  const currentStampMode: StampMode =
+    enableCompanyStamp && enableStatusStamp
+      ? 'both'
+      : enableStatusStamp
+      ? 'status_only'
+      : enableCompanyStamp
+      ? 'company_only'
+      : 'none';
+
+  const handleSetStampMode = (mode: StampMode) => {
+    if (mode === 'both') {
+      setEnableCompanyStamp(true);
+      setEnableStatusStamp(true);
+    } else if (mode === 'status_only') {
+      setEnableCompanyStamp(false);
+      setEnableStatusStamp(true);
+    } else if (mode === 'company_only') {
+      setEnableCompanyStamp(true);
+      setEnableStatusStamp(false);
+    } else {
+      setEnableCompanyStamp(false);
+      setEnableStatusStamp(false);
+    }
+  };
 
   // Status & Navigasi
   const [activeFormTab, setActiveFormTab] = useState<'doc' | 'business' | 'items' | 'stamp'>('doc');
@@ -205,13 +248,6 @@ export default function InvoiceGeneratorPage() {
     width: 160,
   });
 
-  const [stampPos, setStampPos] = useState<ElementPosition>({
-    x: 550,
-    y: 880,
-    width: 115,
-    rotation: -12,
-  });
-
   const resetElementPositions = useCallback((paper: PaperSize, orient?: PaperOrientation) => {
     const curOrient = orient || orientation;
 
@@ -219,30 +255,36 @@ export default function InvoiceGeneratorPage() {
       if (curOrient === 'landscape') {
         setLogoPos({ x: 36, y: 32, width: 85 });
         setSignaturePos({ x: 570, y: 380, width: 140 });
-        setStampPos({ x: 600, y: 350, width: 100, rotation: -12 });
+        setCompanyStampPos({ x: 595, y: 350, width: 95, rotation: -8 });
+        setStatusStampPos({ x: 340, y: 370, width: 115, rotation: -12 });
       } else {
         setLogoPos({ x: 32, y: 32, width: 75 });
         setSignaturePos({ x: 360, y: 640, width: 140 });
-        setStampPos({ x: 385, y: 610, width: 100, rotation: -12 });
+        setCompanyStampPos({ x: 375, y: 610, width: 95, rotation: -8 });
+        setStatusStampPos({ x: 120, y: 600, width: 115, rotation: -12 });
       }
     } else if (paper === 'thermal80') {
       setLogoPos({ x: 106, y: 16, width: 90 });
       setSignaturePos({ x: 76, y: 560, width: 150 });
-      setStampPos({ x: 96, y: 530, width: 95, rotation: -12 });
+      setCompanyStampPos({ x: 95, y: 530, width: 90, rotation: -8 });
+      setStatusStampPos({ x: 80, y: 460, width: 110, rotation: -10 });
     } else if (paper === 'thermal58') {
       setLogoPos({ x: 75, y: 12, width: 70 });
       setSignaturePos({ x: 45, y: 520, width: 130 });
-      setStampPos({ x: 60, y: 490, width: 85, rotation: -12 });
+      setCompanyStampPos({ x: 60, y: 500, width: 80, rotation: -8 });
+      setStatusStampPos({ x: 50, y: 430, width: 95, rotation: -10 });
     } else {
       // Default A4
       if (curOrient === 'landscape') {
         setLogoPos({ x: 48, y: 48, width: 100 });
         setSignaturePos({ x: 860, y: 590, width: 160 });
-        setStampPos({ x: 890, y: 560, width: 115, rotation: -12 });
+        setCompanyStampPos({ x: 885, y: 540, width: 110, rotation: -8 });
+        setStatusStampPos({ x: 550, y: 560, width: 130, rotation: -12 });
       } else {
         setLogoPos({ x: 48, y: 48, width: 90 });
         setSignaturePos({ x: 520, y: 920, width: 160 });
-        setStampPos({ x: 550, y: 880, width: 115, rotation: -12 });
+        setCompanyStampPos({ x: 540, y: 880, width: 110, rotation: -8 });
+        setStatusStampPos({ x: 260, y: 780, width: 130, rotation: -12 });
       }
     }
   }, [orientation]);
@@ -394,22 +436,25 @@ export default function InvoiceGeneratorPage() {
       setOrientation('portrait');
       resetElementPositions('a4', 'portrait');
       setDocNumber(`INV-2026/XI/${Math.floor(1000 + Math.random() * 9000)}`);
-      setStampStatusText('LUNAS');
-      setStampColor('blue');
+      setStatusStampText('LUNAS');
+      setStatusStampColor('red');
+      setCompanyStampColor('blue');
     } else if (type === 'nota') {
       setPaperSize('a5');
       setOrientation('portrait');
       resetElementPositions('a5', 'portrait');
       setDocNumber(`NOTA-${Math.floor(100 + Math.random() * 900)}`);
-      setStampStatusText('LUNAS');
-      setStampColor('red');
+      setStatusStampText('LUNAS');
+      setStatusStampColor('red');
+      setCompanyStampColor('purple');
     } else if (type === 'kwitansi') {
       setPaperSize('a5');
       setOrientation('landscape');
       resetElementPositions('a5', 'landscape');
       setDocNumber(`KWT-2026/${Math.floor(10 + Math.random() * 90)}`);
-      setStampStatusText('DITERIMA');
-      setStampColor('green');
+      setStatusStampText('DITERIMA');
+      setStatusStampColor('green');
+      setCompanyStampColor('blue');
     }
   };
 
@@ -428,54 +473,78 @@ export default function InvoiceGeneratorPage() {
     green: { border: 'border-emerald-700 text-emerald-700', text: 'text-emerald-700', hex: '#047857' },
   };
 
-  // Helper render SVG Cap Stempel Digital
-  const renderStampSvg = (w: number, h: number) => {
-    if (stampShape === 'circle') {
+  // Helper render SVG Cap Stempel Resmi Perusahaan / Toko
+  const renderCompanyStampSvg = (w: number, h: number) => {
+    if (companyStampShape === 'circle') {
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width={w} height={h} className="overflow-visible select-none">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width={w} height={h} className="overflow-visible select-none drop-shadow-xs">
           <defs>
-            <path id="stampCircleTop" d="M 25,80 A 55,55 0 0,1 135,80" fill="none" />
-            <path id="stampCircleBottom" d="M 135,80 A 55,55 0 0,1 25,80" fill="none" />
+            <path id="companyCircleTop" d="M 24,80 A 56,56 0 0,1 136,80" fill="none" />
+            <path id="companyCircleBottom" d="M 136,80 A 56,56 0 0,1 24,80" fill="none" />
           </defs>
           <circle cx="80" cy="80" r="74" fill="none" stroke="currentColor" strokeWidth="2.5" />
-          <circle cx="80" cy="80" r="67" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-          <text fill="currentColor" fontSize="9" fontWeight="bold" letterSpacing="1">
-            <textPath href="#stampCircleTop" startOffset="50%" textAnchor="middle">
-              {stampTopText}
+          <circle cx="80" cy="80" r="66" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
+          <text fill="currentColor" fontSize="8.5" fontWeight="bold" letterSpacing="1">
+            <textPath href="#companyCircleTop" startOffset="50%" textAnchor="middle">
+              {companyStampText || companyName || 'PT KOMPRES KILAT DIGITAL'}
             </textPath>
           </text>
-          <text x="26" y="84" fill="currentColor" fontSize="10">★</text>
-          <text x="124" y="84" fill="currentColor" fontSize="10">★</text>
-          <rect x="22" y="66" width="116" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <text x="80" y="86" fill="currentColor" fontSize="16" fontWeight="900" textAnchor="middle" letterSpacing="2">
-            {stampStatusText}
+          <text x="24" y="84" fill="currentColor" fontSize="10">★</text>
+          <text x="126" y="84" fill="currentColor" fontSize="10">★</text>
+          <circle cx="80" cy="80" r="32" fill="none" stroke="currentColor" strokeWidth="1.2" />
+          <text x="80" y="78" fill="currentColor" fontSize="10" fontWeight="900" textAnchor="middle" letterSpacing="1">
+            OFFICIAL
+          </text>
+          <text x="80" y="90" fill="currentColor" fontSize="8" fontWeight="bold" textAnchor="middle" letterSpacing="0.5">
+            SEAL
           </text>
           <text fill="currentColor" fontSize="8" fontWeight="600" letterSpacing="1">
-            <textPath href="#stampCircleBottom" startOffset="50%" textAnchor="middle">
-              {stampBottomText}
+            <textPath href="#companyCircleBottom" startOffset="50%" textAnchor="middle">
+              {companyStampCity || 'JAKARTA • 2026'}
             </textPath>
           </text>
         </svg>
       );
     } else {
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 90" width={w} height={h} className="overflow-visible select-none">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 90" width={w} height={h} className="overflow-visible select-none drop-shadow-xs">
           <rect x="3" y="3" width="164" height="84" fill="none" stroke="currentColor" strokeWidth="2.5" rx="3" />
           <rect x="7" y="7" width="156" height="76" fill="none" stroke="currentColor" strokeWidth="1" rx="2" />
           <text x="85" y="24" fill="currentColor" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">
-            {stampTopText}
+            {companyStampText || companyName || 'PT KOMPRES KILAT DIGITAL'}
           </text>
           <line x1="15" y1="30" x2="155" y2="30" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-          <text x="85" y="52" fill="currentColor" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="2">
-            {stampStatusText}
+          <text x="85" y="52" fill="currentColor" fontSize="14" fontWeight="900" textAnchor="middle" letterSpacing="2">
+            CAP RESMI TOKO
           </text>
           <line x1="15" y1="58" x2="155" y2="58" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
           <text x="85" y="74" fill="currentColor" fontSize="8" fontWeight="700" textAnchor="middle" letterSpacing="1">
-            {stampBottomText}
+            {companyStampCity || 'JAKARTA • 2026'}
           </text>
         </svg>
       );
     }
+  };
+
+  // Helper render SVG Stempel Status Pembayaran (LUNAS, PAID, dll.)
+  const renderStatusStampSvg = (w: number, h: number) => {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 85" width={w} height={h} className="overflow-visible select-none drop-shadow-xs">
+        <rect x="4" y="4" width="162" height="77" fill="none" stroke="currentColor" strokeWidth="3" rx="5" />
+        <rect x="9" y="9" width="152" height="67" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="4 2" rx="3" />
+        <text x="85" y="22" fill="currentColor" fontSize="8" fontWeight="800" textAnchor="middle" letterSpacing="2">
+          VERIFIKASI TRANSAKSI
+        </text>
+        <line x1="20" y1="27" x2="150" y2="27" stroke="currentColor" strokeWidth="1" />
+        <text x="85" y="52" fill="currentColor" fontSize="21" fontWeight="900" textAnchor="middle" letterSpacing="3">
+          {statusStampText}
+        </text>
+        <line x1="20" y1="58" x2="150" y2="58" stroke="currentColor" strokeWidth="1" />
+        <text x="85" y="70" fill="currentColor" fontSize="8" fontWeight="700" textAnchor="middle" letterSpacing="1">
+          TGL: {issueDate || 'HARI INI'}
+        </text>
+      </svg>
+    );
   };
 
   // Structured Data Schema untuk SEO Google
@@ -1419,6 +1488,7 @@ export default function InvoiceGeneratorPage() {
                         value={signerName}
                         onChange={(e) => setSignerName(e.target.value)}
                         className="w-full p-2 bg-slate-50 dark:bg-slate-800 border rounded-xl font-bold"
+                        placeholder="Budi Pengerti, S.Hum."
                       />
                     </div>
                     <div>
@@ -1433,132 +1503,189 @@ export default function InvoiceGeneratorPage() {
                   </div>
                 </div>
 
-                {/* 2. Cap Stempel Digital Resmi */}
-                <div className="space-y-3 pt-3 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                {/* 2. Modul Stempel Digital: Pilihan Eksklusif & Terpisah */}
+                <div className="space-y-4 pt-3 border-t">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                       <Stamp className="w-4 h-4 text-indigo-600" />
-                      <span>Cap Stempel Digital Resmi</span>
-                    </span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={enableStamp}
-                        onChange={(e) => setEnableStamp(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600" />
+                      <span>Mode Visibilitas Stempel:</span>
                     </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleSetStampMode('both')}
+                        className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                          currentStampMode === 'both'
+                            ? 'bg-indigo-50 border-indigo-500 text-indigo-900 dark:bg-indigo-950/50 dark:border-indigo-400 dark:text-indigo-200 font-bold ring-1 ring-indigo-500'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 font-bold text-[11px]">
+                          <span>🏢 + 🟢 Keduanya</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Cap Toko & Status Lunas</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetStampMode('status_only')}
+                        className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                          currentStampMode === 'status_only'
+                            ? 'bg-indigo-50 border-indigo-500 text-indigo-900 dark:bg-indigo-950/50 dark:border-indigo-400 dark:text-indigo-200 font-bold ring-1 ring-indigo-500'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 font-bold text-[11px]">
+                          <span>🟢 Hanya Status</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">LUNAS / PAID / Diterima</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetStampMode('company_only')}
+                        className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                          currentStampMode === 'company_only'
+                            ? 'bg-indigo-50 border-indigo-500 text-indigo-900 dark:bg-indigo-950/50 dark:border-indigo-400 dark:text-indigo-200 font-bold ring-1 ring-indigo-500'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 font-bold text-[11px]">
+                          <span>🏢 Hanya Cap Toko</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Stempel Resmi Toko</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetStampMode('none')}
+                        className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                          currentStampMode === 'none'
+                            ? 'bg-indigo-50 border-indigo-500 text-indigo-900 dark:bg-indigo-950/50 dark:border-indigo-400 dark:text-indigo-200 font-bold ring-1 ring-indigo-500'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 font-bold text-[11px]">
+                          <span>⚪ Tanpa Stempel</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Dokumen Bersih / Polos</p>
+                      </button>
+                    </div>
                   </div>
 
-                  {enableStamp && (
-                    <div className="space-y-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-1 font-semibold">
-                            Bentuk Stempel:
-                          </label>
-                          <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => setStampShape('circle')}
-                              className={`flex-1 py-1.5 text-[11px] font-bold ${stampShape === 'circle' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800'}`}
-                            >
-                              Bulat Dinas
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setStampShape('rectangle')}
-                              className={`flex-1 py-1.5 text-[11px] font-bold ${stampShape === 'rectangle' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800'}`}
-                            >
-                              Kotak Toko
-                            </button>
-                          </div>
-                        </div>
+                  {/* Sub-A: Cap Stempel Resmi Toko / Perusahaan */}
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>1. Cap Resmi Perusahaan / Toko</span>
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableCompanyStamp}
+                          onChange={(e) => setEnableCompanyStamp(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600" />
+                      </label>
+                    </div>
 
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-1 font-semibold">
-                            Warna Tinta Stempel:
-                          </label>
-                          <div className="flex items-center gap-2">
-                            {(['blue', 'red', 'purple', 'green'] as StampColor[]).map((clr) => (
-                              <button
-                                key={clr}
-                                type="button"
-                                onClick={() => setStampColor(clr)}
-                                style={{ backgroundColor: stampColorMap[clr].hex }}
-                                className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
-                                  stampColor === clr ? 'scale-125 border-white shadow-md' : 'border-transparent'
-                                }`}
-                                title={clr}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Teks Atas Stempel (Nama Perusahaan/Toko):</label>
-                          <input
-                            type="text"
-                            value={stampTopText}
-                            onChange={(e) => setStampTopText(e.target.value.toUpperCase())}
-                            className="w-full p-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs uppercase font-bold"
-                          />
-                        </div>
+                    {enableCompanyStamp && (
+                      <div className="space-y-2.5 pt-1">
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[10px] text-slate-500 mb-0.5">Teks Status Tengah:</label>
-                            <select
-                              value={stampStatusText}
-                              onChange={(e) => setStampStatusText(e.target.value)}
-                              className="w-full p-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs font-bold"
-                            >
-                              <option value="LUNAS">LUNAS</option>
-                              <option value="PAID">PAID</option>
-                              <option value="DITERIMA">DITERIMA</option>
-                              <option value="TERVERIFIKASI">TERVERIFIKASI</option>
-                              <option value="DISETUJUI">DISETUJUI</option>
-                            </select>
+                            <label className="block text-[10px] text-slate-500 mb-1 font-semibold">
+                              Bentuk Cap:
+                            </label>
+                            <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => setCompanyStampShape('circle')}
+                                className={`flex-1 py-1 text-[11px] font-bold ${companyStampShape === 'circle' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800'}`}
+                              >
+                                Bulat Dinas
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCompanyStampShape('rectangle')}
+                                className={`flex-1 py-1 text-[11px] font-bold ${companyStampShape === 'rectangle' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800'}`}
+                              >
+                                Kotak Toko
+                              </button>
+                            </div>
                           </div>
+
                           <div>
-                            <label className="block text-[10px] text-slate-500 mb-0.5">Teks Bawah Stempel:</label>
+                            <label className="block text-[10px] text-slate-500 mb-1 font-semibold">
+                              Warna Tinta:
+                            </label>
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              {(['blue', 'red', 'purple', 'green'] as StampColor[]).map((clr) => (
+                                <button
+                                  key={clr}
+                                  type="button"
+                                  onClick={() => setCompanyStampColor(clr)}
+                                  style={{ backgroundColor: stampColorMap[clr].hex }}
+                                  className={`w-5 h-5 rounded-full border-2 transition-transform cursor-pointer ${
+                                    companyStampColor === clr ? 'scale-125 border-white shadow-md' : 'border-transparent'
+                                  }`}
+                                  title={clr}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-slate-500 mb-0.5">Nama Toko / Perusahaan (Melingkar):</label>
+                          <input
+                            type="text"
+                            value={companyStampText}
+                            onChange={(e) => setCompanyStampText(e.target.value.toUpperCase())}
+                            className="w-full p-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs uppercase font-bold"
+                            placeholder="PT KOMPRES KILAT DIGITAL"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">Kota / Keterangan Bawah:</label>
                             <input
                               type="text"
-                              value={stampBottomText}
-                              onChange={(e) => setStampBottomText(e.target.value.toUpperCase())}
+                              value={companyStampCity}
+                              onChange={(e) => setCompanyStampCity(e.target.value.toUpperCase())}
                               className="w-full p-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs uppercase"
+                              placeholder="JAKARTA • 2026"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5 font-semibold">
+                              Kemiringan ({companyStampRotation}°):
+                            </label>
+                            <input
+                              type="range"
+                              min="-25"
+                              max="25"
+                              value={companyStampRotation}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                setCompanyStampRotation(val);
+                                setCompanyStampPos((prev) => ({ ...prev, rotation: val }));
+                              }}
+                              className="w-full accent-indigo-600 mt-1"
                             />
                           </div>
                         </div>
 
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5 font-semibold">
-                            Kemiringan Cap Stempel ({stampRotation}°):
-                          </label>
-                          <input
-                            type="range"
-                            min="-25"
-                            max="25"
-                            value={stampRotation}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
-                              setStampRotation(val);
-                              setStampPos((prev) => ({ ...prev, rotation: val }));
-                            }}
-                            className="w-full accent-indigo-600"
-                          />
-                        </div>
-
                         <div className="flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
                           <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
-                            Posisi: X={stampPos.x}px, Y={stampPos.y}px ({stampPos.width}px)
+                            Posisi Cap: X={companyStampPos.x}px, Y={companyStampPos.y}px
                           </span>
                           <button
                             type="button"
                             onClick={() => {
-                              setSelectedElementId('stamp');
+                              setSelectedElementId('company-stamp');
                               setMobileTab('preview');
                             }}
                             className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
@@ -1568,8 +1695,105 @@ export default function InvoiceGeneratorPage() {
                           </button>
                         </div>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Sub-B: Stempel Status Pembayaran */}
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>2. Stempel Status Pembayaran</span>
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableStatusStamp}
+                          onChange={(e) => setEnableStatusStamp(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600" />
+                      </label>
                     </div>
-                  )}
+
+                    {enableStatusStamp && (
+                      <div className="space-y-2.5 pt-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5 font-semibold">Teks Status:</label>
+                            <select
+                              value={statusStampText}
+                              onChange={(e) => setStatusStampText(e.target.value)}
+                              className="w-full p-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs font-bold"
+                            >
+                              <option value="LUNAS">LUNAS</option>
+                              <option value="PAID">PAID</option>
+                              <option value="DITERIMA">DITERIMA</option>
+                              <option value="TERVERIFIKASI">TERVERIFIKASI</option>
+                              <option value="DISETUJUI">DISETUJUI</option>
+                              <option value="DP / TERMIN">DP / TERMIN</option>
+                              <option value="BATAL">BATAL</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-1 font-semibold">
+                              Warna Tinta:
+                            </label>
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              {(['red', 'blue', 'green', 'purple'] as StampColor[]).map((clr) => (
+                                <button
+                                  key={clr}
+                                  type="button"
+                                  onClick={() => setStatusStampColor(clr)}
+                                  style={{ backgroundColor: stampColorMap[clr].hex }}
+                                  className={`w-5 h-5 rounded-full border-2 transition-transform cursor-pointer ${
+                                    statusStampColor === clr ? 'scale-125 border-white shadow-md' : 'border-transparent'
+                                  }`}
+                                  title={clr}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-slate-500 mb-0.5 font-semibold">
+                            Kemiringan Stempel ({statusStampRotation}°):
+                          </label>
+                          <input
+                            type="range"
+                            min="-25"
+                            max="25"
+                            value={statusStampRotation}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setStatusStampRotation(val);
+                              setStatusStampPos((prev) => ({ ...prev, rotation: val }));
+                            }}
+                            className="w-full accent-indigo-600 mt-1"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] bg-emerald-50/70 dark:bg-emerald-950/40 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50">
+                          <span className="text-emerald-800 dark:text-emerald-300 font-mono text-[10px]">
+                            Posisi Stempel: X={statusStampPos.x}px, Y={statusStampPos.y}px
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedElementId('status-stamp');
+                              setMobileTab('preview');
+                            }}
+                            className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <Move className="w-3 h-3" />
+                            <span>Seret di Canvas</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -1884,19 +2108,33 @@ export default function InvoiceGeneratorPage() {
 
                     <div className="border-t border-dashed border-slate-400 my-2" />
 
-                    {/* Stempel Mini di Struk Thermal */}
-                    {enableStamp && (
-                      <div className="flex justify-center my-2">
-                        <div
-                          style={{
-                            color: stampColorMap[stampColor].hex,
-                            borderColor: stampColorMap[stampColor].hex,
-                            transform: `rotate(${stampRotation}deg)`,
-                          }}
-                          className="border-2 border-dashed px-3 py-1 text-center font-black text-xs tracking-widest uppercase rounded"
-                        >
-                          *** {stampStatusText} ***
-                        </div>
+                    {/* Stempel di Struk Thermal */}
+                    {(enableStatusStamp || enableCompanyStamp) && (
+                      <div className="space-y-1.5 my-2 flex flex-col items-center">
+                        {enableStatusStamp && (
+                          <div
+                            style={{
+                              color: stampColorMap[statusStampColor].hex,
+                              borderColor: stampColorMap[statusStampColor].hex,
+                              transform: `rotate(${statusStampRotation}deg)`,
+                            }}
+                            className="border-2 border-dashed px-3 py-1 text-center font-black text-xs tracking-widest uppercase rounded"
+                          >
+                            *** {statusStampText} ***
+                          </div>
+                        )}
+                        {enableCompanyStamp && (
+                          <div
+                            style={{
+                              color: stampColorMap[companyStampColor].hex,
+                              borderColor: stampColorMap[companyStampColor].hex,
+                              transform: `rotate(${companyStampRotation}deg)`,
+                            }}
+                            className="border border-double px-2 py-0.5 text-center font-bold text-[9px] tracking-wider uppercase rounded opacity-90"
+                          >
+                            CAP RESMI: {companyStampText}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1966,17 +2204,31 @@ export default function InvoiceGeneratorPage() {
 
                     {/* Kotak Nominal Jumlah & Tanda Tangan */}
                     <div className="pt-6 flex items-end justify-between">
-                      {/* Box Jumlah Rupiah Tebal */}
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
-                          Terbilang Nominal:
-                        </span>
-                        <div
-                          style={{ borderColor: themeColor }}
-                          className="border-2 rounded-xl py-3 px-5 bg-slate-50 font-black text-xl tracking-tight text-slate-900 inline-block shadow-xs"
-                        >
-                          {formatRupiah(grandTotal)},-
+                      {/* Box Jumlah Rupiah Tebal & Stempel Status */}
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                            Terbilang Nominal:
+                          </span>
+                          <div
+                            style={{ borderColor: themeColor }}
+                            className="border-2 rounded-xl py-3 px-5 bg-slate-50 font-black text-xl tracking-tight text-slate-900 inline-block shadow-xs"
+                          >
+                            {formatRupiah(grandTotal)},-
+                          </div>
                         </div>
+
+                        {!isFreeLayout && enableStatusStamp && (
+                          <div
+                            style={{
+                              color: stampColorMap[statusStampColor].hex,
+                              transform: `rotate(${statusStampRotation}deg)`,
+                            }}
+                            className="opacity-90 select-none pointer-events-none"
+                          >
+                            {renderStatusStampSvg(110, 55)}
+                          </div>
+                        )}
                       </div>
 
                       {/* Area Tanda Tangan & Cap Stempel */}
@@ -1997,15 +2249,15 @@ export default function InvoiceGeneratorPage() {
                                 <div className="h-16 w-36 border-b border-dashed border-slate-300" />
                               )}
 
-                              {enableStamp && (
+                              {enableCompanyStamp && (
                                 <div
                                   style={{
-                                    color: stampColorMap[stampColor].hex,
-                                    transform: `rotate(${stampRotation}deg)`,
+                                    color: stampColorMap[companyStampColor].hex,
+                                    transform: `rotate(${companyStampRotation}deg)`,
                                   }}
                                   className="absolute z-20 pointer-events-none opacity-85 select-none"
                                 >
-                                  {renderStampSvg(110, stampShape === 'circle' ? 110 : 60)}
+                                  {renderCompanyStampSvg(110, companyStampShape === 'circle' ? 110 : 60)}
                                 </div>
                               )}
                             </>
@@ -2127,7 +2379,7 @@ export default function InvoiceGeneratorPage() {
 
                     {/* Ringkasan Subtotal, PPN, dan Terbilang */}
                     <div className="pt-2 flex flex-col sm:flex-row justify-between gap-6 items-start">
-                      {/* Terbilang & Catatan */}
+                      {/* Terbilang & Catatan & Stempel Status (Static Layout) */}
                       <div className="flex-1 space-y-2">
                         <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                           <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">
@@ -2140,6 +2392,19 @@ export default function InvoiceGeneratorPage() {
                         {paymentTerms && (
                           <div className="text-[11px] text-slate-500 leading-relaxed">
                             <strong>Ketentuan:</strong> {paymentTerms}
+                          </div>
+                        )}
+                        {!isFreeLayout && enableStatusStamp && (
+                          <div className="pt-2">
+                            <div
+                              style={{
+                                color: stampColorMap[statusStampColor].hex,
+                                transform: `rotate(${statusStampRotation}deg)`,
+                              }}
+                              className="opacity-90 select-none pointer-events-none inline-block"
+                            >
+                              {renderStatusStampSvg(130, 65)}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -2204,15 +2469,15 @@ export default function InvoiceGeneratorPage() {
                                 <div className="h-16 w-36 border-b border-dashed border-slate-300" />
                               )}
 
-                              {enableStamp && (
+                              {enableCompanyStamp && (
                                 <div
                                   style={{
-                                    color: stampColorMap[stampColor].hex,
-                                    transform: `rotate(${stampRotation}deg)`,
+                                    color: stampColorMap[companyStampColor].hex,
+                                    transform: `rotate(${companyStampRotation}deg)`,
                                   }}
                                   className="absolute z-20 pointer-events-none opacity-85 select-none"
                                 >
-                                  {renderStampSvg(115, stampShape === 'circle' ? 115 : 65)}
+                                  {renderCompanyStampSvg(115, companyStampShape === 'circle' ? 115 : 65)}
                                 </div>
                               )}
                             </>
@@ -2289,31 +2554,63 @@ export default function InvoiceGeneratorPage() {
                       </DraggableCanvasElement>
                     )}
 
-                    {/* 3. Cap Stempel Digital */}
-                    {enableStamp && (
+                    {/* 3. Cap Stempel Resmi Perusahaan / Toko */}
+                    {enableCompanyStamp && (
                       <DraggableCanvasElement
-                        id="stamp"
-                        title="Cap Stempel"
-                        position={{ ...stampPos, rotation: stampRotation }}
+                        id="company-stamp"
+                        title="Cap Resmi Toko"
+                        position={{ ...companyStampPos, rotation: companyStampRotation }}
                         minWidth={60}
                         maxWidth={240}
-                        aspectRatio={stampShape === 'circle' ? 1 : 170 / 90}
-                        isSelected={selectedElementId === 'stamp'}
+                        aspectRatio={companyStampShape === 'circle' ? 1 : 170 / 90}
+                        isSelected={selectedElementId === 'company-stamp'}
                         containerRef={previewRef}
                         onSelect={(id) => setSelectedElementId(id)}
                         onChange={(newPos) => {
-                          setStampPos(newPos);
-                          if (newPos.rotation !== undefined) setStampRotation(newPos.rotation);
+                          setCompanyStampPos(newPos);
+                          if (newPos.rotation !== undefined) setCompanyStampRotation(newPos.rotation);
                         }}
                         onRotate={(rot) => {
-                          setStampRotation(rot);
-                          setStampPos((prev) => ({ ...prev, rotation: rot }));
+                          setCompanyStampRotation(rot);
+                          setCompanyStampPos((prev) => ({ ...prev, rotation: rot }));
                         }}
-                        onDelete={() => setEnableStamp(false)}
+                        onDelete={() => setEnableCompanyStamp(false)}
+                        zIndex={34}
+                      >
+                        <div style={{ color: stampColorMap[companyStampColor].hex }} className="opacity-90 select-none pointer-events-none">
+                          {renderCompanyStampSvg(
+                            companyStampPos.width,
+                            companyStampShape === 'circle' ? companyStampPos.width : (companyStampPos.width * 90) / 170
+                          )}
+                        </div>
+                      </DraggableCanvasElement>
+                    )}
+
+                    {/* 4. Stempel Status Pembayaran (LUNAS, PAID, dll.) */}
+                    {enableStatusStamp && (
+                      <DraggableCanvasElement
+                        id="status-stamp"
+                        title="Stempel Status"
+                        position={{ ...statusStampPos, rotation: statusStampRotation }}
+                        minWidth={70}
+                        maxWidth={260}
+                        aspectRatio={170 / 85}
+                        isSelected={selectedElementId === 'status-stamp'}
+                        containerRef={previewRef}
+                        onSelect={(id) => setSelectedElementId(id)}
+                        onChange={(newPos) => {
+                          setStatusStampPos(newPos);
+                          if (newPos.rotation !== undefined) setStatusStampRotation(newPos.rotation);
+                        }}
+                        onRotate={(rot) => {
+                          setStatusStampRotation(rot);
+                          setStatusStampPos((prev) => ({ ...prev, rotation: rot }));
+                        }}
+                        onDelete={() => setEnableStatusStamp(false)}
                         zIndex={35}
                       >
-                        <div style={{ color: stampColorMap[stampColor].hex }} className="opacity-90 select-none pointer-events-none">
-                          {renderStampSvg(stampPos.width, stampShape === 'circle' ? stampPos.width : (stampPos.width * 90) / 170)}
+                        <div style={{ color: stampColorMap[statusStampColor].hex }} className="opacity-90 select-none pointer-events-none">
+                          {renderStatusStampSvg(statusStampPos.width, (statusStampPos.width * 85) / 170)}
                         </div>
                       </DraggableCanvasElement>
                     )}
