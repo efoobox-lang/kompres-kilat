@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit, sanitizeInput } from '@/lib/security';
+import { calculateDynamicAtsScore } from '@/lib/ats-scoring';
 
 export async function POST(request: Request) {
   try {
@@ -38,42 +39,56 @@ export async function POST(request: Request) {
     if (action === 'ats-review') {
       if (geminiKey) {
         try {
-          const prompt = `Anda adalah Senior HR Recruiter & Spesialis Sistem ATS (Applicant Tracking System) kelas dunia.
-Tinjau dan analisislah draf CV / Resume berikut untuk target posisi: "${cleanJobTarget || 'Umum / Profesional'}".
+          const prompt = `Anda adalah Senior HR Recruiter & Spesialis Penilaian Sistem ATS (Applicant Tracking System) kelas dunia.
+Tinjau dan analisislah draf CV / Resume berikut secara ketat, objektif, dan sensitif terhadap variasi kualitas teks untuk target posisi: "${cleanJobTarget || 'Umum / Profesional'}".
 
 Isi CV Pengguna:
 """
 ${cleanText}
 """
 
-Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) dengan struktur persis seperti ini:
+RUBRIK & PEMBOBOTAN SKOR ATS (0 - 100):
+1. Kesesuaian Kata Kunci & Target Posisi (Bobot 30%): Seberapa relevan keahlian, tools, sertifikasi, dan terminologi industri dalam teks CV dengan target posisi "${cleanJobTarget || 'Umum'}"? Jika CV tidak relevan dengan target posisi, kurangi poin secara signifikan.
+2. Metrik Kuantitatif & Action Verbs (Bobot 25%): Keberadaan data terukur (angka, %, nominal Rp/$, Google XYZ formula: Pencapaian X diukur dengan Y dengan melakukan Z) dan kata kerja aksi aktif (memimpin, meningkatkan, dsb).
+3. Kelengkapan Komponen ATS (Bobot 25%): Keberadaan bagian Kontak, Ringkasan Profesional, Pengalaman Kerja, Pendidikan, dan Keterampilan/Skills.
+4. Keterbacaan Bot & Kerapian Format (Bobot 20%): Kepadatan kata ideal (350-800 kata), format poin-poin yang mudah dipindai parser bot HR, tanpa paragraf padat bertumpuk.
+
+ATURAN WAJIB:
+- Hitung nilai "atsScore" secara DINAMIS dan MATEMATIS antara 0 sampai 100 berdasarkan kualitas nyata teks di atas.
+- DILARANG KERAS memberikan nilai default atau statis (seperti 78 atau 80).
+- Draf yang sangat minim/singkat (< 100 kata) harus bernilai 15 - 40.
+- CV standar tanpa data angka/metrik bernilai 50 - 68.
+- CV yang rapi dan relevan bernilai 72 - 84.
+- CV yang sangat terukur dengan metrik lengkap dan sangat cocok dengan posisi target bernilai 86 - 98.
+
+Kembalikan HANYA format JSON valid tanpa blok markdown (tanpa \`\`\`json) dengan struktur persis seperti ini:
 {
-  "atsScore": 82,
-  "rating": "Sangat Baik (Lolos Skrining Awal)",
-  "summary": "Analisis singkat 2-3 kalimat mengenai keterbacaan bot ATS dan kekuatan profil kandidat.",
+  "atsScore": 75,
+  "rating": "Baik (Memenuhi Standar ATS Mayoritas)",
+  "summary": "Analisis singkat 2-3 kalimat mengenai keterbacaan bot ATS dan kecocokan profil kandidat dengan posisi target.",
   "strengths": [
-    "Kekuatan profil 1",
-    "Kekuatan profil 2",
-    "Kekuatan profil 3"
+    "Kekuatan nyata dari profil 1",
+    "Kekuatan nyata dari profil 2",
+    "Kekuatan nyata dari profil 3"
   ],
   "improvements": [
-    "Kelemahan atau format yang perlu diperbaiki 1",
-    "Kelemahan atau format yang perlu diperbaiki 2",
-    "Kelemahan atau format yang perlu diperbaiki 3"
+    "Kelemahan atau area perbaikan spesifik 1",
+    "Kelemahan atau area perbaikan spesifik 2",
+    "Kelemahan atau area perbaikan spesifik 3"
   ],
   "missingKeywords": [
-    "Keyword 1",
-    "Keyword 2",
-    "Keyword 3",
-    "Keyword 4"
+    "Kata kunci 1",
+    "Kata kunci 2",
+    "Kata kunci 3",
+    "Kata kunci 4"
   ],
   "revisedExperiencePoints": [
     "Contoh perbaikan poin pengalaman dengan Action Verb dan metrik terukur (% / Rp / jumlah)",
-    "Contoh perbaikan poin pengalaman kedua dengan standar Google XYZ formula"
+    "Contoh perbaikan poin pengalaman kedua dengan formula dampak bisnis"
   ]
 }`;
 
-          const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+          const models = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
           for (const model of models) {
             try {
               const res = await fetch(
@@ -85,6 +100,7 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: { responseMimeType: 'application/json' },
                   }),
+                  signal: AbortSignal.timeout(10000), // Timeout 10 detik agar tidak menggantung
                 }
               );
 
@@ -92,12 +108,26 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
                 const data = await res.json();
                 const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (rawJson) {
-                  const parsed = JSON.parse(rawJson);
-                  return NextResponse.json({ success: true, data: parsed, action: 'ats-review' });
+                  let cleanJson = String(rawJson).trim();
+                  // Bersihkan kemungkinan pembungkus markdown codeblock
+                  cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+                  const firstBrace = cleanJson.indexOf('{');
+                  const lastBrace = cleanJson.lastIndexOf('}');
+                  if (firstBrace !== -1 && lastBrace !== -1) {
+                    cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+                  }
+
+                  const parsed = JSON.parse(cleanJson);
+                  if (typeof parsed === 'object' && parsed !== null) {
+                    const parsedScore = parseInt(String(parsed.atsScore), 10);
+                    // Pastikan skor bernilai angka valid antara 0 dan 100
+                    parsed.atsScore = isNaN(parsedScore) ? 72 : Math.max(0, Math.min(100, parsedScore));
+                    return NextResponse.json({ success: true, data: parsed, action: 'ats-review' });
+                  }
                 }
               }
             } catch {
-              // Lanjut ke model berikutnya jika ada kendala
+              // Lanjut ke model berikutnya jika model ini bermasalah atau timeout
             }
           }
         } catch (err) {
@@ -105,30 +135,9 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
         }
       }
 
-      // Smart Engine Fallback jika API key tidak tersedia
-      const fallbackAts = {
-        atsScore: 78,
-        rating: 'Cukup Baik (Perlu Optimalisasi Kata Kunci)',
-        summary:
-          'Struktur CV Anda memiliki alur pengalaman yang jelas, namun penulisan deskripsi pekerjaan masih banyak berfokus pada tugas harian dan belum menonjolkan metrik pencapaian kuantitatif.',
-        strengths: [
-          'Penggunaan format kronologis terbalik yang mudah dibaca oleh parser mesin ATS.',
-          'Informasi kontak dan riwayat pendidikan tercantum dengan urutan yang tepat.',
-          'Riwayat karier menunjukkan perkembangan keahlian yang konsisten.',
-        ],
-        improvements: [
-          'Gunakan rumus aksi Google (Action Verb + Konteks + Metrik Dampak Terukur).',
-          'Hindari format tabel bersarang atau grafik kompleks yang menyulitkan mesin scanner BUMN / JobStreet.',
-          'Tambahkan ringkasan profesional (Professional Summary) di bagian atas sepanjang 3 baris.',
-        ],
-        missingKeywords: ['Leadership', 'Problem Solving', 'Project Management', 'Data Analysis', 'Cross-functional'],
-        revisedExperiencePoints: [
-          'Memimpin optimalisasi alur kerja tim hingga mempercepat penyelesaian proyek sebesar 25% dalam 3 bulan.',
-          'Mengelola koordinasi lintas divisi dan memangkas waktu pelaporan administratif sebesar 40%.',
-        ],
-      };
-
-      return NextResponse.json({ success: true, data: fallbackAts, action: 'ats-review' });
+      // Fallback Cerdas Dinamis: Dihitung secara matematis dari teks CV aktual (Bukan skor statis/hardcoded 78!)
+      const dynamicEvaluation = calculateDynamicAtsScore(cleanText, cleanJobTarget);
+      return NextResponse.json({ success: true, data: dynamicEvaluation, action: 'ats-review' });
     }
 
     // ==========================================
@@ -162,7 +171,7 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
   ]
 }`;
 
-          const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+          const models = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
           for (const model of models) {
             try {
               const res = await fetch(
@@ -174,6 +183,7 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: { responseMimeType: 'application/json' },
                   }),
+                  signal: AbortSignal.timeout(10000),
                 }
               );
 
@@ -181,7 +191,14 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (tanpa \`\`\`json) denga
                 const data = await res.json();
                 const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (rawJson) {
-                  const parsed = JSON.parse(rawJson);
+                  let cleanJson = String(rawJson).trim();
+                  cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+                  const firstBrace = cleanJson.indexOf('{');
+                  const lastBrace = cleanJson.lastIndexOf('}');
+                  if (firstBrace !== -1 && lastBrace !== -1) {
+                    cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+                  }
+                  const parsed = JSON.parse(cleanJson);
                   return NextResponse.json({ success: true, data: parsed, action: 'summarize' });
                 }
               }

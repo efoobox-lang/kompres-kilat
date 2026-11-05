@@ -58,7 +58,6 @@ const DEFAULT_CONFIG: NumberingConfig = {
 
 export default function PageNumberPdfPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [previewPageIndex, setPreviewPageIndex] = useState<number>(1);
   const [config, setConfig] = useState<NumberingConfig>(DEFAULT_CONFIG);
@@ -176,10 +175,6 @@ export default function PageNumberPdfPage() {
 
     try {
       const arrayBuffer = await selectedFile.arrayBuffer();
-      // Simpan salinan buffer murni untuk pdf-lib
-      const bytes = new Uint8Array(arrayBuffer);
-      setPdfBytes(bytes);
-
       // Kloning buffer khusus untuk PDF.js worker agar buffer utama tidak neutered / detached
       const pdfjsData = new Uint8Array(arrayBuffer.slice(0));
 
@@ -200,7 +195,6 @@ export default function PageNumberPdfPage() {
       const msg = err instanceof Error ? err.message : 'Gagal membuka dokumen PDF.';
       setErrorMessage(msg.includes('password') ? 'Berkas PDF diproteksi password. Harap buka kunci terlebih dahulu.' : 'Gagal memproses berkas PDF.');
       setFile(null);
-      setPdfBytes(null);
     } finally {
       setIsLoading(false);
     }
@@ -354,7 +348,6 @@ export default function PageNumberPdfPage() {
 
   const handleReset = () => {
     setFile(null);
-    setPdfBytes(null);
     setTotalPages(0);
     pdfJsDocRef.current = null;
     setConfig(DEFAULT_CONFIG);
