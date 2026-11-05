@@ -30,6 +30,7 @@ import DraggableCanvasElement, { ElementPosition } from '@/components/DraggableC
 
 export type DocumentType = 'invoice' | 'nota' | 'kwitansi';
 export type PaperSize = 'a4' | 'a5' | 'thermal80' | 'thermal58';
+export type PaperOrientation = 'portrait' | 'landscape';
 export type LogoPosition = 'left' | 'center' | 'right';
 export type StampShape = 'circle' | 'rectangle';
 export type StampColor = 'blue' | 'red' | 'purple' | 'green';
@@ -77,6 +78,7 @@ export default function InvoiceGeneratorPage() {
   // Pilihan Dokumen & Kertas
   const [docType, setDocType] = useState<DocumentType>('invoice');
   const [paperSize, setPaperSize] = useState<PaperSize>('a4');
+  const [orientation, setOrientation] = useState<PaperOrientation>('portrait');
   const [themeColor, setThemeColor] = useState<string>('#4f46e5'); // Indigo default
 
   // Info Perusahaan / Toko
@@ -139,7 +141,7 @@ export default function InvoiceGeneratorPage() {
   const [receiptCity, setReceiptCity] = useState<string>('Jakarta');
 
   // Tanda Tangan
-  const [signerName, setSignerName] = useState<string>('Agung Riyanto, S.Kom.');
+  const [signerName, setSignerName] = useState<string>('Budi Pengerti, S.Hum.');
   const [signerTitle, setSignerTitle] = useState<string>('Finance & Accounting Manager');
   const [signatureMode, setSignatureMode] = useState<'draw' | 'upload' | 'text'>('draw');
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
@@ -184,11 +186,19 @@ export default function InvoiceGeneratorPage() {
     rotation: -12,
   });
 
-  const resetElementPositions = useCallback((paper: PaperSize) => {
+  const resetElementPositions = useCallback((paper: PaperSize, orient?: PaperOrientation) => {
+    const curOrient = orient || orientation;
+
     if (paper === 'a5') {
-      setLogoPos({ x: 32, y: 32, width: 75 });
-      setSignaturePos({ x: 360, y: 640, width: 140 });
-      setStampPos({ x: 385, y: 610, width: 100, rotation: -12 });
+      if (curOrient === 'landscape') {
+        setLogoPos({ x: 36, y: 32, width: 85 });
+        setSignaturePos({ x: 570, y: 380, width: 140 });
+        setStampPos({ x: 600, y: 350, width: 100, rotation: -12 });
+      } else {
+        setLogoPos({ x: 32, y: 32, width: 75 });
+        setSignaturePos({ x: 360, y: 640, width: 140 });
+        setStampPos({ x: 385, y: 610, width: 100, rotation: -12 });
+      }
     } else if (paper === 'thermal80') {
       setLogoPos({ x: 106, y: 16, width: 90 });
       setSignaturePos({ x: 76, y: 560, width: 150 });
@@ -199,11 +209,17 @@ export default function InvoiceGeneratorPage() {
       setStampPos({ x: 60, y: 490, width: 85, rotation: -12 });
     } else {
       // Default A4
-      setLogoPos({ x: 48, y: 48, width: 90 });
-      setSignaturePos({ x: 520, y: 920, width: 160 });
-      setStampPos({ x: 550, y: 880, width: 115, rotation: -12 });
+      if (curOrient === 'landscape') {
+        setLogoPos({ x: 48, y: 48, width: 100 });
+        setSignaturePos({ x: 860, y: 590, width: 160 });
+        setStampPos({ x: 890, y: 560, width: 115, rotation: -12 });
+      } else {
+        setLogoPos({ x: 48, y: 48, width: 90 });
+        setSignaturePos({ x: 520, y: 920, width: 160 });
+        setStampPos({ x: 550, y: 880, width: 115, rotation: -12 });
+      }
     }
-  }, []);
+  }, [orientation]);
 
   // Refs
   const previewRef = useRef<HTMLDivElement>(null);
@@ -349,19 +365,22 @@ export default function InvoiceGeneratorPage() {
     setDocType(type);
     if (type === 'invoice') {
       setPaperSize('a4');
-      resetElementPositions('a4');
+      setOrientation('portrait');
+      resetElementPositions('a4', 'portrait');
       setDocNumber(`INV-2026/XI/${Math.floor(1000 + Math.random() * 9000)}`);
       setStampStatusText('LUNAS');
       setStampColor('blue');
     } else if (type === 'nota') {
       setPaperSize('a5');
-      resetElementPositions('a5');
+      setOrientation('portrait');
+      resetElementPositions('a5', 'portrait');
       setDocNumber(`NOTA-${Math.floor(100 + Math.random() * 900)}`);
       setStampStatusText('LUNAS');
       setStampColor('red');
     } else if (type === 'kwitansi') {
       setPaperSize('a5');
-      resetElementPositions('a5');
+      setOrientation('landscape');
+      resetElementPositions('a5', 'landscape');
       setDocNumber(`KWT-2026/${Math.floor(10 + Math.random() * 90)}`);
       setStampStatusText('DITERIMA');
       setStampColor('green');
@@ -398,23 +417,42 @@ export default function InvoiceGeneratorPage() {
 
       let pdfWidth = 210;
       let pdfHeight = 297;
-      const orientation: 'p' | 'l' = 'p';
+      let pdfOrient: 'p' | 'l' = orientation === 'landscape' ? 'l' : 'p';
 
-      if (paperSize === 'a5') {
-        pdfWidth = 148;
-        pdfHeight = 210;
+      if (paperSize === 'a4') {
+        if (orientation === 'landscape') {
+          pdfWidth = 297;
+          pdfHeight = 210;
+          pdfOrient = 'l';
+        } else {
+          pdfWidth = 210;
+          pdfHeight = 297;
+          pdfOrient = 'p';
+        }
+      } else if (paperSize === 'a5') {
+        if (orientation === 'landscape') {
+          pdfWidth = 210;
+          pdfHeight = 148;
+          pdfOrient = 'l';
+        } else {
+          pdfWidth = 148;
+          pdfHeight = 210;
+          pdfOrient = 'p';
+        }
       } else if (paperSize === 'thermal80') {
         pdfWidth = 80;
         pdfHeight = Math.max(120, (canvas.height * 80) / canvas.width);
+        pdfOrient = 'p';
       } else if (paperSize === 'thermal58') {
         pdfWidth = 58;
         pdfHeight = Math.max(100, (canvas.height * 58) / canvas.width);
+        pdfOrient = 'p';
       }
 
       const pdf = new jsPDF({
-        orientation,
+        orientation: pdfOrient,
         unit: 'mm',
-        format: paperSize.startsWith('thermal') ? [pdfWidth, pdfHeight] : paperSize,
+        format: [pdfWidth, pdfHeight],
       });
 
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
@@ -714,6 +752,57 @@ export default function InvoiceGeneratorPage() {
                     ))}
                   </div>
                 </div>
+
+                {!paperSize.startsWith('thermal') && (
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Orientasi Kertas:
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrientation('portrait');
+                          resetElementPositions(paperSize, 'portrait');
+                        }}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex items-center justify-center gap-2.5 ${
+                          orientation === 'portrait'
+                            ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-sm'
+                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <span className="text-lg">📄</span>
+                        <div className="text-left">
+                          <p className="text-xs font-bold leading-tight">Portrait</p>
+                          <p className={`text-[10px] ${orientation === 'portrait' ? 'text-indigo-100' : 'text-slate-400'}`}>
+                            Tegak Vertikal
+                          </p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrientation('landscape');
+                          resetElementPositions(paperSize, 'landscape');
+                        }}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex items-center justify-center gap-2.5 ${
+                          orientation === 'landscape'
+                            ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-sm'
+                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <span className="text-lg">📃</span>
+                        <div className="text-left">
+                          <p className="text-xs font-bold leading-tight">Landscape</p>
+                          <p className={`text-[10px] ${orientation === 'landscape' ? 'text-indigo-100' : 'text-slate-400'}`}>
+                            Melebar Horizontal
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -1538,7 +1627,7 @@ export default function InvoiceGeneratorPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Pratinjau {docType.toUpperCase()} ({paperSize.toUpperCase()})
+                  Pratinjau {docType.toUpperCase()} ({paperSize.toUpperCase()}{!paperSize.startsWith('thermal') ? ` - ${orientation.toUpperCase()}` : ''})
                 </span>
 
                 {/* Switch Mode Tata Letak */}
@@ -1628,6 +1717,20 @@ export default function InvoiceGeneratorPage() {
               </div>
             )}
 
+            {/* Dynamic Print CSS for Orientation */}
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+                  @media print {
+                    @page {
+                      size: ${paperSize.startsWith('thermal') ? 'auto' : `${paperSize} ${orientation}`};
+                      margin: 0;
+                    }
+                  }
+                `,
+              }}
+            />
+
             {/* Container Lembar Kertas Preview */}
             <div className="w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex justify-center shadow-inner">
               <div
@@ -1637,8 +1740,28 @@ export default function InvoiceGeneratorPage() {
                   setSelectedElementId(null);
                 }}
                 style={{
-                  width: paperSize === 'a4' ? '794px' : paperSize === 'a5' ? '560px' : paperSize === 'thermal80' ? '302px' : '220px',
-                  minHeight: paperSize === 'a4' ? '1123px' : paperSize === 'a5' ? '794px' : 'auto',
+                  width:
+                    paperSize === 'a4'
+                      ? orientation === 'landscape'
+                        ? '1123px'
+                        : '794px'
+                      : paperSize === 'a5'
+                      ? orientation === 'landscape'
+                        ? '794px'
+                        : '560px'
+                      : paperSize === 'thermal80'
+                      ? '302px'
+                      : '220px',
+                  minHeight:
+                    paperSize === 'a4'
+                      ? orientation === 'landscape'
+                        ? '794px'
+                        : '1123px'
+                      : paperSize === 'a5'
+                      ? orientation === 'landscape'
+                        ? '560px'
+                        : '794px'
+                      : 'auto',
                 }}
                 className={`bg-white text-slate-900 shadow-2xl transition-all duration-150 box-border relative ${
                   paperSize.startsWith('thermal') ? 'p-4 font-mono text-[11px]' : 'p-8 sm:p-12 font-sans text-xs'
