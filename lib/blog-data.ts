@@ -31,6 +31,146 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'cara-membuat-invoice-nota-kwitansi-resmi-online-gratis-cetak-thermal',
+    title: 'Cara Membuat Invoice, Nota Toko, dan Kwitansi Resmi Online Gratis (Lengkap Stempel Digital, Tanda Tangan & Cetak Thermal)',
+    excerpt: 'Panduan lengkap cara membuat faktur tagihan invoice profesional, nota penjualan toko, dan kwitansi pembayaran resmi instan tanpa login. Dilengkapi fitur logo bebas seret (drag & drop), tanda tangan digital, cap stempel resmi LUNAS, serta pilihan cetak A4, A5, dan struk thermal kasir 58mm/80mm (Portrait & Landscape).',
+    category: 'Bisnis & UMKM',
+    date: '5 November 2026',
+    readTime: '7 menit',
+    author: 'Tim KompresKilat',
+    relatedTool: {
+      title: 'Pembuat Invoice, Nota & Kwitansi Instan',
+      description: 'Buat tagihan invoice profesional, nota kasir toko, dan kwitansi resmi instan dengan logo bebas geser, tanda tangan interaktif, stempel dinas digital LUNAS, serta unduh PDF ukuran A4, A5, dan struk thermal (Portrait/Landscape).',
+      url: '/tools/invoice-generator',
+      icon: '🧾',
+      buttonText: 'Buat Dokumen Sekarang',
+    },
+    content: `
+### Pentingnya Dokumen Transaksi Profesional bagi Bisnis & UMKM
+Dalam ekosistem bisnis modern—mulai dari toko retail kelontong, kedai kopi (F&B), online shop, freelancer kreatif, hingga perseroan terbatas (PT) dan CV—dokumen transaksi resmi merupakan fondasi utama pencatatan akuntansi dan kredibilitas di mata pelanggan. Dokumen transaksi yang tertata rapi tidak hanya mencegah sengketa pembayaran, namun juga mempermudah pelaporan pajak berkala serta memberi citra profesional bagi usaha Anda.
+
+Namun di lapangan, masih banyak pelaku usaha yang mencatat transaksi menggunakan buku nota manual tulisan tangan yang rentan hilang, robek, atau sukar dibaca. Sebagian lainnya memakai template spreadsheet yang kaku dan rumit ketika harus dicetak ke printer struk thermal atau diubah menjadi PDF resmi berstempel.
+
+Untuk menjembatani kebutuhan tersebut, KompresKilat menghadirkan generator dokumen transaksi instan: **[Pembuat Invoice, Nota & Kwitansi Instan](/tools/invoice-generator)**. Alat ini memungkinkan siapa saja menerbitkan faktur tagihan, nota belanja kasir, dan kwitansi tanda terima berstandar hukum secara gratis, 100% langsung di browser tanpa perlu mendaftar akun atau menginstal software tambahan.
+
+---
+
+### Perbedaan Mendasar: Kapan Menggunakan Invoice, Nota, dan Kwitansi?
+Sebelum menerbitkan dokumen, sangat penting untuk memahami fungsi dan momentum penggunaan dari ketiga jenis dokumen bisnis ini:
+
+| Karakteristik | Invoice (Faktur Tagihan) | Nota Penjualan Toko | Kwitansi Pembayaran Resmi |
+| :--- | :--- | :--- | :--- |
+| **Fungsi Utama** | Permintaan penagihan pembayaran atas barang/jasa yang diserahkan. | Bukti rincian pembelian barang secara langsung/tunai di kasir. | Tanda bukti sah bahwa sejumlah uang telah diterima oleh penerima. |
+| **Waktu Penerbitan** | Diterbitkan sebelum atau saat pembayaran jatuh tempo (termin/tempo). | Diterbitkan seketika saat transaksi jual beli fisik berlangsung. | Diterbitkan sesaat setelah dana tunai atau transfer efektif diterima. |
+| **Pihak yang Menggunakan** | B2B, konsultan, agensi, vendor proyek, dan e-commerce. | Toko retail, minimarket, restoran, bengkel, butik busana. | Pembayaran sewa properti, les privat, pelunasan utang, transaksi resmi. |
+| **Unsur Wajib Dokumen** | No. Invoice, termin pembayaran (Due Date), rincian jasa, bank transfer. | No. Transaksi, daftar item belanja, subtotal, uang tunai, dan kembalian. | Kalimat "Telah terima dari", "Uang sejumlah", terbilang, dan tanda tangan bermaterai/stempel. |
+
+---
+
+### Anatomi & Elemen Wajib Dokumen Transaksi Sah di Indonesia
+Agar dokumen transaksi diakui secara sah dalam pembukuan maupun keperluan audit internal, pastikan elemen-elemen berikut tercantum secara jelas:
+
+1. **Identitas Usaha (Kop Dokumen)**: Nama merek/toko, logo perusahaan, alamat fisik, nomor WhatsApp/telepon, dan alamat email aktif.
+2. **Nomor Seri Dokumen Unik**: Penomoran faktur yang urut dan sistematis (contoh: \`INV/2026/XI/001\`, \`NOTA-8821\`, atau \`KWT/004\`) guna mempermudah rekonsiliasi kas bank.
+3. **Tanggal Transaksi & Tanggal Jatuh Tempo**: Menetapkan batas waktu pelunasan (*due date*) agar tidak terjadi keterlambatan pembayaran (*overdue*).
+4. **Identitas Pelanggan/Klien**: Nama orang pribadi atau nama instansi/perusahaan tujuan.
+5. **Rincian Barang atau Jasa**: Deskripsi item pekerjaan, kuantitas (Qty), harga satuan (*unit price*), serta total per baris.
+6. **Kalkulasi Akurat**: Subtotal bersih, pemotongan diskon promosi, dan persentase pajak (seperti PPN 11% atau 12%).
+7. **Instruksi Pembayaran**: Nomor rekening bank resmi, nama pemilik rekening, atau instruksi pembayaran tunai (*Cash*).
+8. **Pengesahan Digital**: Tanda tangan penanggung jawab berwenang serta stempel basah atau stempel dinas digital yang menyatakan status pembayaran (seperti stempel **LUNAS** atau **DITERIMA**).
+
+---
+
+### Keunggulan Fitur Pembuat Dokumen KompresKilat
+Aplikasi web ini dirancang dengan teknologi grafis modern untuk memberikan pengalaman seperti software desktop premium:
+
+#### 1. Free-Form Drag & Drop Element (Logo, Tanda Tangan, & Cap Stempel)
+Anda tidak lagi terkekang oleh tata letak template yang kaku. Logo toko, goresan tanda tangan, dan cap stempel dapat digeser secara bebas ke koordinat manapun di atas kanvas lembar kerja pratinjau. Anda bahkan dapat memperbesar, memperkecil (*scaling*), dan memutar posisi cap stempel persis seperti membubuhkan stempel manual di atas kertas nyata.
+
+#### 2. Generator Cap Stempel Digital Resmi Bawaan
+Tidak punya cap fisik atau scanner? Fitur ini menyediakan generator stempel otomatis:
+- **Pilihan Bentuk**: Bulat dinas instansi (lingkaran konsentris) atau kotak toko modern dengan garis ganda.
+- **Warna Tinta Otentik**: Biru dinas kepemerintahan, merah lunas, ungu tua, dan hijau zamrud.
+- **Status Stempel Fleksibel**: LUNAS, DITERIMA, DIBAYAR, VALID, APPROVED, atau DRAFT.
+- **Efek Kemiringan Natural**: Dilengkapi slider rotasi kemiringan sudut stempel (-12° hingga +15°) untuk menciptakan kesan stempel tangan asli.
+
+#### 3. Tanda Tangan Digital Dua Mode
+Anda dapat membubuhkan tanda tangan langsung menggunakan kursor mouse atau sentuhan jari di layar HP/tablet pada kanvas interaktif beresolusi tajam, atau mengunggah gambar tanda tangan transparan (PNG).
+
+#### 4. Dukungan Kertas Lengkap: A4, A5, dan Struk Thermal Kasir (Portrait & Landscape)
+- **Ukuran Standar Kantor**: A4 (210 x 297 mm) dan A5 (148 x 210 mm) untuk pengiriman dokumen formal via email atau WhatsApp dokumen.
+- **Ukuran Struk Kasir Thermal**: Format pita 58mm dan 80mm yang kompatibel dengan printer kasir POS thermal Bluetooth/USB mini.
+- **Orientasi Ganda**: Pilih orientasi **Portrait** (vertikal/tegak) untuk faktur standar, atau **Landscape** (horizontal/mendatar) untuk tabel rincian item transaksi yang banyak dan lebar.
+
+---
+
+### Panduan Langkah Demi Langkah: Cara Membuat Dokumen Transaksi Profesional
+
+#### Langkah 1: Pilih Jenis Template Dokumen & Ukuran Kertas
+Buka perkakas **[Pembuat Invoice, Nota & Kwitansi Instan](/tools/invoice-generator)**. Pada tab pertama (**Format**), tentukan:
+- Jenis Dokumen: *Invoice*, *Nota Toko*, atau *Kwitansi*.
+- Ukuran Kertas: *A4*, *A5*, *Thermal 58mm*, atau *Thermal 80mm*.
+- Orientasi Dokumen: *Portrait (Tegak)* atau *Landscape (Mendatar)*.
+- Mata Uang & Format Angka: Standar Rupiah (Rp) atau mata uang asing lainnya.
+
+#### Langkah 2: Lengkapi Profil Usaha & Identitas Klien
+Beralih ke tab **Profil**, isi data bisnis Anda (nama toko, alamat, kontak WhatsApp). Anda juga dapat langsung mengunggah logo usaha berformat PNG atau JPG. Logo akan seketika muncul di area kanvas pratinjau dan dapat Anda geser ke sudut manapun yang paling ideal.
+
+#### Langkah 3: Masukkan Daftar Transaksi & Rincian Item
+Pada tab **Rincian**, masukkan nomor referensi dokumen dan tanggal penerbitan. Tambahkan baris item barang atau jasa:
+- Masukkan nama deskripsi barang, jumlah unit, dan nominal harga satuan.
+- Sistem otomatis menghitung total harga per baris serta total keseluruhan secara *real-time*.
+- Masukkan persentase diskon (jika ada potongan harga) dan tarif pajak PPN.
+
+#### Langkah 4: Bubuhkan Tanda Tangan & Cap Stempel Digital
+Buka tab **Stempel**:
+- Aktifkan fitur *Tanda Tangan Digital*: goreskan paraf Anda di kanvas atau unggah file paraf transparan, lalu masukkan nama penandatangan (contoh: *Budi Pengerti, S.Hum.*) beserta nama jabatannya.
+- Aktifkan *Cap Stempel Digital Resmi*: pilih bentuk stempel bulat atau kotak, atur teks nama perusahaan dan teks status (*LUNAS* / *DITERIMA*), lalu pilih warna tinta stempel favorit.
+- Di area pratinjau lembar kertas sebelah kanan, klik dan geser elemen stempel agar menimpa sebagian tanda tangan untuk menciptakan kesan dokumen dinas yang sah.
+
+#### Langkah 5: Ekspor ke PDF Berkualitas Tinggi atau Cetak Langsung
+Setelah pratinjau terlihat sempurna:
+- Klik tombol **Unduh PDF Resmi** untuk menghasilkan file PDF vektor berkualitas tinggi yang siap dikirim ke klien melalui email atau WhatsApp.
+- Atau klik tombol **Cetak Dokumen** untuk mencetak langsung ke printer inkjet/laser kantor maupun printer thermal kasir toko Anda.
+
+---
+
+### Jaminan Keamanan Privasi Finansial 100% Client-Side
+Keamanan dan kerahasiaan data keuangan usaha Anda adalah prioritas mutlak. Seluruh proses pembuatan dokumen—mulai dari input nama klien, kalkulasi nominal uang, nomor rekening bank, unggahan logo, hingga goresan tanda tangan digital—diproses secara lokal di dalam peramban (browser) perangkat Anda (*client-side execution*).
+
+Tidak ada data transaksi atau dokumen yang disimpan ke server KompresKilat. Ketika tab peramban ditutup, seluruh informasi sensitif Anda tetap berada di perangkat Anda sendiri secara aman.
+
+---
+
+### Pertanyaan yang Sering Diajukan (FAQ)
+
+**1. Apakah kwitansi atau invoice buatan online ini sah di mata hukum Indonesia?**  
+Ya, dokumen transaksi elektronik diakui secara sah di Indonesia berdasarkan Undang-Undang Informasi dan Transaksi Elektronik (UU ITE). Untuk transaksi dengan nilai tertentu yang memerlukan kekuatan pembuktian hukum perdata khusus di pengadilan, Anda dapat menambahkan bea meterai (e-Meterai) pada dokumen yang telah diekspor ke PDF.
+
+**2. Apakah saya bisa menggunakan logo toko berlatar belakang transparan?**  
+Sangat disarankan menggunakan logo berformat PNG dengan latar belakang transparan (*transparent background*). Logo akan menyatu secara mulus di atas lembar kerja dan dapat digeser ke posisi mana saja tanpa meninggalkan kotak putih yang mengganggu estetika dokumen.
+
+**3. Bagaimana cara mencetak nota pada printer thermal kasir mini?**  
+Pilih opsi ukuran kertas **Thermal 58mm** atau **Thermal 80mm**. Saat menekan tombol **Cetak Dokumen**, jendela cetak browser akan terbuka. Di menu tujuan printer (*Destination*), pilih printer thermal Anda, sesuaikan margin menjadi *None* atau *Default*, dan nota akan tercetak rapi sesuai lebar kertas roll thermal kasir Anda.
+
+**4. Apakah layanan generator invoice ini benar-benar gratis tanpa watermark situs?**  
+Benar, seluruh fitur pembuatan invoice, nota, dan kwitansi di KompresKilat dapat digunakan 100% gratis tanpa batasan kuota, tanpa harus registrasi akun, dan tanpa tempelan watermark merek yang menutupi dokumen bisnis Anda.
+`,
+    en: {
+      title: 'How to Create Free Professional Invoices, Store Receipts & Payment Vouchers Online (With Digital Stamp & Signatures)',
+      excerpt: 'Complete guide to creating professional invoices, POS store receipts, and official payment vouchers instantly without registration. Features free-form drag-and-drop logo, interactive signature pad, official PAID stamp, and multi-format printing for A4, A5, and 58mm/80mm thermal receipts.',
+      category: 'Business & SME',
+      date: 'November 5, 2026',
+      readTime: '7 min read',
+      content: `Create professional invoices, retail sales notes, and official payment receipts in seconds. Customize business details, add interactive signatures, generate authentic official stamps, and print or export crisp PDF documents directly in your browser.`,
+      relatedTool: {
+        title: 'Instant Invoice, Note & Receipt Generator',
+        description: 'Generate customizable invoices, cash notes, and official receipts with draggable logo, signature pad, digital official stamps, and thermal/A4 PDF exports.',
+        buttonText: 'Create Document Now',
+      },
+    },
+  },
+  {
     slug: 'cara-memberi-nomor-halaman-pdf-online-gratis-lewati-cover',
     title: 'Cara Memberi Nomor Halaman PDF Online Gratis & Praktis (Lewati Halaman Cover Skripsi & Laporan)',
     excerpt: 'Panduan lengkap cara menambahkan nomor halaman pada berkas PDF skripsi, jurnal, dan laporan kantor secara otomatis. Mendukung posisi Header/Footer, format kustom, dan lewati halaman cover tanpa aplikasi tambahan.',
