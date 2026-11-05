@@ -112,16 +112,6 @@ export default function InvoiceGeneratorPage() {
           ? '560px'
           : '794px'
         : 'auto',
-    aspectRatio:
-      paperSize === 'a4'
-        ? isLandscape
-          ? '1123 / 794'
-          : '794 / 1123'
-        : paperSize === 'a5'
-        ? isLandscape
-          ? '794 / 560'
-          : '560 / 794'
-        : undefined,
   };
 
   // Info Perusahaan / Toko
@@ -449,7 +439,7 @@ export default function InvoiceGeneratorPage() {
     setExportNotice(null);
 
     // Beri jeda singkat agar DOM dan event unselect selesai
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 80));
 
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -457,18 +447,12 @@ export default function InvoiceGeneratorPage() {
 
       const targetElement = previewRef.current;
 
-      // Konfigurasi html2canvas optimal:
-      // useCORS: true dan allowTaint: false WAJIB agar kanvas tidak tainted saat toDataURL dipanggil
+      // 1. Konfigurasi html2canvas optimal: scale: 2 untuk hasil tajam & useCORS: true untuk logo/gambar
       const canvas = await html2canvas(targetElement, {
         scale: 2.0,
         useCORS: true,
-        allowTaint: false,
-        logging: false,
         backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: targetElement.scrollWidth,
-        windowHeight: targetElement.scrollHeight,
+        logging: false,
       });
 
       if (!canvas) {
@@ -477,6 +461,7 @@ export default function InvoiceGeneratorPage() {
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
+      // 2. Sesuaikan perhitungan ukuran halaman pada jsPDF sesuai format dan orientasi (Portrait / Landscape)
       let pdfWidth = 210;
       let pdfHeight = 297;
       let pdfOrient: 'p' | 'l' = orientation === 'landscape' ? 'l' : 'p';
@@ -522,29 +507,16 @@ export default function InvoiceGeneratorPage() {
 
       const fileName = `${docType.toUpperCase()}_${docNumber.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`;
 
-      // Ekspor via Blob + anchor download agar file langsung terunduh otomatis ke folder Downloads
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = blobUrl;
-      downloadLink.download = fileName;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      // 3. Unduh instan langsung via pdf.save()
+      pdf.save(fileName);
 
       setExportNotice({
         type: 'success',
-        message: `File PDF "${fileName}" berhasil diunduh otomatis ke perangkat Anda.`,
+        message: `File PDF "${fileName}" berhasil diunduh ke perangkat Anda.`,
       });
-      setTimeout(() => setExportNotice(null), 5000);
+      setTimeout(() => setExportNotice(null), 4000);
     } catch (err) {
-      console.error('Ekspor unduh PDF langsung mengalami kendala:', err);
-
-      setExportNotice({
-        type: 'warning',
-        message: 'Gagal membuat file PDF secara otomatis karena keterbatasan render browser. Silakan gunakan tombol "Cetak" jika ingin menyimpan sebagai PDF via dialog cetak.',
-      });
+      console.error('Ekspor PDF langsung error:', err);
     } finally {
       setIsExporting(false);
     }
@@ -1916,7 +1888,6 @@ export default function InvoiceGeneratorPage() {
                 style={{
                   width: previewDimensions.width,
                   minHeight: previewDimensions.minHeight,
-                  aspectRatio: previewDimensions.aspectRatio,
                 }}
                 className={`bg-white text-slate-900 shadow-2xl transition-all duration-300 box-border relative shrink-0 ${
                   paperSize.startsWith('thermal')
@@ -2233,8 +2204,8 @@ export default function InvoiceGeneratorPage() {
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
                           <tr
-                            style={{ backgroundColor: `${themeColor}15`, color: themeColor }}
-                            className="border-b-2 border-slate-300 font-extrabold"
+                            style={{ color: themeColor }}
+                            className="bg-slate-100 border-b-2 border-slate-300 font-extrabold"
                           >
                             <th className="py-2.5 px-3 w-10">No.</th>
                             <th className="py-2.5 px-3">Deskripsi Barang / Layanan</th>
