@@ -24,7 +24,11 @@ import {
   Move,
   RotateCcw,
   MousePointerClick,
-  Layout
+  Layout,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  X
 } from 'lucide-react';
 import DraggableCanvasElement, { ElementPosition } from '@/components/DraggableCanvasElement';
 
@@ -80,6 +84,45 @@ export default function InvoiceGeneratorPage() {
   const [paperSize, setPaperSize] = useState<PaperSize>('a4');
   const [orientation, setOrientation] = useState<PaperOrientation>('portrait');
   const [themeColor, setThemeColor] = useState<string>('#4f46e5'); // Indigo default
+
+  // Status orientasi landscape aktif untuk kertas non-thermal
+  const isLandscape = orientation === 'landscape' && !paperSize.startsWith('thermal');
+
+  // Kalkulasi dimensi kontainer pratinjau dokumen secara dinamis
+  const previewDimensions = {
+    width:
+      paperSize === 'a4'
+        ? isLandscape
+          ? '1123px'
+          : '794px'
+        : paperSize === 'a5'
+        ? isLandscape
+          ? '794px'
+          : '560px'
+        : paperSize === 'thermal80'
+        ? '302px'
+        : '220px',
+    minHeight:
+      paperSize === 'a4'
+        ? isLandscape
+          ? '794px'
+          : '1123px'
+        : paperSize === 'a5'
+        ? isLandscape
+          ? '560px'
+          : '794px'
+        : 'auto',
+    aspectRatio:
+      paperSize === 'a4'
+        ? isLandscape
+          ? '1123 / 794'
+          : '794 / 1123'
+        : paperSize === 'a5'
+        ? isLandscape
+          ? '794 / 560'
+          : '560 / 794'
+        : undefined,
+  };
 
   // Info Perusahaan / Toko
   const [companyName, setCompanyName] = useState<string>('PT KOMPRES KILAT DIGITAL');
@@ -157,6 +200,10 @@ export default function InvoiceGeneratorPage() {
 
   // Status & Navigasi
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportNotice, setExportNotice] = useState<{
+    type: 'success' | 'warning' | 'info';
+    message: string;
+  } | null>(null);
   const [activeFormTab, setActiveFormTab] = useState<'doc' | 'business' | 'items' | 'stamp'>('doc');
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -394,26 +441,34 @@ export default function InvoiceGeneratorPage() {
     window.print();
   };
 
-  // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF)
+  // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF) dengan fallback otomatis window.print()
   const handleDownloadPdf = async () => {
     if (!previewRef.current) return;
     setSelectedElementId(null);
-    await new Promise((r) => setTimeout(r, 60));
     setIsExporting(true);
+    setExportNotice(null);
+
+    // Beri jeda singkat agar DOM dan event unselect selesai
+    await new Promise((r) => setTimeout(r, 80));
 
     try {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      // Ambil elemen pratinjau dokumen dengan skala 2.5 untuk kualitas cetak tajam
+      // Ambil elemen pratinjau dokumen dengan skala 2 untuk kualitas tajam & efisiensi memori browser
       const canvas = await html2canvas(previewRef.current, {
-        scale: 2.5,
+        scale: 2.0,
         useCORS: true,
+        allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      if (!canvas) {
+        throw new Error('Canvas render menghasilkan objek kosong');
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       let pdfWidth = 210;
       let pdfHeight = 297;
@@ -457,9 +512,24 @@ export default function InvoiceGeneratorPage() {
 
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${docType.toUpperCase()}_${docNumber.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`);
+
+      setExportNotice({
+        type: 'success',
+        message: 'Dokumen PDF berhasil diunduh ke perangkat Anda.',
+      });
+      setTimeout(() => setExportNotice(null), 5000);
     } catch (err) {
-      console.error('PDF export error:', err);
-      alert('Gagal mengekspor PDF. Anda dapat menggunakan tombol "Cetak Dokumen" lalu pilih "Simpan sebagai PDF".');
+      console.warn('Ekspor unduh PDF langsung mengalami kendala, beralih ke fallback dialog cetak:', err);
+
+      setExportNotice({
+        type: 'warning',
+        message: 'Ekspor PDF langsung memerlukan kapasitas grafis lebih tinggi. Membuka dialog cetak otomatis—silakan pilih opsi "Simpan sebagai PDF" (Save as PDF) untuk mengunduh dokumen.',
+      });
+
+      // Fallback otomatis: panggil dialog cetak browser
+      setTimeout(() => {
+        window.print();
+      }, 350);
     } finally {
       setIsExporting(false);
     }
@@ -537,7 +607,9 @@ export default function InvoiceGeneratorPage() {
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16">
       <JsonLd data={schema} />
-      <Navbar />
+      <div className="print:hidden">
+        <Navbar />
+      </div>
 
       {/* Header Breadcrumbs & Judul */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-4">
@@ -636,7 +708,7 @@ export default function InvoiceGeneratorPage() {
           {/* ======================================================== */}
           {/* KOLOM KIRI: PENGATURAN & FORMULIR INPUT */}
           {/* ======================================================== */}
-          <div className={`lg:col-span-5 space-y-4 print:hidden ${mobileTab === 'preview' ? 'hidden sm:block' : 'block'}`}>
+          <div className={`${isLandscape ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 print:hidden ${mobileTab === 'preview' ? 'hidden sm:block' : 'block'}`}>
             {/* Form Category Navigation */}
             <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between text-xs">
               <button
@@ -1621,17 +1693,55 @@ export default function InvoiceGeneratorPage() {
           {/* ======================================================== */}
           {/* KOLOM KANAN: PRATINJAU DOKUMEN (LIVE PREVIEW) */}
           {/* ======================================================== */}
-          <div className={`lg:col-span-7 flex flex-col items-center w-full ${mobileTab === 'editor' ? 'hidden sm:flex' : 'flex'}`}>
+          <div className={`${isLandscape ? 'lg:col-span-8' : 'lg:col-span-7'} flex flex-col items-center w-full ${mobileTab === 'editor' ? 'hidden sm:flex' : 'flex'}`}>
             {/* Action Bar Atas */}
             <div className="w-full bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3 mb-3 print:hidden">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Pratinjau {docType.toUpperCase()} ({paperSize.toUpperCase()}{!paperSize.startsWith('thermal') ? ` - ${orientation.toUpperCase()}` : ''})
+                  Pratinjau {docType.toUpperCase()} ({paperSize.toUpperCase()})
                 </span>
 
+                {/* Quick Toggle Orientasi Kertas (Portrait vs Landscape) */}
+                {!paperSize.startsWith('thermal') && (
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrientation('portrait');
+                        resetElementPositions(paperSize, 'portrait');
+                      }}
+                      className={`px-2 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                        orientation === 'portrait'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                      title="Ubah pratinjau ke mode Tegak (Portrait)"
+                    >
+                      <span>📄</span>
+                      <span className="hidden sm:inline">Portrait</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrientation('landscape');
+                        resetElementPositions(paperSize, 'landscape');
+                      }}
+                      className={`px-2 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                        orientation === 'landscape'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                      title="Ubah pratinjau ke mode Melebar (Landscape)"
+                    >
+                      <span>📃</span>
+                      <span className="hidden sm:inline">Landscape</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Switch Mode Tata Letak */}
-                <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl ml-2 border border-slate-200 dark:border-slate-700">
+                <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl ml-1 border border-slate-200 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => setIsFreeLayout(true)}
@@ -1696,6 +1806,38 @@ export default function InvoiceGeneratorPage() {
               </div>
             </div>
 
+            {/* Notifikasi Status Ekspor / Fallback Dialog Cetak */}
+            {exportNotice && (
+              <div
+                className={`w-full mb-3 p-3.5 rounded-xl border flex items-start justify-between gap-3 text-xs shadow-xs animate-in fade-in duration-200 print:hidden ${
+                  exportNotice.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200'
+                    : exportNotice.type === 'warning'
+                    ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-200'
+                    : 'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-200'
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  {exportNotice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  ) : exportNotice.type === 'warning' ? (
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  )}
+                  <p className="leading-relaxed font-medium">{exportNotice.message}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setExportNotice(null)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer shrink-0"
+                  title="Tutup Pesan"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Hint Interaktif Banner */}
             {isFreeLayout && (
               <div className="w-full mb-3 px-3.5 py-2 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 print:hidden shadow-2xs">
@@ -1717,7 +1859,7 @@ export default function InvoiceGeneratorPage() {
               </div>
             )}
 
-            {/* Dynamic Print CSS for Orientation */}
+            {/* Dynamic Print CSS for Orientation & Clean Layout */}
             <style
               dangerouslySetInnerHTML={{
                 __html: `
@@ -1726,45 +1868,47 @@ export default function InvoiceGeneratorPage() {
                       size: ${paperSize.startsWith('thermal') ? 'auto' : `${paperSize} ${orientation}`};
                       margin: 0;
                     }
+                    body, main {
+                      background: #ffffff !important;
+                      padding: 0 !important;
+                      margin: 0 !important;
+                    }
+                    .print\\:hidden, nav, footer {
+                      display: none !important;
+                    }
+                    #invoice-preview-sheet {
+                      box-shadow: none !important;
+                      border: none !important;
+                      margin: 0 auto !important;
+                      page-break-inside: avoid;
+                    }
                   }
                 `,
               }}
             />
 
             {/* Container Lembar Kertas Preview */}
-            <div className="w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex justify-center shadow-inner">
+            <div className={`w-full max-w-full overflow-x-auto p-4 sm:p-8 bg-slate-200/70 dark:bg-slate-950 rounded-2xl border border-slate-300 dark:border-slate-800 flex ${
+              isLandscape ? 'justify-start sm:justify-center' : 'justify-center'
+            } shadow-inner transition-all duration-300`}>
               <div
+                id="invoice-preview-sheet"
                 ref={previewRef}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest('[data-drag-ignore="true"]')) return;
                   setSelectedElementId(null);
                 }}
                 style={{
-                  width:
-                    paperSize === 'a4'
-                      ? orientation === 'landscape'
-                        ? '1123px'
-                        : '794px'
-                      : paperSize === 'a5'
-                      ? orientation === 'landscape'
-                        ? '794px'
-                        : '560px'
-                      : paperSize === 'thermal80'
-                      ? '302px'
-                      : '220px',
-                  minHeight:
-                    paperSize === 'a4'
-                      ? orientation === 'landscape'
-                        ? '794px'
-                        : '1123px'
-                      : paperSize === 'a5'
-                      ? orientation === 'landscape'
-                        ? '560px'
-                        : '794px'
-                      : 'auto',
+                  width: previewDimensions.width,
+                  minHeight: previewDimensions.minHeight,
+                  aspectRatio: previewDimensions.aspectRatio,
                 }}
-                className={`bg-white text-slate-900 shadow-2xl transition-all duration-150 box-border relative ${
-                  paperSize.startsWith('thermal') ? 'p-4 font-mono text-[11px]' : 'p-8 sm:p-12 font-sans text-xs'
+                className={`bg-white text-slate-900 shadow-2xl transition-all duration-300 box-border relative shrink-0 ${
+                  paperSize.startsWith('thermal')
+                    ? 'p-4 font-mono text-[11px]'
+                    : isLandscape
+                    ? 'p-6 sm:p-10 font-sans text-xs'
+                    : 'p-8 sm:p-12 font-sans text-xs'
                 }`}
               >
                 {/* -------------------------------------------------- */}
@@ -2405,7 +2549,9 @@ export default function InvoiceGeneratorPage() {
         </section>
       </section>
 
-      <Footer />
+      <div className="print:hidden">
+        <Footer />
+      </div>
     </main>
   );
 }
