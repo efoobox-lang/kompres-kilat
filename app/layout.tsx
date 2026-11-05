@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import StickyAd from '@/components/StickyAd';
 import PwaRegister from '@/components/PwaRegister';
+import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 
@@ -136,6 +137,9 @@ export default function RootLayout({
             <PwaRegister />
           </LanguageProvider>
         </ThemeProvider>
+
+        {/* Vercel Web Analytics */}
+        <Analytics />
 
         {/* Universal Full-Website Translation Engine */}
         <div id="google_translate_element" className="fixed -top-96 -left-96 opacity-0 pointer-events-none" />
