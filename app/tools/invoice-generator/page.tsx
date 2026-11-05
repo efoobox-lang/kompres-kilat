@@ -441,7 +441,7 @@ export default function InvoiceGeneratorPage() {
     window.print();
   };
 
-  // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF) dengan fallback otomatis window.print()
+  // Unduh Dokumen ke Format PDF Berkualitas Tinggi (html2canvas + jsPDF) Langsung ke Perangkat
   const handleDownloadPdf = async () => {
     if (!previewRef.current) return;
     setSelectedElementId(null);
@@ -449,19 +449,26 @@ export default function InvoiceGeneratorPage() {
     setExportNotice(null);
 
     // Beri jeda singkat agar DOM dan event unselect selesai
-    await new Promise((r) => setTimeout(r, 80));
+    await new Promise((r) => setTimeout(r, 100));
 
     try {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      // Ambil elemen pratinjau dokumen dengan skala 2 untuk kualitas tajam & efisiensi memori browser
-      const canvas = await html2canvas(previewRef.current, {
+      const targetElement = previewRef.current;
+
+      // Konfigurasi html2canvas optimal:
+      // useCORS: true dan allowTaint: false WAJIB agar kanvas tidak tainted saat toDataURL dipanggil
+      const canvas = await html2canvas(targetElement, {
         scale: 2.0,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         logging: false,
         backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: targetElement.scrollWidth,
+        windowHeight: targetElement.scrollHeight,
       });
 
       if (!canvas) {
@@ -508,28 +515,36 @@ export default function InvoiceGeneratorPage() {
         orientation: pdfOrient,
         unit: 'mm',
         format: [pdfWidth, pdfHeight],
+        compress: true,
       });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${docType.toUpperCase()}_${docNumber.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+
+      const fileName = `${docType.toUpperCase()}_${docNumber.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`;
+
+      // Ekspor via Blob + anchor download agar file langsung terunduh otomatis ke folder Downloads
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = blobUrl;
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 
       setExportNotice({
         type: 'success',
-        message: 'Dokumen PDF berhasil diunduh ke perangkat Anda.',
+        message: `File PDF "${fileName}" berhasil diunduh otomatis ke perangkat Anda.`,
       });
       setTimeout(() => setExportNotice(null), 5000);
     } catch (err) {
-      console.warn('Ekspor unduh PDF langsung mengalami kendala, beralih ke fallback dialog cetak:', err);
+      console.error('Ekspor unduh PDF langsung mengalami kendala:', err);
 
       setExportNotice({
         type: 'warning',
-        message: 'Ekspor PDF langsung memerlukan kapasitas grafis lebih tinggi. Membuka dialog cetak otomatis—silakan pilih opsi "Simpan sebagai PDF" (Save as PDF) untuk mengunduh dokumen.',
+        message: 'Gagal membuat file PDF secara otomatis karena keterbatasan render browser. Silakan gunakan tombol "Cetak" jika ingin menyimpan sebagai PDF via dialog cetak.',
       });
-
-      // Fallback otomatis: panggil dialog cetak browser
-      setTimeout(() => {
-        window.print();
-      }, 350);
     } finally {
       setIsExporting(false);
     }
@@ -547,7 +562,7 @@ export default function InvoiceGeneratorPage() {
   const renderStampSvg = (w: number, h: number) => {
     if (stampShape === 'circle') {
       return (
-        <svg viewBox="0 0 160 160" width={w} height={h} className="overflow-visible select-none">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width={w} height={h} className="overflow-visible select-none">
           <defs>
             <path id="stampCircleTop" d="M 25,80 A 55,55 0 0,1 135,80" fill="none" />
             <path id="stampCircleBottom" d="M 135,80 A 55,55 0 0,1 25,80" fill="none" />
@@ -574,7 +589,7 @@ export default function InvoiceGeneratorPage() {
       );
     } else {
       return (
-        <svg viewBox="0 0 170 90" width={w} height={h} className="overflow-visible select-none">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 90" width={w} height={h} className="overflow-visible select-none">
           <rect x="3" y="3" width="164" height="84" fill="none" stroke="currentColor" strokeWidth="2.5" rx="3" />
           <rect x="7" y="7" width="156" height="76" fill="none" stroke="currentColor" strokeWidth="1" rx="2" />
           <text x="85" y="24" fill="currentColor" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">
