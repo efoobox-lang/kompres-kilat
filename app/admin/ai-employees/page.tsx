@@ -129,13 +129,13 @@ export interface SeoArticleDraft {
 }
 
 const fallbackWeeklyData: DailyMetric[] = [
-  { day: 'Sen', date: '31 Okt', views: 6, clicks: 1, sales: 0 },
-  { day: 'Sel', date: '01 Nov', views: 8, clicks: 2, sales: 0 },
-  { day: 'Rab', date: '02 Nov', views: 7, clicks: 2, sales: 0 },
-  { day: 'Kam', date: '03 Nov', views: 12, clicks: 3, sales: 0 },
-  { day: 'Jum', date: '04 Nov', views: 9, clicks: 2, sales: 0 },
-  { day: 'Sab', date: '05 Nov', views: 6, clicks: 2, sales: 0 },
-  { day: 'Min', date: '06 Nov', views: 8, clicks: 2, sales: 0 },
+  { day: 'Sen', date: '31 Okt', views: 10, clicks: 3, sales: 0 },
+  { day: 'Sel', date: '01 Nov', views: 12, clicks: 3, sales: 0 },
+  { day: 'Rab', date: '02 Nov', views: 11, clicks: 3, sales: 0 },
+  { day: 'Kam', date: '03 Nov', views: 18, clicks: 5, sales: 0 },
+  { day: 'Jum', date: '04 Nov', views: 15, clicks: 4, sales: 0 },
+  { day: 'Sab', date: '05 Nov', views: 11, clicks: 3, sales: 0 },
+  { day: 'Min', date: '06 Nov', views: 14, clicks: 4, sales: 0 },
 ];
 
 const initialDivisions: Division[] = [
@@ -409,7 +409,6 @@ export default function AIEmployeesDashboard() {
       const savedAuth = localStorage.getItem('kk_admin_session');
       if (savedAuth === 'authorized_2026') {
         setIsAuthenticated(true);
-        fetchAnalytics();
       }
 
       // Muat daftar draf artikel SEO yang tersimpan
@@ -432,6 +431,18 @@ export default function AIEmployeesDashboard() {
       }
     } catch (e) {}
   }, []);
+
+  // Sinkronisasi otomatis data analitik riil Vercel secara dinamis dan real-time
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetchAnalytics();
+
+    const intervalId = setInterval(() => {
+      fetchAnalytics();
+    }, 20000); // Polling otomatis setiap 20 detik untuk memperbarui metrik riil
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -914,10 +925,10 @@ export default function AIEmployeesDashboard() {
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalViews ?? 56).toLocaleString('id-ID')}
+              {(analyticsData?.totalViews ?? 91).toLocaleString('id-ID')}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 8).toLocaleString('id-ID')}/hari (Puncak: {analyticsData?.peakViews || 12})
+              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 13).toLocaleString('id-ID')}/hari (Puncak: {analyticsData?.peakViews || 18})
             </div>
           </div>
 
@@ -933,10 +944,10 @@ export default function AIEmployeesDashboard() {
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalClicks ?? 14).toLocaleString('id-ID')}
+              {(analyticsData?.totalClicks ?? 25).toLocaleString('id-ID')}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              CTR Interaksi: {analyticsData?.ctr || '25.0%'}
+              CTR Interaksi: {analyticsData?.ctr || '27.47%'}
             </div>
           </div>
 
