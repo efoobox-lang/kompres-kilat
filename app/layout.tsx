@@ -102,10 +102,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         {/* Anti-FOUC Theme Initializer */}
         <script
+          id="theme-initializer"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -122,12 +124,14 @@ export default function RootLayout({
         />
         {/* Google AdSense Script */}
         <script
+          id="google-adsense"
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2604470661972091"
           crossOrigin="anonymous"
+          suppressHydrationWarning
         />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-800">
+      <body className="min-h-full flex flex-col bg-slate-50 text-slate-800" suppressHydrationWarning>
         <ThemeProvider>
           <LanguageProvider>
             {children}

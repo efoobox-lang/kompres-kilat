@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Server,
@@ -172,6 +172,7 @@ const initialDivisions: Division[] = [
 ];
 
 export default function AIEmployeesDashboard() {
+  const [mounted, setMounted] = useState<boolean>(false);
   const [divisions, setDivisions] = useState<Division[]>(initialDivisions);
   const [activeDivision, setActiveDivision] = useState<Division | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
@@ -206,6 +207,10 @@ export default function AIEmployeesDashboard() {
       source: 'gemini-2.5-flash'
     }
   ]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fungsi triggerTask: Menjalankan perintah AI untuk divisi tertentu secara real-time
   const triggerTask = async (id: string, promptText?: string) => {
@@ -375,6 +380,10 @@ export default function AIEmployeesDashboard() {
   const filteredDivisions = divisions.filter(
     (div) => activeFilter === 'all' || div.status === activeFilter
   );
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
