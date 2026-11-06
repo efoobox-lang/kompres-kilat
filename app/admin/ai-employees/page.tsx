@@ -51,8 +51,11 @@ import {
   Edit3,
   BookOpen,
   CheckSquare,
-  Save
+  Save,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
 
 export type DivisionStatus = 'Working' | 'Idle';
 
@@ -317,6 +320,42 @@ export default function AIEmployeesDashboard() {
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
   const [logDivisionFilter, setLogDivisionFilter] = useState<string>('all');
   const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
+  const [sfxEnabled, setSfxEnabled] = useState<boolean>(true);
+
+  // Helper suara 8-bit retro sintetis Web Audio API
+  const play8BitSound = (type: 'start' | 'success') => {
+    if (!sfxEnabled || typeof window === 'undefined') return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'square';
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'start') {
+        osc.frequency.setValueAtTime(330, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.12);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } else {
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(554.37, now + 0.08);
+        osc.frequency.setValueAtTime(659.25, now + 0.16);
+        osc.frequency.setValueAtTime(880, now + 0.24);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }
+    } catch (e) {}
+  };
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -431,6 +470,7 @@ export default function AIEmployeesDashboard() {
 
     setLoadingDivisionId(id);
     setIsProcessing(true);
+    play8BitSound('start');
 
     // 1. Ubah status divisi menjadi 'Working' dan tampilkan indikator proses berjalan
     setDivisions((prev) =>
@@ -465,6 +505,7 @@ export default function AIEmployeesDashboard() {
         const resultTask = data.task;
         const timeStr = data.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         const sourceModel = data.model || 'gemini-2.5-flash';
+        play8BitSound('success');
 
         // 3. Perbarui aktivitas divisi dengan hasil nyata dari AI dan tambahkan total output tugas +1 secara real-time
         setDivisions((prev) =>
@@ -621,115 +662,19 @@ export default function AIEmployeesDashboard() {
     }
   };
 
-  // Helper avatar karakter 2D dengan meja kerja & animasi simulasi game
+  // Helper avatar karakter 2D dengan meja kerja & simulasi pixel-art office simulator
   const renderGameWorkstation = (division: Division, isWorking: boolean, isLoading: boolean) => {
-    let emoji = '🤖';
-    let roleBadge = 'DevOps Agent';
-    let deskDecor = '🖥️ ☕ ⚡';
-
-    switch (division.iconName) {
-      case 'it':
-        emoji = '👨‍💻';
-        roleBadge = 'Lead SysAdmin';
-        deskDecor = '🖥️ 🗄️ ☕';
-        break;
-      case 'analytics':
-        emoji = '📊';
-        roleBadge = 'Data Scientist';
-        deskDecor = '📈 🛡️ 📋';
-        break;
-      case 'marketing':
-        emoji = '📈';
-        roleBadge = 'Growth Optimizer';
-        deskDecor = '🎯 📊 🚀';
-        break;
-      case 'sosmed':
-        emoji = '📱';
-        roleBadge = 'Community Manager';
-        deskDecor = '📱 💡 💬';
-        break;
-      case 'creative':
-        emoji = '🎨';
-        roleBadge = 'Art Director';
-        deskDecor = '🎨 🎬 🎧';
-        break;
-      case 'seo':
-        emoji = '✍️';
-        roleBadge = 'SEO Strategist';
-        deskDecor = '📚 🔍 📝';
-        break;
-    }
-
     return (
-      <div className="relative p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 shadow-inner flex items-center justify-between gap-3">
-        {/* Karakter Meja Kerja 2D */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            {/* Karakter Avatar Box */}
-            <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg transition-all duration-300 border-2 ${
-                isWorking
-                  ? 'bg-gradient-to-b from-indigo-900/60 to-purple-900/60 border-indigo-400 shadow-indigo-500/30'
-                  : 'bg-slate-900 border-slate-700 opacity-80'
-              }`}
-            >
-              <span className={isLoading ? 'animate-spin' : isWorking ? 'animate-bounce' : ''}>
-                {isLoading ? '⏳' : emoji}
-              </span>
-
-              {/* Status Dot */}
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                {isWorking && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                )}
-                <span
-                  className={`relative inline-flex rounded-full h-3.5 w-3.5 border-2 border-slate-950 ${
-                    isWorking ? 'bg-emerald-400' : 'bg-amber-400'
-                  }`}
-                />
-              </span>
-            </div>
-
-            {/* Bubble Pesan Mengetik Saat Bekerja */}
-            {isWorking && (
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-indigo-600 border border-indigo-400 text-[9px] font-mono font-bold text-white whitespace-nowrap shadow-md flex items-center gap-1 animate-pulse">
-                <span>💬 Mengetik...</span>
-              </div>
-            )}
-          </div>
-
-          {/* Info Posisi Meja */}
-          <div className="space-y-0.5">
-            <div className="text-xs font-bold text-white flex items-center gap-1.5">
-              <span>{roleBadge}</span>
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-              <span>Meja Kerja:</span>
-              <span>{deskDecor}</span>
-            </div>
-            <div className="text-[10px] text-indigo-400 font-mono">
-              {division.metricLabel}: <strong className="text-slate-200">{division.metricValue}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Badge Game Style */}
-        <div className="text-right flex flex-col items-end">
-          <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm ${
-              isWorking
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            {division.status}
-          </span>
-          <span className="text-[10px] text-slate-500 font-mono mt-1">
-            {division.outputCount} tugas selesai
-          </span>
-        </div>
-      </div>
+      <PixelOfficeWorkstation
+        divisionId={division.id}
+        divisionName={division.name}
+        iconName={division.iconName}
+        isWorking={isWorking}
+        isLoading={isLoading}
+        metricLabel={division.metricLabel}
+        metricValue={division.metricValue}
+        outputCount={division.outputCount}
+      />
     );
   };
 
@@ -909,6 +854,20 @@ export default function AIEmployeesDashboard() {
               <span className="hidden sm:inline">{isLoadingAnalytics ? 'Sinkronisasi...' : 'Sinkron Metrik'}</span>
             </button>
 
+            {/* Tombol 8-bit Sound Effects Toggle */}
+            <button
+              onClick={() => setSfxEnabled(!sfxEnabled)}
+              title={sfxEnabled ? 'Matikan Efek Suara 8-Bit Retro' : 'Aktifkan Efek Suara 8-Bit Retro'}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-mono transition active:scale-95 cursor-pointer ${
+                sfxEnabled
+                  ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-300 shadow-sm shadow-indigo-500/20'
+                  : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              {sfxEnabled ? <Volume2 className="w-3.5 h-3.5 text-indigo-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-500" />}
+              <span className="hidden sm:inline">SFX: {sfxEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
             {/* Tombol Broadcast Trigger All */}
             <button
               onClick={triggerAllDivisions}
@@ -1084,7 +1043,11 @@ export default function AIEmployeesDashboard() {
                 return (
                   <div
                     key={division.id}
-                    className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-xl ${division.borderColor} bg-slate-900/95 group`}
+                    className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-xl ${
+                      isWorking || isLoading
+                        ? 'border-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)] ring-1 ring-indigo-400/40 bg-slate-900'
+                        : `${division.borderColor} bg-slate-900/95`
+                    } group`}
                   >
                     {/* Header Pintu Masuk Ruangan 2D */}
                     <div className="p-3.5 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
