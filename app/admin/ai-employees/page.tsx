@@ -44,7 +44,10 @@ import {
   KeyRound,
   EyeOff,
   AlertCircle,
-  LogOut
+  LogOut,
+  Coffee,
+  Users,
+  Wifi
 } from 'lucide-react';
 
 export type DivisionStatus = 'Working' | 'Idle';
@@ -53,6 +56,7 @@ export interface Division {
   id: string;
   name: string;
   roomCode: string;
+  wing: 'West Wing (Teknologi)' | 'East Wing (Pertumbuhan)' | 'Central Suite (Konten & Media)';
   role: string;
   category: string;
   iconName: 'it' | 'marketing' | 'sosmed' | 'creative' | 'seo' | 'analytics';
@@ -84,7 +88,7 @@ export interface DailyMetric {
   date: string;
   views: number;
   clicks: number;
-  sales: number; // Dalam Rupiah
+  sales: number;
 }
 
 export interface AnalyticsData {
@@ -105,7 +109,7 @@ export interface AnalyticsData {
   syncedAt: string;
 }
 
-const weeklyMetricsData: DailyMetric[] = [
+const fallbackWeeklyData: DailyMetric[] = [
   { day: 'Sen', date: '31 Okt', views: 28400, clicks: 4620, sales: 2150000 },
   { day: 'Sel', date: '01 Nov', views: 32100, clicks: 5310, sales: 2480000 },
   { day: 'Rab', date: '02 Nov', views: 35800, clicks: 5940, sales: 2890000 },
@@ -119,8 +123,9 @@ const initialDivisions: Division[] = [
   {
     id: 'it',
     name: 'Divisi IT & Sistem',
-    roomCode: 'ROOM 101 • DEVOPS & INFRA',
-    role: 'Infrastructure & DevOps Agent',
+    roomCode: 'RUANG 101 // SERVER & DEVOPS LAB',
+    wing: 'West Wing (Teknologi)',
+    role: 'Lead Infrastructure & Edge SysAdmin',
     category: 'Core System',
     iconName: 'it',
     accentColor: 'from-cyan-500/20 via-blue-500/10 to-transparent text-cyan-400',
@@ -132,7 +137,7 @@ const initialDivisions: Division[] = [
     lastUpdated: '2 menit yang lalu',
     metricLabel: 'Uptime Edge',
     metricValue: '99.98%',
-    equipment: ['Edge Server Rack', 'Grafana Monitor', 'SSH Terminal Dual-Screen'],
+    equipment: ['Edge Server Rack', 'Grafana Dual Monitor', 'Console Linux'],
     presetPrompts: [
       'Jalankan audit kesehatan server Vercel',
       'Periksa error log 404 & 500 terkini',
@@ -140,9 +145,34 @@ const initialDivisions: Division[] = [
     ]
   },
   {
+    id: 'analytics',
+    name: 'Divisi Analytics',
+    roomCode: 'RUANG 102 // DATA & COMPLIANCE LAB',
+    wing: 'West Wing (Teknologi)',
+    role: 'Data Scientist & AdSense Auditor',
+    category: 'Intelligence',
+    iconName: 'analytics',
+    accentColor: 'from-indigo-500/20 via-blue-500/10 to-transparent text-indigo-400',
+    borderColor: 'border-indigo-500/40 hover:border-indigo-400',
+    badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+    status: 'Working',
+    currentTask: 'Merekapitulasi trafik organik Google Search Console dan estimasi performa AdSense',
+    outputCount: 34,
+    lastUpdated: '3 menit yang lalu',
+    metricLabel: 'AdSense Health',
+    metricValue: '100% Valid',
+    equipment: ['Live GSC Dashboard', 'AdSense Security Shield', 'Telemetry Matrix'],
+    presetPrompts: [
+      'Analisis trafik harian Google Search Console',
+      'Cek kepatuhan penempatan iklan AdSense',
+      'Hitung rasio retensi pengguna mingguan'
+    ]
+  },
+  {
     id: 'marketing',
     name: 'Divisi Marketing & Growth',
-    roomCode: 'ROOM 102 • GROWTH & SALES',
+    roomCode: 'RUANG 103 // GROWTH & SALES LAB',
+    wing: 'East Wing (Pertumbuhan)',
     role: 'Growth & Funnel Optimizer',
     category: 'Growth & Sales',
     iconName: 'marketing',
@@ -155,7 +185,7 @@ const initialDivisions: Division[] = [
     lastUpdated: '5 menit yang lalu',
     metricLabel: 'Konversi Trial',
     metricValue: '+14.2%',
-    equipment: ['Funnel Whiteboard', 'AdSense Tracker', 'Lead Campaign Hub'],
+    equipment: ['Funnel Strategy Board', 'Ad Campaign Tracker', 'Conversion Rig'],
     presetPrompts: [
       'Analisis strategi konversi pelanggan baru',
       'Susun draf email onboarding UMKM',
@@ -165,8 +195,9 @@ const initialDivisions: Division[] = [
   {
     id: 'sosmed',
     name: 'Divisi Admin & Sosmed',
-    roomCode: 'ROOM 103 • SOCIAL & CS',
-    role: 'Social Engagement & Community',
+    roomCode: 'RUANG 104 // SOCIAL & COMMUNITY HUB',
+    wing: 'East Wing (Pertumbuhan)',
+    role: 'Social Engagement & Community Manager',
     category: 'Public Relations',
     iconName: 'sosmed',
     accentColor: 'from-pink-500/20 via-rose-500/10 to-transparent text-pink-400',
@@ -176,9 +207,9 @@ const initialDivisions: Division[] = [
     currentTask: 'Menyiapkan caption promosi alat kompres gambar & PDF tanpa upload server',
     outputCount: 48,
     lastUpdated: '1 menit yang lalu',
-    metricLabel: 'Antrean Konten',
-    metricValue: '6 Postingan',
-    equipment: ['Multi-Device Hub', 'Ring Light Pro', 'Auto-Reply Console'],
+    metricLabel: 'Antrean Post',
+    metricValue: '6 Konten',
+    equipment: ['Smartphone Tree Rig', 'Ring Light Pro', 'Auto-Reply Console'],
     presetPrompts: [
       'Buat caption Instagram/TikTok fitur kompres KTP',
       'Susun utas edukasi privasi file online di X',
@@ -188,7 +219,8 @@ const initialDivisions: Division[] = [
   {
     id: 'creative',
     name: 'Divisi Video & Kreatif',
-    roomCode: 'ROOM 104 • CREATIVE STUDIO',
+    roomCode: 'RUANG 105 // MULTIMEDIA & VIDEO SUITE',
+    wing: 'Central Suite (Konten & Media)',
     role: 'Multimedia & Visual Director',
     category: 'Design & Assets',
     iconName: 'creative',
@@ -199,9 +231,9 @@ const initialDivisions: Division[] = [
     currentTask: 'Menunggu brief skrip teaser reels fitur invoice & nota thermal terbaru',
     outputCount: 11,
     lastUpdated: '12 menit yang lalu',
-    metricLabel: 'Aset Siap Pakai',
+    metricLabel: 'Aset Siap',
     metricValue: '18 File',
-    equipment: ['Graphic Pen Tablet', 'Timeline Render Rig', 'Sound Monitor'],
+    equipment: ['Wacom Display Rig', 'Render Engine 4K', 'Audio Monitor Desk'],
     presetPrompts: [
       'Buat konsep video reels perbandingan kecepatan kompresi',
       'Susun storyboard teaser fitur invoice thermal',
@@ -211,7 +243,8 @@ const initialDivisions: Division[] = [
   {
     id: 'seo',
     name: 'Divisi SEO & Content Writer',
-    roomCode: 'ROOM 105 • SEO & EDITORIAL',
+    roomCode: 'RUANG 106 // SEO & EDITORIAL DESK',
+    wing: 'Central Suite (Konten & Media)',
     role: 'Search Strategist & Copywriter',
     category: 'Content Engine',
     iconName: 'seo',
@@ -224,34 +257,11 @@ const initialDivisions: Division[] = [
     lastUpdated: 'Baru saja',
     metricLabel: 'SERP Top 3',
     metricValue: '12 Keyword',
-    equipment: ['Google SERP Radar', 'Keyword Density Rig', 'Markdown Desk'],
+    equipment: ['Google SERP Radar', 'Keyword Density Stack', 'Markdown Rig'],
     presetPrompts: [
       'Riset kata kunci artikel blog invoice digital',
       'Audit sitemap.xml dan metadata 102 rute',
       'Buat ringkasan artikel panduan kompres foto KTP'
-    ]
-  },
-  {
-    id: 'analytics',
-    name: 'Divisi Analytics',
-    roomCode: 'ROOM 106 • DATA & COMPLIANCE',
-    role: 'Data Scientist & AdSense Auditor',
-    category: 'Intelligence',
-    iconName: 'analytics',
-    accentColor: 'from-indigo-500/20 via-blue-500/10 to-transparent text-indigo-400',
-    borderColor: 'border-indigo-500/40 hover:border-indigo-400',
-    badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
-    status: 'Working',
-    currentTask: 'Merekapitulasi trafik organik Google Search Console dan estimasi performa AdSense',
-    outputCount: 34,
-    lastUpdated: '3 menit yang lalu',
-    metricLabel: 'AdSense Audit',
-    metricValue: '100% Valid',
-    equipment: ['GSC Live Feed', 'AdSense Safety Shield', 'Heatmap Terminal'],
-    presetPrompts: [
-      'Analisis trafik harian Google Search Console',
-      'Cek kepatuhan penempatan iklan AdSense',
-      'Hitung rasio retensi pengguna mingguan'
     ]
   }
 ];
@@ -269,14 +279,12 @@ export default function AIEmployeesDashboard() {
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [loadingDivisionId, setLoadingDivisionId] = useState<string | null>(null);
-  const [activeViewMode, setActiveViewMode] = useState<'office2d' | 'compact'>('office2d');
   const [activeFilter, setActiveFilter] = useState<'all' | 'Working' | 'Idle'>('all');
-  const [selectedChartMetric, setSelectedChartMetric] = useState<'views' | 'clicks' | 'sales'>('views');
-  const [hoveredDayIndex, setHoveredDayIndex] = useState<number | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
   const [modalOutput, setModalOutput] = useState<{ text: string; source: string; timestamp: string } | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
   const [logDivisionFilter, setLogDivisionFilter] = useState<string>('all');
   const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
@@ -286,8 +294,8 @@ export default function AIEmployeesDashboard() {
       id: 'log-1',
       divisionId: 'seo',
       divisionName: 'Divisi SEO & Content Writer',
-      taskTitle: 'Audit sitemap.xml dan struktur data Schema.org terverifikasi sukses dengan 104 index terdaftar.',
-      timestamp: '19:12',
+      taskTitle: 'Audit sitemap.xml dan struktur data Schema.org terverifikasi sukses dengan 105 rute terindeks.',
+      timestamp: '19:35',
       source: 'gemini-2.5-flash',
       status: 'success'
     },
@@ -295,8 +303,8 @@ export default function AIEmployeesDashboard() {
       id: 'log-2',
       divisionId: 'it',
       divisionName: 'Divisi IT & Sistem',
-      taskTitle: 'Pemeriksaan uptime Vercel: 99.98% dengan latensi respons 28ms edge network.',
-      timestamp: '19:08',
+      taskTitle: 'Pemeriksaan uptime Vercel: 99.98% dengan latensi respons 24ms edge CDN network.',
+      timestamp: '19:30',
       source: 'gemini-2.5-flash',
       status: 'success'
     },
@@ -305,7 +313,7 @@ export default function AIEmployeesDashboard() {
       divisionId: 'analytics',
       divisionName: 'Divisi Analytics',
       taskTitle: 'Audit unit iklan AdSense: Seluruh slot terisolasi aman dari mode cetak nota/struk.',
-      timestamp: '18:55',
+      timestamp: '19:22',
       source: 'gemini-2.5-flash',
       status: 'success'
     }
@@ -335,9 +343,7 @@ export default function AIEmployeesDashboard() {
         setIsAuthenticated(true);
         fetchAnalytics();
       }
-    } catch (e) {
-      // localStorage may be unavailable
-    }
+    } catch (e) {}
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -385,7 +391,7 @@ export default function AIEmployeesDashboard() {
           return {
             ...div,
             status: 'Working',
-            currentTask: 'Sedang memproses instruksi otomatis via Gemini 2.5 Flash...',
+            currentTask: 'Sedang mengeksekusi tugas otomatis melalui Gemini 2.5 Flash...',
             lastUpdated: 'Memproses...'
           };
         }
@@ -428,7 +434,7 @@ export default function AIEmployeesDashboard() {
           })
         );
 
-        // Masukkan riwayat log aktivitas global baru ke dalam daftar log (waktu, divisi, hasil tugas)
+        // Masukkan riwayat log aktivitas global baru ke dalam daftar log
         const newLogEntry: ActivityLog = {
           id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           divisionId: targetDivision.id,
@@ -534,63 +540,113 @@ export default function AIEmployeesDashboard() {
     }
   };
 
-  // Helper avatar karakter 2D
-  const render2DAvatar = (iconName: string, isWorking: boolean) => {
+  // Helper avatar karakter 2D dengan meja kerja & animasi simulasi game
+  const renderGameWorkstation = (division: Division, isWorking: boolean, isLoading: boolean) => {
     let emoji = '🤖';
-    let roleBadge = 'DevOps Bot';
-    let gradient = 'from-cyan-500/20 to-blue-600/30 border-cyan-400/40';
+    let roleBadge = 'DevOps Agent';
+    let deskDecor = '🖥️ ☕ ⚡';
 
-    switch (iconName) {
+    switch (division.iconName) {
       case 'it':
         emoji = '👨‍💻';
         roleBadge = 'Lead SysAdmin';
-        gradient = 'from-cyan-500/30 to-blue-600/40 border-cyan-400/50';
-        break;
-      case 'marketing':
-        emoji = '📈';
-        roleBadge = 'Growth Hacker';
-        gradient = 'from-purple-500/30 to-violet-600/40 border-purple-400/50';
-        break;
-      case 'sosmed':
-        emoji = '📱';
-        roleBadge = 'Social Manager';
-        gradient = 'from-pink-500/30 to-rose-600/40 border-pink-400/50';
-        break;
-      case 'creative':
-        emoji = '🎨';
-        roleBadge = 'Art Director';
-        gradient = 'from-amber-500/30 to-orange-600/40 border-amber-400/50';
-        break;
-      case 'seo':
-        emoji = '✍️';
-        roleBadge = 'SEO Copywriter';
-        gradient = 'from-emerald-500/30 to-teal-600/40 border-emerald-400/50';
+        deskDecor = '🖥️ 🗄️ ☕';
         break;
       case 'analytics':
         emoji = '📊';
         roleBadge = 'Data Scientist';
-        gradient = 'from-indigo-500/30 to-blue-600/40 border-indigo-400/50';
+        deskDecor = '📈 🛡️ 📋';
+        break;
+      case 'marketing':
+        emoji = '📈';
+        roleBadge = 'Growth Optimizer';
+        deskDecor = '🎯 📊 🚀';
+        break;
+      case 'sosmed':
+        emoji = '📱';
+        roleBadge = 'Community Manager';
+        deskDecor = '📱 💡 💬';
+        break;
+      case 'creative':
+        emoji = '🎨';
+        roleBadge = 'Art Director';
+        deskDecor = '🎨 🎬 🎧';
+        break;
+      case 'seo':
+        emoji = '✍️';
+        roleBadge = 'SEO Strategist';
+        deskDecor = '📚 🔍 📝';
         break;
     }
 
     return (
-      <div className="relative flex flex-col items-center">
-        {/* Animated Workstation Glow */}
-        <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-b ${gradient} border-2 flex items-center justify-center text-3xl shadow-lg transition-transform ${isWorking ? 'scale-105 shadow-indigo-500/20' : 'opacity-80'}`}>
-          <span className={isWorking ? 'animate-bounce drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]' : 'grayscale-[20%]'}>
-            {emoji}
-          </span>
-          {isWorking && (
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border border-slate-950" />
-            </span>
-          )}
+      <div className="relative p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 shadow-inner flex items-center justify-between gap-3">
+        {/* Karakter Meja Kerja 2D */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            {/* Karakter Avatar Box */}
+            <div
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg transition-all duration-300 border-2 ${
+                isWorking
+                  ? 'bg-gradient-to-b from-indigo-900/60 to-purple-900/60 border-indigo-400 shadow-indigo-500/30'
+                  : 'bg-slate-900 border-slate-700 opacity-80'
+              }`}
+            >
+              <span className={isLoading ? 'animate-spin' : isWorking ? 'animate-bounce' : ''}>
+                {isLoading ? '⏳' : emoji}
+              </span>
+
+              {/* Status Dot */}
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                {isWorking && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-3.5 w-3.5 border-2 border-slate-950 ${
+                    isWorking ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`}
+                />
+              </span>
+            </div>
+
+            {/* Bubble Pesan Mengetik Saat Bekerja */}
+            {isWorking && (
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-indigo-600 border border-indigo-400 text-[9px] font-mono font-bold text-white whitespace-nowrap shadow-md flex items-center gap-1 animate-pulse">
+                <span>💬 Mengetik...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Info Posisi Meja */}
+          <div className="space-y-0.5">
+            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>{roleBadge}</span>
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+              <span>Meja Kerja:</span>
+              <span>{deskDecor}</span>
+            </div>
+            <div className="text-[10px] text-indigo-400 font-mono">
+              {division.metricLabel}: <strong className="text-slate-200">{division.metricValue}</strong>
+            </div>
+          </div>
         </div>
 
-        {/* Name tag meja kerja */}
-        <div className="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 border border-slate-800 text-[10px] font-mono text-slate-300 whitespace-nowrap shadow-sm">
-          {roleBadge}
+        {/* Status Badge Game Style */}
+        <div className="text-right flex flex-col items-end">
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm ${
+              isWorking
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            {division.status}
+          </span>
+          <span className="text-[10px] text-slate-500 font-mono mt-1">
+            {division.outputCount} tugas selesai
+          </span>
         </div>
       </div>
     );
@@ -612,14 +668,6 @@ export default function AIEmployeesDashboard() {
       log.source.toLowerCase().includes(query);
     return matchesDivision && matchesSearch;
   });
-
-  // Perhitungan Data Bar Chart dari API atau fallback data mingguan
-  const currentWeeklyData = analyticsData?.weekly || weeklyMetricsData;
-  const maxValues = {
-    views: Math.max(...currentWeeklyData.map((d) => d.views)),
-    clicks: Math.max(...currentWeeklyData.map((d) => d.clicks)),
-    sales: Math.max(...currentWeeklyData.map((d) => d.sales))
-  };
 
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
@@ -648,10 +696,10 @@ export default function AIEmployeesDashboard() {
               </div>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Akses Command Center
+              Akses Kantor Virtual HQ
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-              Halaman ini diproteksi. Masukkan kata sandi administrator untuk mengelola Kantor Virtual Karyawan AI & analitik kompreskilat.site.
+              Halaman ini diproteksi. Masukkan kata sandi administrator untuk mengelola simulasi kantor 2D karyawan AI kompreskilat.site.
             </p>
           </div>
 
@@ -700,7 +748,7 @@ export default function AIEmployeesDashboard() {
               className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Buka Akses Admin</span>
+              <span>Buka Akses Denah Kantor</span>
             </button>
           </form>
 
@@ -721,35 +769,38 @@ export default function AIEmployeesDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Background Ambient Glow */}
+      {/* Background Blueprint Grid Lines & Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
         {/* ======================================================== */}
         {/* TOP NAVBAR / COMMAND CENTER HEADER */}
         {/* ======================================================== */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shadow-indigo-500/20">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shadow-indigo-500/20">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-indigo-400" />
+                <Building2 className="w-6 h-6 text-indigo-400" />
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Link href="/" className="hover:text-white transition flex items-center gap-1">
+              <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                <Link href="/" className="hover:text-white transition">
                   kompreskilat.site
                 </Link>
                 <span>/</span>
-                <span className="text-indigo-400 font-medium">Command Center HQ</span>
+                <span className="text-indigo-400 font-semibold">HQ Virtual Office</span>
+                <span>/</span>
+                <span className="text-slate-500">Lantai 1</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                KILAT HQ — Command Center & Virtual Office
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+                Simulasi Kantor 2D Karyawan AI
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold font-mono">
                   <Flame className="w-3 h-3 text-indigo-400" />
                   Gemini 2.5 Flash
                 </span>
@@ -759,11 +810,11 @@ export default function AIEmployeesDashboard() {
 
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
             {/* Edge Status Pill */}
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-mono text-slate-300">{analyticsData?.latency || 'Edge 24ms'}</span>
+              <span className="text-slate-300">{analyticsData?.latency || 'Edge 24ms'}</span>
               <span className="text-slate-600">|</span>
-              <span className="text-emerald-400 font-medium">Uptime {analyticsData?.uptime || '99.98%'}</span>
+              <span className="text-emerald-400">Uptime {analyticsData?.uptime || '99.98%'}</span>
             </div>
 
             {/* Tombol Sinkronisasi Data Riil */}
@@ -777,14 +828,14 @@ export default function AIEmployeesDashboard() {
               <span className="hidden sm:inline">{isLoadingAnalytics ? 'Sinkronisasi...' : 'Sinkron Metrik'}</span>
             </button>
 
-            {/* Tombol Sinkronisasi / Trigger All */}
+            {/* Tombol Broadcast Trigger All */}
             <button
               onClick={triggerAllDivisions}
               disabled={isProcessing}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-              <span>{isProcessing ? 'Semua Divisi Bekerja...' : 'Perintahkan 6 Divisi'}</span>
+              <span>{isProcessing ? '6 Divisi Bekerja...' : 'Perintahkan 6 Divisi'}</span>
             </button>
 
             <Link
@@ -808,436 +859,233 @@ export default function AIEmployeesDashboard() {
         </header>
 
         {/* ======================================================== */}
-        {/* BAGIAN ATAS: ANALITIK COMMAND CENTER MODERN (SAAS STYLE) */}
+        {/* PANEL METRIK PENDUKUNG (VERCEL ANALYTICS RIIL) */}
         {/* ======================================================== */}
-        <section className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Panel Metrik Bisnis & Pertumbuhan Platform</span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white mt-0.5">
-                Modern SaaS Analytics & Traffic Performance
-              </h2>
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Metrik 1: Total Views */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                Total Views
+              </span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
+                {analyticsData?.viewsGrowth || '+18.4%'}
+              </span>
             </div>
-            <div className="text-xs text-slate-400 font-mono">
-              Periode: 7 Hari Terakhir (31 Okt – 06 Nov 2026)
+            <div className="mt-2 text-2xl font-extrabold text-white font-mono">
+              {(analyticsData?.totalViews ?? 248920).toLocaleString('id-ID')}
             </div>
-          </div>
-
-          {/* 3 KARTU STATISTIK METRIK BISNIS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Card 1: Total Views */}
-            <div className="relative p-6 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800/80 hover:border-cyan-500/30 transition shadow-lg group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-cyan-400" />
-                  Total Views (Tayangan)
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
-                  <TrendingUp className="w-3 h-3" />
-                  {analyticsData?.viewsGrowth ?? '+18.4%'}
-                </span>
-              </div>
-
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-white font-mono tracking-tight">
-                  {(analyticsData?.totalViews ?? 248920).toLocaleString('id-ID')}
-                </span>
-                <span className="text-xs text-slate-400">tayangan</span>
-              </div>
-
-              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                Trafik organik seluruh 28+ tools utilitas (kompres, invoice, PDF & gambar).
-              </p>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                <span>Rata-rata Harian: ~{(analyticsData?.avgDailyViews ?? 35560).toLocaleString('id-ID')}</span>
-                <span className="text-cyan-400">Puncak: {(analyticsData?.peakViews ?? 44200).toLocaleString('id-ID')} (Kam)</span>
-              </div>
-            </div>
-
-            {/* Card 2: Total Clicks */}
-            <div className="relative p-6 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800/80 hover:border-purple-500/30 transition shadow-lg group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <MousePointerClick className="w-4 h-4 text-purple-400" />
-                  Total Clicks (Interaksi)
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
-                  <TrendingUp className="w-3 h-3" />
-                  {analyticsData?.clicksGrowth ?? '+12.6%'}
-                </span>
-              </div>
-
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-white font-mono tracking-tight">
-                  {(analyticsData?.totalClicks ?? 41350).toLocaleString('id-ID')}
-                </span>
-                <span className="text-xs text-slate-400">klik aksi</span>
-              </div>
-
-              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                Eksekusi kompresi instan, cetak thermal nota, dan unduh hasil konversi.
-              </p>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                <span>CTR Rata-rata: {analyticsData?.ctr ?? '16.61%'}</span>
-                <span className="text-purple-400">Visitors: {(analyticsData?.uniqueVisitors ?? 142800).toLocaleString('id-ID')}</span>
-              </div>
-            </div>
-
-            {/* Card 3: Total Sales / Konversi */}
-            <div className="relative p-6 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800/80 hover:border-emerald-500/30 transition shadow-lg group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
-                  Total Sales & Monetisasi
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
-                  <TrendingUp className="w-3 h-3" />
-                  {analyticsData?.salesGrowth ?? '+24.1%'}
-                </span>
-              </div>
-
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
-                  {formatIDR(analyticsData?.totalSales ?? 18450000)}
-                </span>
-              </div>
-
-              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                Langganan API Cloud, donasi kopi pengguna, & estimasi Adsense Publisher.
-              </p>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                <span>312 Transaksi Berhasil</span>
-                <span className="text-emerald-400">ARPU: ~Rp 59.100</span>
-              </div>
+            <div className="text-[10px] text-slate-500 mt-1 font-mono">
+              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 35560).toLocaleString('id-ID')}/hari
             </div>
           </div>
 
-          {/* GRAFIK BATANG INTERAKTIF (BAR CHART) HARIAN */}
-          <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl backdrop-blur-sm space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  Grafik Performa Harian Interaktif
-                  <span className="text-xs font-normal text-slate-400">
-                    (Arahkan kursor pada batang untuk melihat rincian)
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Perbandingan tren pertumbuhan platform kompreskilat.site selama 7 hari berjalan
-                </p>
-              </div>
-
-              {/* Metric Toggle Tabs */}
-              <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
-                <button
-                  onClick={() => setSelectedChartMetric('views')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${selectedChartMetric === 'views' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Views
-                </button>
-                <button
-                  onClick={() => setSelectedChartMetric('clicks')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${selectedChartMetric === 'clicks' ? 'bg-purple-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Clicks
-                </button>
-                <button
-                  onClick={() => setSelectedChartMetric('sales')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${selectedChartMetric === 'sales' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Sales (Rp)
-                </button>
-              </div>
+          {/* Metrik 2: Total Clicks */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <MousePointerClick className="w-3.5 h-3.5 text-purple-400" />
+                Total Clicks
+              </span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
+                {analyticsData?.clicksGrowth || '+12.6%'}
+              </span>
             </div>
+            <div className="mt-2 text-2xl font-extrabold text-white font-mono">
+              {(analyticsData?.totalClicks ?? 41350).toLocaleString('id-ID')}
+            </div>
+            <div className="text-[10px] text-slate-500 mt-1 font-mono">
+              CTR Konversi: {analyticsData?.ctr || '16.61%'}
+            </div>
+          </div>
 
-            {/* Bar Chart Visual Container */}
-            <div className="pt-6 pb-2">
-              <div className="h-56 flex items-end justify-between gap-2 sm:gap-6 border-b border-slate-800/80 pb-4">
-                {currentWeeklyData.map((metric, index) => {
-                  const currentValue = metric[selectedChartMetric];
-                  const maxValue = maxValues[selectedChartMetric];
-                  const percentage = Math.max(15, Math.round((currentValue / maxValue) * 100));
-                  const isHovered = hoveredDayIndex === index;
+          {/* Metrik 3: Unique Visitors */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                Unique Visitors
+              </span>
+              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full font-mono">
+                Live
+              </span>
+            </div>
+            <div className="mt-2 text-2xl font-extrabold text-white font-mono">
+              {(analyticsData?.uniqueVisitors ?? 142800).toLocaleString('id-ID')}
+            </div>
+            <div className="text-[10px] text-slate-500 mt-1 font-mono">
+              Pengunjung unik terverifikasi
+            </div>
+          </div>
 
-                  let barColor = 'from-cyan-600 to-cyan-400 shadow-cyan-500/20';
-                  if (selectedChartMetric === 'clicks') barColor = 'from-purple-600 to-violet-400 shadow-purple-500/20';
-                  if (selectedChartMetric === 'sales') barColor = 'from-emerald-600 to-teal-400 shadow-emerald-500/20';
-
-                  return (
-                    <div
-                      key={metric.day}
-                      onMouseEnter={() => setHoveredDayIndex(index)}
-                      onMouseLeave={() => setHoveredDayIndex(null)}
-                      className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative"
-                    >
-                      {/* Floating Tooltip saat Hover */}
-                      {isHovered && (
-                        <div className="absolute -top-16 z-20 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 shadow-2xl text-[11px] whitespace-nowrap animate-in fade-in zoom-in-95 duration-150">
-                          <div className="font-bold text-white flex items-center justify-between gap-3">
-                            <span>{metric.day}, {metric.date}</span>
-                            <span className="text-indigo-400">
-                              {selectedChartMetric === 'sales'
-                                ? formatIDR(metric.sales)
-                                : selectedChartMetric === 'views'
-                                ? `${metric.views.toLocaleString('id-ID')} views`
-                                : `${metric.clicks.toLocaleString('id-ID')} clicks`}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
-                            <span>V: {metric.views.toLocaleString('id-ID')}</span>
-                            <span>•</span>
-                            <span>C: {metric.clicks.toLocaleString('id-ID')}</span>
-                            <span>•</span>
-                            <span>{formatIDR(metric.sales)}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Bar batang */}
-                      <div className="w-full max-w-[48px] bg-slate-800/40 rounded-t-xl overflow-hidden flex flex-col justify-end transition-all">
-                        <div
-                          style={{ height: `${percentage}%` }}
-                          className={`w-full rounded-t-xl bg-gradient-to-t ${barColor} transition-all duration-300 group-hover:brightness-125 shadow-lg relative`}
-                        >
-                          {/* Highlight peak label */}
-                          {percentage === 100 && (
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-amber-300 font-mono bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded">
-                              PEAK
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Label Hari & Tanggal */}
-                      <div className="mt-3 text-center">
-                        <div className={`text-xs font-bold transition ${isHovered ? 'text-white' : 'text-slate-300'}`}>
-                          {metric.day}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono">
-                          {metric.date.split(' ')[0]}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Ringkasan Insight Bawah Chart */}
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                  <span>Kenaikan trafik tertinggi terjadi pada hari <strong>Kamis (+38% spike)</strong> akibat rilis fitur Nota Thermal.</span>
-                </div>
-                <div className="font-mono text-slate-500">
-                  Data disinkronkan otomatis dari: <span className="text-slate-300">{analyticsData?.source || 'Vercel Analytics & Telemetry'}</span> ({analyticsData?.syncedAt || 'Terverifikasi'})
-                </div>
-              </div>
+          {/* Metrik 4: Total Monetisasi / Sales */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                Total Monetisasi
+              </span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
+                {analyticsData?.salesGrowth || '+24.1%'}
+              </span>
+            </div>
+            <div className="mt-2 text-xl sm:text-2xl font-extrabold text-white font-mono">
+              {formatIDR(analyticsData?.totalSales ?? 18450000)}
+            </div>
+            <div className="text-[10px] text-slate-500 mt-1 font-mono">
+              312 pesanan & iklan terkonfirmasi
             </div>
           </div>
         </section>
 
         {/* ======================================================== */}
-        {/* BAGIAN BAWAH: SIMULASI KANTOR VIRTUAL 2D / OFFICE GRID */}
+        {/* DENAH KANTOR 2D INTERAKTIF (OFFICE FLOOR PLAN BLUEPRINT) */}
         {/* ======================================================== */}
-        <section className="space-y-6 pt-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-purple-400">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Simulasi Denah Kantor Virtual 2D (Office Grid Management)</span>
+        <section className="relative rounded-3xl border-2 border-slate-800 bg-slate-900/90 shadow-2xl overflow-hidden backdrop-blur-md">
+          {/* Header Blueprint Denah Kantor */}
+          <div className="p-5 sm:p-6 border-b border-slate-800 bg-slate-950/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 font-mono">
+                  BLUEPRINT DENAH GEDUNG OPERASIONAL // LANTAI 01
+                </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white mt-0.5 flex items-center gap-2.5">
-                Denah Lantai 1: 6 Ruangan Divisi Karyawan AI
-                <span className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold">
-                  {activeCount} Aktif / 6 Total Divisi
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                Tata Letak Denah Kantor 2D Karyawan AI
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold">
+                  {activeCount} Ruangan Aktif Bekerja
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Setiap ruangan mensimulasikan lingkungan kerja divisi AI yang siap mengeksekusi tugas otomatis melalui Gemini 2.5 Flash
+                Klik tombol &apos;Perintah AI&apos; pada masing-masing ruangan untuk menugaskan divisi secara real-time via Gemini API.
               </p>
             </div>
 
-            {/* Kontrol Tampilan & Filter */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Filter Status */}
-              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
-                <button
-                  onClick={() => setActiveFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${activeFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Semua ({divisions.length})
-                </button>
-                <button
-                  onClick={() => setActiveFilter('Working')}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${activeFilter === 'Working' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Working ({activeCount})
-                </button>
-                <button
-                  onClick={() => setActiveFilter('Idle')}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${activeFilter === 'Idle' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Idle ({divisions.length - activeCount})
-                </button>
-              </div>
-
-              {/* Toggle Mode: 2D Blueprint vs Compact */}
-              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
-                <button
-                  onClick={() => setActiveViewMode('office2d')}
-                  title="Tampilan Denah Kantor 2D Berpetak"
-                  className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition cursor-pointer ${activeViewMode === 'office2d' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Denah 2D</span>
-                </button>
-                <button
-                  onClick={() => setActiveViewMode('compact')}
-                  title="Tampilan Kartu Ringkas"
-                  className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition cursor-pointer ${activeViewMode === 'compact' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                  <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Kompak</span>
-                </button>
-              </div>
+            {/* Filter Ruangan */}
+            <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                  activeFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Semua Ruangan ({divisions.length})
+              </button>
+              <button
+                onClick={() => setActiveFilter('Working')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                  activeFilter === 'Working' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Working ({activeCount})
+              </button>
+              <button
+                onClick={() => setActiveFilter('Idle')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                  activeFilter === 'Idle' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Idle ({divisions.length - activeCount})
+              </button>
             </div>
           </div>
 
-          {/* DENAH KANTOR 2D / GRID RUANGAN BERPETAK */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDivisions.map((division) => {
-              const isWorking = division.status === 'Working';
-              const isLoading = loadingDivisionId === division.id;
+          {/* DENAH LANTAI UTAMA (FLOOR PLAN GRID) */}
+          <div className="p-6 sm:p-8 space-y-8 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px]">
+            {/* GRID 6 RUANGAN DIVISI */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDivisions.map((division) => {
+                const isWorking = division.status === 'Working';
+                const isLoading = loadingDivisionId === division.id;
 
-              return (
-                <div
-                  key={division.id}
-                  className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden flex flex-col justify-between group shadow-xl ${division.borderColor} bg-slate-900/90`}
-                >
-                  {/* Decorative Blueprint Corner Grid Accent */}
-                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:20px_20px] opacity-25 pointer-events-none" />
-
-                  {/* Header Ruangan Kantor 2D */}
-                  <div className="relative p-4 border-b border-slate-800/80 bg-slate-950/70 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 shadow-sm">
-                        {renderDivisionIcon(division.iconName)}
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono tracking-wider text-slate-400 uppercase font-semibold">
+                return (
+                  <div
+                    key={division.id}
+                    className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-xl ${division.borderColor} bg-slate-900/95 group`}
+                  >
+                    {/* Header Pintu Masuk Ruangan 2D */}
+                    <div className="p-3.5 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                        <span className="text-[10px] font-mono font-bold text-slate-400 tracking-wider">
                           {division.roomCode}
-                        </div>
-                        <h3 className="text-sm font-bold text-white leading-tight">
-                          {division.name}
-                        </h3>
+                        </span>
                       </div>
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500">
+                        PINTU MASUK
+                      </span>
                     </div>
 
-                    {/* Status Pill */}
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold font-mono border transition ${
-                        isWorking
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                      {division.status}
-                    </span>
-                  </div>
-
-                  {/* 2D Workstation Visual Area */}
-                  {activeViewMode === 'office2d' && (
-                    <div className="relative px-5 py-4 border-b border-slate-800/60 bg-gradient-to-b from-slate-950/40 via-slate-900/20 to-slate-950/60">
-                      <div className="flex items-center justify-between gap-4">
-                        {/* Avatar 2D Karyawan AI */}
-                        {render2DAvatar(division.iconName, isWorking)}
-
-                        {/* Visual Peralatan Ruangan / Workstation Specs */}
-                        <div className="flex-1 space-y-1.5 min-w-0">
-                          <div className="text-[10px] uppercase tracking-wider text-slate-500 font-mono font-bold">
-                            Perangkat Kerja Ruangan:
+                    {/* Area Interior Ruangan (Tile Pattern Lantai Kantor) */}
+                    <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
+                      {/* Nama Divisi & Ikon */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
+                            {renderDivisionIcon(division.iconName)}
                           </div>
-                          <div className="flex flex-wrap gap-1">
-                            {division.equipment.map((item, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-0.5 rounded-md bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 font-mono"
-                              >
-                                {item}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="pt-1 flex items-center justify-between text-[11px]">
-                            <span className="text-slate-400">{division.metricLabel}:</span>
-                            <span className="font-mono font-bold text-indigo-400">{division.metricValue}</span>
+                          <div>
+                            <h3 className="text-sm font-bold text-white leading-tight">
+                              {division.name}
+                            </h3>
+                            <div className="text-[10px] text-slate-400 font-mono">
+                              {division.wing}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
 
-                  {/* Terminal Aktivitas Saat Ini */}
-                  <div className="relative p-4 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                        <span className="flex items-center gap-1.5 text-slate-300 font-mono text-[10px] uppercase">
-                          <Activity className="w-3 h-3 text-indigo-400" />
-                          Aktivitas Terminal Terkini:
-                        </span>
-                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-mono">
-                          <Clock className="w-2.5 h-2.5" />
-                          {division.lastUpdated}
-                        </span>
+                      {/* Karakter Pekerja 2D Meja Kerja */}
+                      {renderGameWorkstation(division, isWorking, isLoading)}
+
+                      {/* Layar Terminal Pekerjaan Terakhir */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                          <span className="flex items-center gap-1 text-slate-300">
+                            <Activity className="w-3 h-3 text-indigo-400" />
+                            Aktivitas Tugas Saat Ini:
+                          </span>
+                          <span className="text-slate-500 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {division.lastUpdated}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed min-h-[58px] flex items-center font-sans">
+                          <p className="line-clamp-2">{division.currentTask}</p>
+                        </div>
                       </div>
 
-                      <div className="relative rounded-xl bg-slate-950/80 p-3 border border-slate-800/80 text-xs text-slate-300 leading-relaxed font-sans min-h-[64px] flex items-center">
-                        <p className="line-clamp-3">
-                          {division.currentTask}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Footer Ruangan: Output Count + Tombol Aksi Perintah AI */}
-                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 font-mono uppercase">Total Output</span>
-                        <span className="text-xs font-bold text-white font-mono">
-                          {division.outputCount} <span className="text-slate-400 font-normal">tugas</span>
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
+                      {/* Tombol Aksi di Ruangan */}
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        {/* Tombol Eksekusi AI Langsung */}
                         <button
                           onClick={() => triggerTask(division.id)}
                           disabled={isLoading}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+                          className="flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
                         >
                           {isLoading ? (
                             <>
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Memproses...</span>
+                              <span>Memproses AI...</span>
                             </>
                           ) : (
                             <>
-                              <Send className="w-3.5 h-3.5" />
+                              <Zap className="w-3.5 h-3.5" />
                               <span>Perintah AI</span>
                             </>
                           )}
                         </button>
 
+                        {/* Tombol Opsi Preset & Instruksi Kustom */}
                         <button
                           onClick={() => {
                             setActiveDivision(division);
                             setModalOutput(null);
                           }}
-                          title="Instruksi Kustom Divisi"
+                          title="Instruksi Kustom"
                           className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer"
                         >
                           <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1245,9 +1093,32 @@ export default function AIEmployeesDashboard() {
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* AREA LORONG TENGAH & BREAKROOM (OFFICE CORRIDOR SIMULATION) */}
+            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-400">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <Coffee className="w-4 h-4" />
                 </div>
-              );
-            })}
+                <div>
+                  <span className="font-bold text-white">Central Corridor & Coffee Lounge</span>
+                  <p className="text-[11px] text-slate-500">
+                    Titik koordinasi antar 6 divisi operasional kompreskilat.site
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-[11px]">
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Jaringan Internal: Aktif
+                </span>
+                <span className="text-slate-600">|</span>
+                <span className="text-slate-400">Total Output: <strong>{totalOutputs} tugas</strong></span>
+              </div>
+            </div>
           </div>
         </section>
 
