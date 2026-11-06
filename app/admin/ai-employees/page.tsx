@@ -47,7 +47,11 @@ import {
   LogOut,
   Coffee,
   Users,
-  Wifi
+  Wifi,
+  Edit3,
+  BookOpen,
+  CheckSquare,
+  Save
 } from 'lucide-react';
 
 export type DivisionStatus = 'Working' | 'Idle';
@@ -107,6 +111,18 @@ export interface AnalyticsData {
   weekly: DailyMetric[];
   source: string;
   syncedAt: string;
+}
+
+export interface SeoArticleDraft {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  keywords: string;
+  metaDescription: string;
+  content: string;
+  status: 'pending_review' | 'approved' | 'revision';
+  createdAt: string;
 }
 
 const fallbackWeeklyData: DailyMetric[] = [
@@ -285,6 +301,19 @@ export default function AIEmployeesDashboard() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
 
+  // State khusus kurasi draf artikel Divisi SEO (Google AdSense Safety Queue)
+  const [seoDrafts, setSeoDrafts] = useState<SeoArticleDraft[]>([]);
+  const [editingDraft, setEditingDraft] = useState<SeoArticleDraft | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+
+  // Helper simpan draf ke localStorage
+  const saveDraftsToStorage = (updated: SeoArticleDraft[]) => {
+    setSeoDrafts(updated);
+    try {
+      localStorage.setItem('kk_seo_article_drafts', JSON.stringify(updated));
+    } catch (e) {}
+  };
+
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
   const [logDivisionFilter, setLogDivisionFilter] = useState<string>('all');
   const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
@@ -342,6 +371,25 @@ export default function AIEmployeesDashboard() {
       if (savedAuth === 'authorized_2026') {
         setIsAuthenticated(true);
         fetchAnalytics();
+      }
+
+      // Muat daftar draf artikel SEO yang tersimpan
+      const savedDrafts = localStorage.getItem('kk_seo_article_drafts');
+      if (savedDrafts) {
+        setSeoDrafts(JSON.parse(savedDrafts));
+      } else {
+        const initialDraft: SeoArticleDraft = {
+          id: 'draft-initial-sample',
+          title: 'Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM',
+          slug: 'cara-membuat-invoice-nota-thermal-online-gratis',
+          category: 'Panduan & Tutorial UMKM',
+          keywords: 'cara membuat nota thermal online, cetak struk kasir 58mm gratis',
+          metaDescription: 'Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.',
+          content: `# Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM\n\n**Target Keyword:** cara membuat nota thermal online | **Estimasi Baca:** 4 Menit\n**Meta Deskripsi:** Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.\n\n## 1. Pendahuluan\nBagi pelaku Usaha Mikro, Kecil, dan Menengah (UMKM), bukti transaksi rapi adalah kunci kepercayaan pelanggan...\n\n## 2. Fitur Unggulan KompresKilat\n- Cetak Thermal 58mm & 80mm\n- Stempel Lunas Digital Fleksibel\n- Privasi 100% aman di browser\n\n## 3. Langkah-Langkah Pembuatan\n1. Masuk ke generator nota kompreskilat.site\n2. Isi produk dan harga\n3. Klik tombol Cetak langsung ke printer thermal`,
+          status: 'pending_review',
+          createdAt: '19:35 WIB'
+        };
+        setSeoDrafts([initialDraft]);
       }
     } catch (e) {}
   }, []);
@@ -447,6 +495,23 @@ export default function AIEmployeesDashboard() {
 
         setActivityLogs((prev) => [newLogEntry, ...prev.slice(0, 49)]);
 
+        // Jika tugas dari Divisi SEO, simpan otomatis ke antrean draf kurasi admin (AdSense Safety)
+        if (id === 'seo') {
+          const draftPayload: SeoArticleDraft = {
+            id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            title: data.articleDraft?.title || 'Draf Artikel SEO Baru: Panduan KompresKilat',
+            slug: data.articleDraft?.slug || 'panduan-kompres-kilat-artikel-baru',
+            category: data.articleDraft?.category || 'Panduan & Tutorial UMKM',
+            keywords: data.articleDraft?.keywords || 'kompres kilat, tools online gratis',
+            metaDescription: data.articleDraft?.metaDescription || 'Panduan edukasi utilitas berkas kompreskilat.site',
+            content: data.articleDraft?.content || resultTask,
+            status: 'pending_review',
+            createdAt: `${timeStr} WIB`
+          };
+
+          saveDraftsToStorage([draftPayload, ...seoDrafts]);
+        }
+
         if (activeDivision?.id === id) {
           setModalOutput({
             text: resultTask,
@@ -489,6 +554,22 @@ export default function AIEmployeesDashboard() {
       };
 
       setActivityLogs((prev) => [fallbackLogEntry, ...prev.slice(0, 49)]);
+
+      if (id === 'seo') {
+        const fallbackDraft: SeoArticleDraft = {
+          id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          title: 'Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM',
+          slug: 'cara-membuat-invoice-nota-thermal-online-gratis',
+          category: 'Panduan & Tutorial UMKM',
+          keywords: 'cara membuat nota thermal online, cetak struk kasir 58mm gratis',
+          metaDescription: 'Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.',
+          content: fallbackMsg,
+          status: 'pending_review',
+          createdAt: `${timeStr} WIB`
+        };
+
+        saveDraftsToStorage([fallbackDraft, ...seoDrafts]);
+      }
 
       if (activeDivision?.id === id) {
         setModalOutput({
@@ -1123,6 +1204,201 @@ export default function AIEmployeesDashboard() {
         </section>
 
         {/* ======================================================== */}
+        {/* PANEL KURASI DRAF ARTIKEL SEO (EDITORIAL REVIEW QUEUE) */}
+        {/* ======================================================== */}
+        <section className="rounded-3xl border-2 border-slate-800 bg-slate-900/90 shadow-2xl overflow-hidden backdrop-blur-md">
+          {/* Header */}
+          <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono">
+                  KURASI EDITORIAL // DIVISI SEO & CONTENT WRITER
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                Antrean Review Draf Artikel SEO (AdSense Safety Guard)
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold">
+                  {seoDrafts.length} Draf Tersedia
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400 max-w-2xl">
+                Artikel dari Divisi SEO disimpan di sini agar dapat ditinjau, diedit, dan disesuaikan kualitasnya oleh Administrator sebelum dirilis ke publik demi mematuhi kebijakan Google AdSense.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              <button
+                onClick={() => triggerTask('seo')}
+                disabled={loadingDivisionId === 'seo'}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/25 cursor-pointer disabled:opacity-50"
+              >
+                {loadingDivisionId === 'seo' ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menulis Draf Baru...</span>
+                  </>
+                ) : (
+                  <>
+                    <PenTool className="w-3.5 h-3.5" />
+                    <span>Generate Draf Artikel Baru</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Table / List of SEO Drafts */}
+          <div className="p-4 sm:p-6 space-y-4">
+            {seoDrafts.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 space-y-2">
+                <BookOpen className="w-10 h-10 mx-auto text-slate-600" />
+                <p className="text-xs font-medium">Belum ada draf artikel di antrean review.</p>
+                <p className="text-[11px] text-slate-600">
+                  Klik tombol &quot;Generate Draf Artikel Baru&quot; atau &quot;Perintah AI&quot; pada Ruang SEO 106 di atas.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {seoDrafts.map((draft) => {
+                  const isApproved = draft.status === 'approved';
+                  const isRevision = draft.status === 'revision';
+
+                  return (
+                    <div
+                      key={draft.id}
+                      className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800/90 hover:border-slate-700/80 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 group"
+                    >
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Status Badge */}
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                              isApproved
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                : isRevision
+                                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            }`}
+                          >
+                            {isApproved
+                              ? '✓ Siap Publikasi'
+                              : isRevision
+                              ? '⚠ Perlu Revisi'
+                              : '⏳ Menunggu Review Admin'}
+                          </span>
+
+                          <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-600" />
+                            Dibuat: {draft.createdAt}
+                          </span>
+
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono">
+                            Slug: /{draft.slug}
+                          </span>
+                        </div>
+
+                        {/* Title & Excerpt */}
+                        <div>
+                          <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-emerald-300 transition">
+                            {draft.title}
+                          </h3>
+                          <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                            {draft.metaDescription || draft.content.slice(0, 160)}
+                          </p>
+                        </div>
+
+                        {/* Keyword tags */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="text-[10px] text-slate-500 font-mono">Keywords:</span>
+                          {draft.keywords.split(',').map((kw, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800/80 text-[10px] text-slate-300 font-mono"
+                            >
+                              {kw.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
+                        {/* Tombol Review & Edit Manual */}
+                        <button
+                          onClick={() => {
+                            setEditingDraft({ ...draft });
+                            setIsReviewModalOpen(true);
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/20"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Review & Edit</span>
+                        </button>
+
+                        {/* Tombol Salin Markdown */}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(draft.content);
+                            setCopiedLogId(draft.id);
+                            setTimeout(() => setCopiedLogId(null), 2000);
+                          }}
+                          title="Salin Markdown Lengkap"
+                          className="p-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          {copiedLogId === draft.id ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <span className="text-[11px] text-emerald-400">Tersalin</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[11px] hidden sm:inline">Salin</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Quick Approve Toggle */}
+                        <button
+                          onClick={() => {
+                            const newStatus = isApproved ? 'pending_review' : 'approved';
+                            const updated = seoDrafts.map((d) =>
+                              d.id === draft.id ? { ...d, status: newStatus as any } : d
+                            );
+                            saveDraftsToStorage(updated);
+                          }}
+                          title={isApproved ? 'Batalkan Persetujuan' : 'Setujui Draf'}
+                          className={`p-2 rounded-xl border text-xs transition cursor-pointer ${
+                            isApproved
+                              ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-emerald-400'
+                          }`}
+                        >
+                          <CheckSquare className="w-4 h-4" />
+                        </button>
+
+                        {/* Hapus Draf */}
+                        <button
+                          onClick={() => {
+                            const updated = seoDrafts.filter((d) => d.id !== draft.id);
+                            saveDraftsToStorage(updated);
+                          }}
+                          title="Hapus Draf"
+                          className="p-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-xs transition cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ======================================================== */}
         {/* REKAPITULASI GLOBAL RIWAYAT AKTIVITAS (ACTIVITY LOGS) */}
         {/* ======================================================== */}
         <section className="rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl overflow-hidden backdrop-blur-md">
@@ -1397,7 +1673,7 @@ export default function AIEmployeesDashboard() {
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-200 leading-relaxed font-sans bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <p className="text-xs text-slate-200 leading-relaxed font-sans bg-slate-900/60 p-3 rounded-lg border border-slate-800 whitespace-pre-wrap">
                     {modalOutput.text}
                   </p>
 
@@ -1406,6 +1682,173 @@ export default function AIEmployeesDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL EDITORIAL: REVIEW & EDIT MANUAL DRAF ARTIKEL SEO */}
+      {/* ======================================================== */}
+      {isReviewModalOpen && editingDraft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    Review & Kurasi Editorial Artikel SEO
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
+                      AdSense Safety Guard
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Pastikan konten orisinal, bermanfaat bagi pengguna, dan bebas dari duplikasi sebelum dirilis.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsReviewModalOpen(false);
+                  setEditingDraft(null);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* Judul & Slug */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Judul Artikel (H1):</label>
+                  <input
+                    type="text"
+                    value={editingDraft.title}
+                    onChange={(e) => setEditingDraft({ ...editingDraft, title: e.target.value })}
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Slug URL:</label>
+                  <input
+                    type="text"
+                    value={editingDraft.slug}
+                    onChange={(e) => setEditingDraft({ ...editingDraft, slug: e.target.value })}
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Meta Deskripsi & Target Keyword */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-300">Meta Deskripsi:</label>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {editingDraft.metaDescription.length}/160 karakter
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={editingDraft.metaDescription}
+                    onChange={(e) => setEditingDraft({ ...editingDraft, metaDescription: e.target.value })}
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Target Keyword:</label>
+                  <input
+                    type="text"
+                    value={editingDraft.keywords}
+                    onChange={(e) => setEditingDraft({ ...editingDraft, keywords: e.target.value })}
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Status Review Dropdown */}
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Status Kurasi Administrator:</label>
+                <select
+                  value={editingDraft.status}
+                  onChange={(e) => setEditingDraft({ ...editingDraft, status: e.target.value as any })}
+                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="pending_review">⏳ Menunggu Review Administrator</option>
+                  <option value="approved">✓ Siap Diterbitkan ke Blog Publik (Approved)</option>
+                  <option value="revision">⚠ Perlu Revisi / Tambahan Panduan</option>
+                </select>
+              </div>
+
+              {/* Textarea Konten Markdown */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-300">Konten Artikel Lengkap (Markdown):</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(editingDraft.content);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer font-medium"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{copied ? 'Tersalin!' : 'Salin Markdown'}</span>
+                  </button>
+                </div>
+                <textarea
+                  rows={13}
+                  value={editingDraft.content}
+                  onChange={(e) => setEditingDraft({ ...editingDraft, content: e.target.value })}
+                  className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-xs leading-relaxed focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-slate-400 text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Format terverifikasi siap rilis untuk blog Next.js</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReviewModalOpen(false);
+                    setEditingDraft(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer"
+                >
+                  Tutup
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = seoDrafts.map((d) =>
+                      d.id === editingDraft.id ? editingDraft : d
+                    );
+                    saveDraftsToStorage(updated);
+                    setIsReviewModalOpen(false);
+                    setEditingDraft(null);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/25 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
