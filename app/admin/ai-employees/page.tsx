@@ -24,7 +24,12 @@ import {
   ExternalLink,
   SlidersHorizontal,
   X,
-  Play
+  Play,
+  Terminal,
+  Search,
+  Trash2,
+  FileText,
+  Check
 } from 'lucide-react';
 
 export type DivisionStatus = 'Working' | 'Idle';
@@ -51,7 +56,8 @@ export interface ActivityLog {
   divisionName: string;
   taskTitle: string;
   timestamp: string;
-  source: 'gemini-2.5-flash' | 'simulated-agent';
+  source: 'gemini-2.5-flash' | 'simulated-agent' | string;
+  status?: 'success' | 'info';
 }
 
 const initialDivisions: Division[] = [
@@ -181,30 +187,36 @@ export default function AIEmployeesDashboard() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'Working' | 'Idle'>('all');
   const [modalOutput, setModalOutput] = useState<{ text: string; source: string; timestamp: string } | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [logSearchQuery, setLogSearchQuery] = useState<string>('');
+  const [logDivisionFilter, setLogDivisionFilter] = useState<string>('all');
+  const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
       id: 'log-1',
       divisionId: 'seo',
       divisionName: 'Divisi SEO & Content Writer',
-      taskTitle: 'Audit sitemap.xml dan struktur data Schema.org terverifikasi sukses.',
-      timestamp: '18:42',
-      source: 'gemini-2.5-flash'
+      taskTitle: 'Audit sitemap.xml dan struktur data Schema.org terverifikasi sukses dengan 104 index terdaftar.',
+      timestamp: '19:12',
+      source: 'gemini-2.5-flash',
+      status: 'success'
     },
     {
       id: 'log-2',
       divisionId: 'it',
       divisionName: 'Divisi IT & Sistem',
-      taskTitle: 'Pemeriksaan uptime Vercel: 99.98% dengan latensi respons 28ms.',
-      timestamp: '18:38',
-      source: 'gemini-2.5-flash'
+      taskTitle: 'Pemeriksaan uptime Vercel: 99.98% dengan latensi respons 28ms edge network.',
+      timestamp: '19:08',
+      source: 'gemini-2.5-flash',
+      status: 'success'
     },
     {
       id: 'log-3',
       divisionId: 'analytics',
       divisionName: 'Divisi Analytics',
-      taskTitle: 'Audit unit iklan AdSense: Seluruh slot terisolasi aman dari mode cetak.',
-      timestamp: '18:30',
-      source: 'gemini-2.5-flash'
+      taskTitle: 'Audit unit iklan AdSense: Seluruh slot terisolasi aman dari mode cetak nota/struk.',
+      timestamp: '18:55',
+      source: 'gemini-2.5-flash',
+      status: 'success'
     }
   ]);
 
@@ -270,18 +282,18 @@ export default function AIEmployeesDashboard() {
           })
         );
 
-        // Tambahkan ke log stream aktivitas real-time
-        setActivityLogs((prev) => [
-          {
-            id: `log-${Date.now()}`,
-            divisionId: targetDivision.id,
-            divisionName: targetDivision.name,
-            taskTitle: resultTask,
-            timestamp: timeStr,
-            source: 'gemini-2.5-flash'
-          },
-          ...prev.slice(0, 9)
-        ]);
+        // Masukkan riwayat log aktivitas global baru ke dalam daftar log (waktu, divisi, hasil tugas)
+        const newLogEntry: ActivityLog = {
+          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          divisionId: targetDivision.id,
+          divisionName: targetDivision.name,
+          taskTitle: resultTask,
+          timestamp: timeStr,
+          source: sourceModel === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : sourceModel,
+          status: 'success'
+        };
+
+        setActivityLogs((prev) => [newLogEntry, ...prev.slice(0, 49)]);
 
         if (activeDivision?.id === id) {
           setModalOutput({
@@ -295,7 +307,7 @@ export default function AIEmployeesDashboard() {
       }
     } catch (err: any) {
       console.warn('Gagal memanggil API AI, menggunakan respon operasional cadangan:', err);
-      const fallbackMsg = `Divisi ${targetDivision.name} telah menyelesaikan instruksi: "${promptText || 'Tugas optimasi platform'}" dan menyelaraskan metrik kompreskilat.site.`;
+      const fallbackMsg = `Divisi ${targetDivision.name} telah menyelesaikan instruksi: "${promptText || 'Tugas optimasi platform'}" dan menyelaraskan metrik operasional kompreskilat.site.`;
       const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
       setDivisions((prev) =>
@@ -313,17 +325,18 @@ export default function AIEmployeesDashboard() {
         })
       );
 
-      setActivityLogs((prev) => [
-        {
-          id: `log-${Date.now()}`,
-          divisionId: targetDivision.id,
-          divisionName: targetDivision.name,
-          taskTitle: fallbackMsg,
-          timestamp: timeStr,
-          source: 'simulated-agent'
-        },
-        ...prev.slice(0, 9)
-      ]);
+      // Masukkan riwayat cadangan ke dalam daftar log
+      const fallbackLogEntry: ActivityLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        divisionId: targetDivision.id,
+        divisionName: targetDivision.name,
+        taskTitle: fallbackMsg,
+        timestamp: timeStr,
+        source: 'simulated-agent',
+        status: 'info'
+      };
+
+      setActivityLogs((prev) => [fallbackLogEntry, ...prev.slice(0, 49)]);
 
       if (activeDivision?.id === id) {
         setModalOutput({
@@ -380,6 +393,17 @@ export default function AIEmployeesDashboard() {
   const filteredDivisions = divisions.filter(
     (div) => activeFilter === 'all' || div.status === activeFilter
   );
+
+  const filteredLogs = activityLogs.filter((log) => {
+    const matchesDivision = logDivisionFilter === 'all' || log.divisionId === logDivisionFilter;
+    const query = logSearchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      log.taskTitle.toLowerCase().includes(query) ||
+      log.divisionName.toLowerCase().includes(query) ||
+      log.source.toLowerCase().includes(query);
+    return matchesDivision && matchesSearch;
+  });
 
   if (!mounted) {
     return null;
@@ -666,37 +690,161 @@ export default function AIEmployeesDashboard() {
         </div>
 
         {/* ======================================================== */}
-        {/* LIVE ACTIVITY FEED STREAM */}
+        {/* REKAPITULASI GLOBAL RIWAYAT AKTIVITAS (ACTIVITY LOGS) */}
         {/* ======================================================== */}
-        <section className="mt-12 p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <h3 className="text-sm sm:text-base font-bold text-white">Log Aktivitas Real-Time Karyawan AI</h3>
-            </div>
-            <span className="text-xs text-slate-400">Otomatis sinkronisasi</span>
-          </div>
-
-          <div className="space-y-2.5">
-            {activityLogs.map((log) => (
-              <div
-                key={log.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-950/60 border border-slate-800/60 text-xs hover:border-slate-700/60 transition"
-              >
-                <div className="flex items-start sm:items-center gap-2.5">
-                  <span className="px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-400 border border-indigo-500/30 text-[10px] font-bold font-mono whitespace-nowrap">
-                    {log.divisionName}
-                  </span>
-                  <span className="text-slate-300 leading-snug">{log.taskTitle}</span>
+        <section className="mt-12 rounded-2xl bg-slate-900/80 border border-slate-800/90 shadow-2xl overflow-hidden backdrop-blur-md">
+          {/* Header Bar */}
+          <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <Terminal className="w-4 h-4" />
                 </div>
-
-                <div className="flex items-center gap-2 text-slate-500 text-[11px] self-end sm:self-auto whitespace-nowrap font-mono">
-                  <span>Engine: {log.source}</span>
-                  <span>•</span>
-                  <span>{log.timestamp} WIB</span>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    Rekapitulasi Riwayat Aktivitas Global
+                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live Stream
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Rekam jejak otomatis hasil eksekusi seluruh divisi AI di kompreskilat.site dalam satu tempat
+                  </p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Filter & Kontrol Pencarian */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Dropdown Filter Divisi */}
+              <div className="relative">
+                <select
+                  value={logDivisionFilter}
+                  onChange={(e) => setLogDivisionFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition cursor-pointer font-medium"
+                >
+                  <option value="all">Semua Divisi ({activityLogs.length})</option>
+                  {divisions.map((div) => (
+                    <option key={div.id} value={div.id}>
+                      {div.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={logSearchQuery}
+                  onChange={(e) => setLogSearchQuery(e.target.value)}
+                  placeholder="Cari tugas / divisi..."
+                  className="pl-8 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 w-44 sm:w-56 transition"
+                />
+              </div>
+
+              {/* Reset / Bersihkan Riwayat */}
+              {activityLogs.length > 0 && (
+                <button
+                  onClick={() => setActivityLogs([])}
+                  title="Bersihkan Semua Log"
+                  className="px-3 py-2 bg-slate-950 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Bersihkan</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* List Log Items */}
+          <div className="p-4 sm:p-6 space-y-3 max-h-[520px] overflow-y-auto divide-y divide-slate-800/40">
+            {filteredLogs.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 space-y-2">
+                <FileText className="w-8 h-8 mx-auto text-slate-600" />
+                <p className="text-xs">
+                  {logSearchQuery || logDivisionFilter !== 'all'
+                    ? 'Tidak ada riwayat aktivitas yang sesuai dengan kriteria filter.'
+                    : 'Belum ada riwayat aktivitas. Klik "Perintah AI" pada salah satu divisi di atas.'}
+                </p>
+              </div>
+            ) : (
+              filteredLogs.map((log) => {
+                const divisionData = divisions.find((d) => d.id === log.divisionId);
+                const isCopied = copiedLogId === log.id;
+
+                return (
+                  <div
+                    key={log.id}
+                    className="pt-3.5 first:pt-0 flex flex-col sm:flex-row items-start justify-between gap-3 group transition"
+                  >
+                    <div className="flex items-start gap-3 w-full sm:w-auto flex-1">
+                      {/* Ikon Divisi */}
+                      <div className="mt-0.5 p-2 rounded-xl bg-slate-950 border border-slate-800/80 shrink-0 shadow-sm">
+                        {renderDivisionIcon(divisionData?.iconName || 'it')}
+                      </div>
+
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        {/* Meta Tags: Divisi, Jam, Engine */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-bold text-[11px] font-mono">
+                            {log.divisionName}
+                          </span>
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                            <Clock className="w-3 h-3 text-slate-500" />
+                            {log.timestamp} WIB
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800/90 text-slate-400 font-mono flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-indigo-400" />
+                            {log.source}
+                          </span>
+                        </div>
+
+                        {/* Ringkasan Hasil Tugas AI */}
+                        <p className="text-xs text-slate-200 leading-relaxed font-sans bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80 break-words group-hover:border-slate-700 transition">
+                          {log.taskTitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tombol Salin Log */}
+                    <div className="shrink-0 self-end sm:self-start mt-1 sm:mt-0">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`[${log.divisionName} - ${log.timestamp} WIB]\n${log.taskTitle}`);
+                          setCopiedLogId(log.id);
+                          setTimeout(() => setCopiedLogId(null), 2000);
+                        }}
+                        title="Salin Rincian Tugas"
+                        className="p-1.5 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-[10px] text-emerald-400 font-medium">Disalin</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span className="text-[10px] hidden sm:inline">Salin</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer Bar */}
+          <div className="px-6 py-3.5 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 font-mono">
+            <span>
+              Menampilkan {filteredLogs.length} dari {activityLogs.length} entri riwayat tugas
+            </span>
+            <span>Diperbarui otomatis saat setiap divisi AI merespons</span>
           </div>
         </section>
       </div>
