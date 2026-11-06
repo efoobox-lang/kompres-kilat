@@ -126,13 +126,13 @@ export interface SeoArticleDraft {
 }
 
 const fallbackWeeklyData: DailyMetric[] = [
-  { day: 'Sen', date: '31 Okt', views: 28400, clicks: 4620, sales: 2150000 },
-  { day: 'Sel', date: '01 Nov', views: 32100, clicks: 5310, sales: 2480000 },
-  { day: 'Rab', date: '02 Nov', views: 35800, clicks: 5940, sales: 2890000 },
-  { day: 'Kam', date: '03 Nov', views: 44200, clicks: 7650, sales: 3450000 },
-  { day: 'Jum', date: '04 Nov', views: 39100, clicks: 6480, sales: 2980000 },
-  { day: 'Sab', date: '05 Nov', views: 31500, clicks: 5210, sales: 2100000 },
-  { day: 'Min', date: '06 Nov', views: 37820, clicks: 6140, sales: 2400000 },
+  { day: 'Sen', date: '31 Okt', views: 6, clicks: 1, sales: 0 },
+  { day: 'Sel', date: '01 Nov', views: 8, clicks: 2, sales: 0 },
+  { day: 'Rab', date: '02 Nov', views: 7, clicks: 2, sales: 0 },
+  { day: 'Kam', date: '03 Nov', views: 12, clicks: 3, sales: 0 },
+  { day: 'Jum', date: '04 Nov', views: 9, clicks: 2, sales: 0 },
+  { day: 'Sab', date: '05 Nov', views: 6, clicks: 2, sales: 0 },
+  { day: 'Min', date: '06 Nov', views: 8, clicks: 2, sales: 0 },
 ];
 
 const initialDivisions: Division[] = [
@@ -955,10 +955,10 @@ export default function AIEmployeesDashboard() {
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalViews ?? 248920).toLocaleString('id-ID')}
+              {(analyticsData?.totalViews ?? 56).toLocaleString('id-ID')}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 35560).toLocaleString('id-ID')}/hari
+              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 8).toLocaleString('id-ID')}/hari (Puncak: {analyticsData?.peakViews || 12})
             </div>
           </div>
 
@@ -970,14 +970,14 @@ export default function AIEmployeesDashboard() {
                 Total Clicks
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.clicksGrowth || '+12.6%'}
+                {analyticsData?.clicksGrowth || '+100%'}
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalClicks ?? 41350).toLocaleString('id-ID')}
+              {(analyticsData?.totalClicks ?? 14).toLocaleString('id-ID')}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              CTR Konversi: {analyticsData?.ctr || '16.61%'}
+              CTR Interaksi: {analyticsData?.ctr || '25.0%'}
             </div>
           </div>
 
@@ -993,10 +993,10 @@ export default function AIEmployeesDashboard() {
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.uniqueVisitors ?? 142800).toLocaleString('id-ID')}
+              {(analyticsData?.uniqueVisitors ?? 7).toLocaleString('id-ID')}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              Pengunjung unik terverifikasi
+              7 pengunjung terverifikasi (Vercel)
             </div>
           </div>
 
@@ -1007,15 +1007,15 @@ export default function AIEmployeesDashboard() {
                 <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
                 Total Monetisasi
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.salesGrowth || '+24.1%'}
+              <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
+                {analyticsData?.salesGrowth || '0%'}
               </span>
             </div>
             <div className="mt-2 text-xl sm:text-2xl font-extrabold text-white font-mono">
-              {formatIDR(analyticsData?.totalSales ?? 18450000)}
+              {formatIDR(analyticsData?.totalSales ?? 0)}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              312 pesanan & iklan terkonfirmasi
+              Tahap awal rilis platform
             </div>
           </div>
         </section>

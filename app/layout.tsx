@@ -105,30 +105,25 @@ export default function RootLayout({
     <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         {/* Anti-FOUC Theme Initializer */}
-        <script
-          id="theme-initializer"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var d = document.documentElement;
-                var t = localStorage.getItem('kk_theme');
-                if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  d.classList.add('dark');
-                } else {
-                  d.classList.remove('dark');
-                }
-              } catch (e) {}
-            `,
-          }}
-        />
-        {/* Google AdSense Script */}
-        <script
+        <Script id="theme-initializer" strategy="beforeInteractive">
+          {`
+            try {
+              var d = document.documentElement;
+              var t = localStorage.getItem('kk_theme');
+              if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                d.classList.add('dark');
+              } else {
+                d.classList.remove('dark');
+              }
+            } catch (e) {}
+          `}
+        </Script>
+        {/* Google AdSense Script - Loaded afterInteractive to prevent premature DOM mutation & hydration mismatch */}
+        <Script
           id="google-adsense"
-          async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2604470661972091"
+          strategy="afterInteractive"
           crossOrigin="anonymous"
-          suppressHydrationWarning
         />
       </head>
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-800" suppressHydrationWarning>
