@@ -152,9 +152,6 @@ export default function CompressImagePage() {
           </p>
         </div>
 
-        {/* Slot Iklan Top Banner */}
-        <AdBanner zone="top-leaderboard" label="Iklan Sponsor" />
-
         {/* Pengaturan Kompresi & Pratinjau */}
         {selectedFile && (
           <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm mb-6 space-y-6">
@@ -313,6 +310,9 @@ export default function CompressImagePage() {
             )}
           </div>
         )}
+
+        {/* Slot Iklan Resmi AdSense (Berjarak aman dari tombol aksi) */}
+        <AdBanner zone="in-tool" label="Iklan" />
 
         {/* Link ke Blog Terkait */}
         <div className="mt-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">

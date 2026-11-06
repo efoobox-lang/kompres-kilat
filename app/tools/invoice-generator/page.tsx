@@ -567,11 +567,6 @@ export default function InvoiceGeneratorPage() {
 
       {/* Header Breadcrumbs & Judul */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-4">
-        {/* AdSense Slot Atas */}
-        <div className="mb-6 print:hidden">
-          <AdBanner slotId="8472910384" />
-        </div>
-
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">

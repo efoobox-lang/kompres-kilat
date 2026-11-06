@@ -301,9 +301,6 @@ export default function PdfToPptPage() {
           </div>
         </div>
 
-        {/* Ad Space #1 - Generous margin to prevent accidental clicks */}
-        <AdBanner className="my-8 sm:my-10" />
-
         {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-start gap-3">
@@ -498,6 +495,11 @@ export default function PdfToPptPage() {
           )}
         </div>
 
+        {/* AdSense Slot - Berjarak aman dari tombol aksi */}
+        <div className="my-8">
+          <AdBanner zone="in-tool" label="Iklan" />
+        </div>
+
         {/* Informational SEO & Educational Content */}
         <section className="mt-12 space-y-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8">
@@ -536,9 +538,6 @@ export default function PdfToPptPage() {
             </div>
           </div>
         </section>
-
-        {/* Ad Space #2 - Bottom of page */}
-        <AdBanner className="my-8 sm:my-10" />
       </main>
 
       <Footer />

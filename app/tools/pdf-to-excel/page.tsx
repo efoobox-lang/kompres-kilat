@@ -456,11 +456,6 @@ export default function PdfToExcelPage() {
 
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-        {/* AdSense Slot Atas */}
-        <div className="mb-6">
-          <AdBanner slotId="8472910384" />
-        </div>
-
         <div className="mb-8 text-center">
           <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold mb-2">
             📊 Format XLSX Asli • Privasi 100% Aman • Engine PDF.js Cerdas
