@@ -1510,6 +1510,16 @@ export default function InvoiceGeneratorPage() {
                       <Stamp className="w-4 h-4 text-indigo-600" />
                       <span>Mode Visibilitas Stempel:</span>
                     </label>
+
+                    {paperSize.startsWith('thermal') && (
+                      <div className="p-2.5 mb-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl text-[11px] text-indigo-900 dark:text-indigo-200 flex items-start gap-1.5 leading-snug">
+                        <span className="text-xs">💡</span>
+                        <span>
+                          <strong>Format Thermal Aktif:</strong> Menampilkan 1 stempel ringkas inline di bawah rincian belanja agar pas dengan lebar struk dan tidak menutupi daftar barang/harga.
+                        </span>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-1.5">
                       <button
                         type="button"
@@ -1678,22 +1688,24 @@ export default function InvoiceGeneratorPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
-                          <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
-                            Posisi Cap: X={companyStampPos.x}px, Y={companyStampPos.y}px
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedElementId('company-stamp');
-                              setMobileTab('preview');
-                            }}
-                            className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
-                          >
-                            <Move className="w-3 h-3" />
-                            <span>Seret di Canvas</span>
-                          </button>
-                        </div>
+                        {!paperSize.startsWith('thermal') && (
+                          <div className="flex items-center justify-between text-[11px] bg-indigo-50/70 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                            <span className="text-indigo-800 dark:text-indigo-300 font-mono text-[10px]">
+                              Posisi Cap: X={companyStampPos.x}px, Y={companyStampPos.y}px
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedElementId('company-stamp');
+                                setMobileTab('preview');
+                              }}
+                              className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <Move className="w-3 h-3" />
+                              <span>Seret di Canvas</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1775,22 +1787,24 @@ export default function InvoiceGeneratorPage() {
                           />
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] bg-emerald-50/70 dark:bg-emerald-950/40 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50">
-                          <span className="text-emerald-800 dark:text-emerald-300 font-mono text-[10px]">
-                            Posisi Stempel: X={statusStampPos.x}px, Y={statusStampPos.y}px
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedElementId('status-stamp');
-                              setMobileTab('preview');
-                            }}
-                            className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
-                          >
-                            <Move className="w-3 h-3" />
-                            <span>Seret di Canvas</span>
-                          </button>
-                        </div>
+                        {!paperSize.startsWith('thermal') && (
+                          <div className="flex items-center justify-between text-[11px] bg-emerald-50/70 dark:bg-emerald-950/40 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50">
+                            <span className="text-emerald-800 dark:text-emerald-300 font-mono text-[10px]">
+                              Posisi Stempel: X={statusStampPos.x}px, Y={statusStampPos.y}px
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedElementId('status-stamp');
+                                setMobileTab('preview');
+                              }}
+                              className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <Move className="w-3 h-3" />
+                              <span>Seret di Canvas</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2108,31 +2122,30 @@ export default function InvoiceGeneratorPage() {
 
                     <div className="border-t border-dashed border-slate-400 my-2" />
 
-                    {/* Stempel di Struk Thermal */}
+                    {/* Stempel Tunggal di Struk Thermal (Cukup 1 stempel ringkas) */}
                     {(enableStatusStamp || enableCompanyStamp) && (
-                      <div className="space-y-1.5 my-2 flex flex-col items-center">
-                        {enableStatusStamp && (
+                      <div className="my-2 flex justify-center">
+                        {enableStatusStamp ? (
                           <div
                             style={{
                               color: stampColorMap[statusStampColor].hex,
                               borderColor: stampColorMap[statusStampColor].hex,
                               transform: `rotate(${statusStampRotation}deg)`,
                             }}
-                            className="border-2 border-dashed px-3 py-1 text-center font-black text-xs tracking-widest uppercase rounded"
+                            className="border-2 border-dashed px-3 py-1 text-center font-black text-xs tracking-widest uppercase rounded inline-block"
                           >
                             *** {statusStampText} ***
                           </div>
-                        )}
-                        {enableCompanyStamp && (
+                        ) : (
                           <div
                             style={{
                               color: stampColorMap[companyStampColor].hex,
                               borderColor: stampColorMap[companyStampColor].hex,
                               transform: `rotate(${companyStampRotation}deg)`,
                             }}
-                            className="border border-double px-2 py-0.5 text-center font-bold text-[9px] tracking-wider uppercase rounded opacity-90"
+                            className="border border-double px-2.5 py-1 text-center font-bold text-[10px] tracking-wider uppercase rounded inline-block opacity-90"
                           >
-                            CAP RESMI: {companyStampText}
+                            *** CAP RESMI: {companyStampText} ***
                           </div>
                         )}
                       </div>
@@ -2554,8 +2567,8 @@ export default function InvoiceGeneratorPage() {
                       </DraggableCanvasElement>
                     )}
 
-                    {/* 3. Cap Stempel Resmi Perusahaan / Toko */}
-                    {enableCompanyStamp && (
+                    {/* 3. Cap Stempel Resmi Perusahaan / Toko (Hanya untuk dokumen A4 & A5) */}
+                    {!paperSize.startsWith('thermal') && enableCompanyStamp && (
                       <DraggableCanvasElement
                         id="company-stamp"
                         title="Cap Resmi Toko"
@@ -2586,8 +2599,8 @@ export default function InvoiceGeneratorPage() {
                       </DraggableCanvasElement>
                     )}
 
-                    {/* 4. Stempel Status Pembayaran (LUNAS, PAID, dll.) */}
-                    {enableStatusStamp && (
+                    {/* 4. Stempel Status Pembayaran (LUNAS, PAID, dll.) (Hanya untuk dokumen A4 & A5) */}
+                    {!paperSize.startsWith('thermal') && enableStatusStamp && (
                       <DraggableCanvasElement
                         id="status-stamp"
                         title="Stempel Status"
