@@ -176,6 +176,7 @@ export default function AIEmployeesDashboard() {
   const [activeDivision, setActiveDivision] = useState<Division | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [loadingDivisionId, setLoadingDivisionId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'Working' | 'Idle'>('all');
   const [modalOutput, setModalOutput] = useState<{ text: string; source: string; timestamp: string } | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -206,39 +207,56 @@ export default function AIEmployeesDashboard() {
     }
   ]);
 
-  // Eksekusi Perintah AI
-  const executeAICommand = async (division: Division, promptToUse?: string) => {
-    setIsProcessing(true);
-    setModalOutput(null);
+  // Fungsi triggerTask: Menjalankan perintah AI untuk divisi tertentu secara real-time
+  const triggerTask = async (id: string, promptText?: string) => {
+    const targetDivision = divisions.find((d) => d.id === id);
+    if (!targetDivision) return;
 
-    const targetPrompt = promptToUse || customPrompt;
+    setLoadingDivisionId(id);
+    setIsProcessing(true);
+
+    // 1. Ubah status divisi menjadi 'Working' dan tampilkan indikator proses berjalan
+    setDivisions((prev) =>
+      prev.map((div) => {
+        if (div.id === id) {
+          return {
+            ...div,
+            status: 'Working',
+            currentTask: 'Sedang memproses instruksi otomatis via Gemini 2.5 Flash...',
+            lastUpdated: 'Memproses...'
+          };
+        }
+        return div;
+      })
+    );
 
     try {
+      // 2. Kirim fetch POST request ke /api/ai-agent
       const res = await fetch('/api/ai-agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          divisionId: division.id,
-          divisionName: division.name,
-          customPrompt: targetPrompt
+          divisionId: targetDivision.id,
+          divisionName: targetDivision.name,
+          customPrompt: promptText || (customPrompt.trim() ? customPrompt.trim() : undefined)
         })
       });
 
       const data = await res.json();
 
       if (data.success && data.task) {
-        const resultText = data.task;
-        const now = data.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const source = data.source || 'gemini-2.5-flash';
+        const resultTask = data.task;
+        const timeStr = data.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const sourceModel = data.model || 'gemini-2.5-flash';
 
-        // Update state divisi terkait
+        // 3. Perbarui aktivitas divisi dengan hasil nyata dari AI dan tambahkan total output tugas +1 secara real-time
         setDivisions((prev) =>
           prev.map((div) => {
-            if (div.id === division.id) {
+            if (div.id === id) {
               return {
                 ...div,
                 status: 'Working',
-                currentTask: resultText,
+                currentTask: resultTask,
                 outputCount: div.outputCount + 1,
                 lastUpdated: 'Baru saja'
               };
@@ -247,35 +265,37 @@ export default function AIEmployeesDashboard() {
           })
         );
 
-        // Tambah ke riwayat aktivitas
+        // Tambahkan ke log stream aktivitas real-time
         setActivityLogs((prev) => [
           {
             id: `log-${Date.now()}`,
-            divisionId: division.id,
-            divisionName: division.name,
-            taskTitle: resultText,
-            timestamp: now,
-            source: source === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : 'simulated-agent'
+            divisionId: targetDivision.id,
+            divisionName: targetDivision.name,
+            taskTitle: resultTask,
+            timestamp: timeStr,
+            source: 'gemini-2.5-flash'
           },
           ...prev.slice(0, 9)
         ]);
 
-        setModalOutput({
-          text: resultText,
-          source: source === 'gemini-2.5-flash' ? 'Google Gemini 2.5 Flash' : 'Agen Cerdas Otomasi',
-          timestamp: now
-        });
+        if (activeDivision?.id === id) {
+          setModalOutput({
+            text: resultTask,
+            source: `Google ${sourceModel}`,
+            timestamp: timeStr
+          });
+        }
       } else {
         throw new Error(data.error || 'Respon AI tidak valid');
       }
-    } catch {
-      // Fallback lokal jika ada gangguan koneksi
-      const fallbackMsg = `Divisi ${division.name} telah menyelesaikan instruksi: "${targetPrompt || 'Tugas optimasi terjadwal'}" dan menyelaraskan metrik platform.`;
-      const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch (err: any) {
+      console.warn('Gagal memanggil API AI, menggunakan respon operasional cadangan:', err);
+      const fallbackMsg = `Divisi ${targetDivision.name} telah menyelesaikan instruksi: "${promptText || 'Tugas optimasi platform'}" dan menyelaraskan metrik kompreskilat.site.`;
+      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
       setDivisions((prev) =>
         prev.map((div) => {
-          if (div.id === division.id) {
+          if (div.id === id) {
             return {
               ...div,
               status: 'Working',
@@ -288,12 +308,27 @@ export default function AIEmployeesDashboard() {
         })
       );
 
-      setModalOutput({
-        text: fallbackMsg,
-        source: 'Agen Mandiri (Local Engine)',
-        timestamp: now
-      });
+      setActivityLogs((prev) => [
+        {
+          id: `log-${Date.now()}`,
+          divisionId: targetDivision.id,
+          divisionName: targetDivision.name,
+          taskTitle: fallbackMsg,
+          timestamp: timeStr,
+          source: 'simulated-agent'
+        },
+        ...prev.slice(0, 9)
+      ]);
+
+      if (activeDivision?.id === id) {
+        setModalOutput({
+          text: fallbackMsg,
+          source: 'Agen Cerdas Otomasi',
+          timestamp: timeStr
+        });
+      }
     } finally {
+      setLoadingDivisionId(null);
       setIsProcessing(false);
       setCustomPrompt('');
     }
@@ -303,7 +338,7 @@ export default function AIEmployeesDashboard() {
   const triggerAllDivisions = async () => {
     setIsProcessing(true);
     for (const div of divisions) {
-      await executeAICommand(div);
+      await triggerTask(div.id);
     }
     setIsProcessing(false);
   };
@@ -585,16 +620,36 @@ export default function AIEmployeesDashboard() {
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveDivision(division);
-                      setModalOutput(null);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Perintah AI</span>
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => triggerTask(division.id)}
+                      disabled={loadingDivisionId === division.id}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                    >
+                      {loadingDivisionId === division.id ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Memproses...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Perintah AI</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveDivision(division);
+                        setModalOutput(null);
+                      }}
+                      title="Beri Instruksi Kustom"
+                      className="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700/60 transition cursor-pointer"
+                    >
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -682,7 +737,7 @@ export default function AIEmployeesDashboard() {
                   {activeDivision.presetPrompts.map((prompt, idx) => (
                     <button
                       key={idx}
-                      onClick={() => executeAICommand(activeDivision, prompt)}
+                      onClick={() => triggerTask(activeDivision.id, prompt)}
                       disabled={isProcessing}
                       className="w-full text-left p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white flex items-center justify-between transition disabled:opacity-50 cursor-pointer"
                     >
@@ -716,7 +771,7 @@ export default function AIEmployeesDashboard() {
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => executeAICommand(activeDivision)}
+                  onClick={() => triggerTask(activeDivision.id, customPrompt)}
                   disabled={isProcessing}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-indigo-600/25 disabled:opacity-50 cursor-pointer"
                 >
