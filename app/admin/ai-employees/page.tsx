@@ -486,6 +486,52 @@ export default function AIEmployeesDashboard() {
     }
   };
 
+  // State Edit Redaksi Manual Batch
+  const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState<string>('');
+  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+
+  const startEditingBatch = (batch: AgentTaskBatch) => {
+    setEditingBatchId(batch.id);
+    setEditingContent(batch.outputContent);
+  };
+
+  const cancelEditingBatch = () => {
+    setEditingBatchId(null);
+    setEditingContent('');
+  };
+
+  const handleSaveBatchEdit = async (batchId: string) => {
+    setIsSavingEdit(true);
+    setStorageError(null);
+    try {
+      const response = await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batchId,
+          output: editingContent,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menyimpan perubahan redaksi.');
+
+      setAgentBatches((prev) =>
+        prev.map((item) =>
+          item.id === batchId
+            ? { ...item, outputContent: editingContent }
+            : item
+        )
+      );
+      setEditingBatchId(null);
+      setEditingContent('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : 'Gagal menyimpan perubahan redaksi.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   // Helper kelola Batch Perintah & Hasil Agen AI
   const handleDeleteBatch = async (batchId: string) => {
     const response = await fetch(`/api/ai-agent/history?id=${encodeURIComponent(batchId)}`, { method: 'DELETE' });
@@ -1807,17 +1853,30 @@ export default function AIEmployeesDashboard() {
                             <Sparkles className="w-3.5 h-3.5" />
                             HASIL OUTPUT AI (DETAIL & TERCATAT):
                           </span>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(batch.outputContent);
-                              setCopiedBatchId(batch.id);
-                              setTimeout(() => setCopiedBatchId(null), 2000);
-                            }}
-                            className="text-slate-400 hover:text-white text-[11px] flex items-center gap-1 cursor-pointer"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span>{copiedBatchId === batch.id ? 'Tersalin!' : 'Salin Teks'}</span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {editingBatchId !== batch.id && (
+                              <button
+                                type="button"
+                                onClick={() => startEditingBatch(batch)}
+                                className="text-amber-400 hover:text-amber-300 text-[11px] font-sans font-semibold flex items-center gap-1 cursor-pointer bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30 transition"
+                                title="Edit redaksi atau ubah kalimat proposal secara manual"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                                <span>Edit Redaksi</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(batch.outputContent);
+                                setCopiedBatchId(batch.id);
+                                setTimeout(() => setCopiedBatchId(null), 2000);
+                              }}
+                              className="text-slate-400 hover:text-white text-[11px] flex items-center gap-1 cursor-pointer"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span>{copiedBatchId === batch.id ? 'Tersalin!' : 'Salin Teks'}</span>
+                            </button>
+                          </div>
                         </div>
 
                         {batch.extractedQuote && (
@@ -1826,9 +1885,52 @@ export default function AIEmployeesDashboard() {
                           </div>
                         )}
 
-                        <div className="text-xs text-slate-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                          {batch.outputContent}
-                        </div>
+                        {editingBatchId === batch.id ? (
+                          <div className="space-y-2.5 pt-1">
+                            <div className="flex items-center justify-between text-[11px] text-amber-300 font-medium">
+                              <span className="flex items-center gap-1">
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <strong>Mode Edit Redaksi Manual:</strong>
+                              </span>
+                              <span className="text-slate-400 font-mono text-[10px]">
+                                {editingContent.length} karakter &bull; {editingContent.trim().split(/\s+/).filter(Boolean).length} kata
+                              </span>
+                            </div>
+
+                            <textarea
+                              value={editingContent}
+                              onChange={(e) => setEditingContent(e.target.value)}
+                              rows={8}
+                              placeholder="Ketik atau edit redaksi kalimat di sini..."
+                              className="w-full text-xs text-slate-100 bg-slate-950 border border-amber-500/50 rounded-lg p-3 font-sans leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-y shadow-inner"
+                            />
+
+                            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800">
+                              <button
+                                type="button"
+                                disabled={isSavingEdit}
+                                onClick={() => handleSaveBatchEdit(batch.id)}
+                                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-600/20"
+                              >
+                                {isSavingEdit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                <span>Simpan Perubahan Redaksi</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isSavingEdit}
+                                onClick={cancelEditingBatch}
+                                className="py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-white text-xs transition cursor-pointer"
+                              >
+                                <span>Batal</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                            {batch.outputContent}
+                          </div>
+                        )}
                       </div>
 
                       {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}

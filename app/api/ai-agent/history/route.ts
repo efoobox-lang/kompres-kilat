@@ -73,6 +73,7 @@ export async function PATCH(request: Request) {
   const platform = typeof body?.platform === 'string' ? body.platform : 'facebook';
   const publishedAt = typeof body?.publishedAt === 'string' ? body.publishedAt : new Date().toISOString();
   const supervisorNotes = typeof body?.supervisorNotes === 'string' ? body.supervisorNotes : '';
+  const output = typeof body?.output === 'string' ? body.output : undefined;
 
   // 1. Publikasi Media Sosial (Facebook atau Instagram)
   if (status === 'published_to_social' || permalink) {
@@ -117,33 +118,42 @@ export async function PATCH(request: Request) {
     }
   }
 
-  // 2. Persetujuan / Review Supervisor (Approval Workflow)
+  // 2. Persetujuan / Review Supervisor (Approval Workflow) & Edit Redaksi Manual
   const validApprovalStatuses = ['approved', 'revision', 'rejected', 'pending_approval', 'completed'];
-  if (validApprovalStatuses.includes(status)) {
+  if (validApprovalStatuses.includes(status) || output !== undefined) {
     try {
-      const records = await aiEmployeeStoreRequest<Array<{ data?: unknown }>>(
-        `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data&limit=1`
+      const records = await aiEmployeeStoreRequest<Array<{ data?: unknown; output?: string }>>(
+        `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data,output&limit=1`
       );
       const existingData = records[0]?.data && typeof records[0].data === 'object'
         ? (records[0].data as Record<string, unknown>)
         : {};
 
+      const patchBody: Record<string, unknown> = {
+        data: {
+          ...existingData,
+          ...(status ? { supervisorStatus: status } : {}),
+          ...(supervisorNotes ? { supervisorNotes } : {}),
+          ...(output !== undefined ? { lastEditedAt: new Date().toISOString(), manuallyEdited: true } : {}),
+          reviewedAt: new Date().toISOString()
+        },
+      };
+
+      if (validApprovalStatuses.includes(status)) {
+        patchBody.status = status;
+      }
+      if (typeof output === 'string') {
+        patchBody.output = output;
+      }
+
       await aiEmployeeStoreRequest(`?record_type=eq.task&id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          status,
-          data: {
-            ...existingData,
-            supervisorStatus: status,
-            supervisorNotes,
-            reviewedAt: new Date().toISOString()
-          },
-        }),
+        body: JSON.stringify(patchBody),
       });
-      return NextResponse.json({ success: true, status });
+      return NextResponse.json({ success: true, status: patchBody.status || 'updated', output });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Gagal memperbarui status persetujuan supervisor.';
+      const message = error instanceof Error ? error.message : 'Gagal memperbarui status persetujuan atau redaksi supervisor.';
       return NextResponse.json({ error: message }, { status: 502 });
     }
   }
