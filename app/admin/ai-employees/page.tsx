@@ -56,6 +56,7 @@ import {
   VolumeX
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export type DivisionStatus = 'Working' | 'Idle';
 
@@ -836,96 +837,16 @@ export default function AIEmployeesDashboard() {
         {/* ======================================================== */}
         {/* TOP NAVBAR / COMMAND CENTER HEADER */}
         {/* ======================================================== */}
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shadow-indigo-500/20">
-              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-indigo-400" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-                <Link href="/" className="hover:text-white transition">
-                  kompreskilat.site
-                </Link>
-                <span>/</span>
-                <span className="text-indigo-400 font-semibold">HQ Virtual Office</span>
-                <span>/</span>
-                <span className="text-slate-500">Lantai 1</span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                Simulasi Kantor 2D Karyawan AI
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold font-mono">
-                  <Flame className="w-3 h-3 text-indigo-400" />
-                  Gemini 2.5 Flash
-                </span>
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-            {/* Edge Status Pill */}
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2 font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-slate-300">{analyticsData?.latency || 'Edge 24ms'}</span>
-              <span className="text-slate-600">|</span>
-              <span className="text-emerald-400">Uptime {analyticsData?.uptime || '99.98%'}</span>
-            </div>
-
-            {/* Tombol Sinkronisasi Data Riil */}
-            <button
-              onClick={fetchAnalytics}
-              disabled={isLoadingAnalytics}
-              title="Sinkronkan data analitik riil dari Vercel / API"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAnalytics ? 'animate-spin text-cyan-400' : 'text-slate-400'}`} />
-              <span className="hidden sm:inline">{isLoadingAnalytics ? 'Sinkronisasi...' : 'Sinkron Metrik'}</span>
-            </button>
-
-            {/* Tombol 8-bit Sound Effects Toggle */}
-            <button
-              onClick={() => setSfxEnabled(!sfxEnabled)}
-              title={sfxEnabled ? 'Matikan Efek Suara 8-Bit Retro' : 'Aktifkan Efek Suara 8-Bit Retro'}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-mono transition active:scale-95 cursor-pointer ${
-                sfxEnabled
-                  ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-300 shadow-sm shadow-indigo-500/20'
-                  : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              {sfxEnabled ? <Volume2 className="w-3.5 h-3.5 text-indigo-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-500" />}
-              <span className="hidden sm:inline">SFX: {sfxEnabled ? 'ON' : 'OFF'}</span>
-            </button>
-
-            {/* Tombol Broadcast Trigger All */}
-            <button
-              onClick={triggerAllDivisions}
-              disabled={isProcessing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition active:scale-95 disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-              <span>{isProcessing ? '6 Divisi Bekerja...' : 'Perintahkan 6 Divisi'}</span>
-            </button>
-
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition cursor-pointer"
-            >
-              <span>Beranda</span>
-              <ExternalLink className="w-3 h-3" />
-            </Link>
-
-            {/* Tombol Logout Sesi Admin */}
-            <button
-              onClick={handleLogout}
-              title="Keluar dari Sesi Administrator"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-xs transition cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5 text-rose-400" />
-              <span>Keluar</span>
-            </button>
-          </div>
-        </header>
+        <AdminHeader
+          currentTab="hub"
+          latency={analyticsData?.latency || '24ms Edge'}
+          uptime={analyticsData?.uptime || '99.98%'}
+          onSync={fetchAnalytics}
+          isSyncing={isLoadingAnalytics}
+          sfxEnabled={sfxEnabled}
+          onToggleSfx={() => setSfxEnabled(!sfxEnabled)}
+          onLogout={handleLogout}
+        />
 
         {/* ======================================================== */}
         {/* PANEL METRIK PENDUKUNG (VERCEL ANALYTICS RIIL) */}
