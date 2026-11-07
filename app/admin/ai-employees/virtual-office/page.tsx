@@ -326,9 +326,8 @@ export default function VirtualOfficePage() {
           permalink: result.permalink,
         });
       } else {
-        // Platform: Instagram (membuat quote card poster jika gambar tidak spesifik)
-        const quoteText = batch.extractedQuote || batch.outputContent.slice(0, 140);
-        const quoteImageUrl = `https://kompreskilat.site/api/og/quote?text=${encodeURIComponent(quoteText)}`;
+        // Platform: Instagram (menggunakan gambar resmi format JPG yang didukung penuh oleh Instagram API)
+        const quoteImageUrl = 'https://kompreskilat.site/images/kompreskilat-quote.jpg';
 
         const response = await fetch('/api/instagram/publish', {
           method: 'POST',
