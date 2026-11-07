@@ -414,9 +414,9 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
     // Jika divisi Creative, siapkan paket data video generator terverifikasi
     if (divisionId === 'creative') {
       const sampleVideos = [
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4'
+        'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+        'https://vjs.zencdn.net/v/oceans.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer_hd.mp4'
       ];
       const selectedVideoUrl = sampleVideos[Math.floor(Math.random() * sampleVideos.length)];
       videoData = {

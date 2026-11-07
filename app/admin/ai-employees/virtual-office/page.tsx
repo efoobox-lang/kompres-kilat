@@ -237,7 +237,7 @@ export default function VirtualOfficePage() {
   const [creativeVideo, setCreativeVideo] = useState({
     title: 'Teaser Video Reels: Solusi Berkas & Cetak Nota KompresKilat',
     caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal!\n\nDukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di browsermu.\n\n👉 Coba sekarang di https://kompreskilat.site/tools/invoice-generator\n\n#KompresKilat #NotaThermal #KasirUMKM #SolusiBisnis`,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     thumbnailUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
     duration: '0:15',
     resolution: '1080x1920 (9:16)',
@@ -1104,27 +1104,58 @@ export default function VirtualOfficePage() {
                   <div className="text-slate-300 text-xs leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 font-sans">
                     {creativeVideo.caption}
                   </div>
+
+                  {/* Status Rilis Instagram Langsung di Dalam Modal */}
+                  {instagramNotice && (
+                    <div
+                      className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2.5 animate-in fade-in duration-200 ${
+                        instagramNotice.status === 'publishing'
+                          ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-200'
+                          : instagramNotice.status === 'success'
+                          ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-200'
+                          : 'bg-rose-950/70 border-rose-500/40 text-rose-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {instagramNotice.status === 'publishing' && (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400 shrink-0" />
+                        )}
+                        {instagramNotice.status === 'success' && (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        )}
+                        {instagramNotice.status === 'error' && (
+                          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        )}
+                        <span className="leading-snug">{instagramNotice.message}</span>
+                      </div>
+
+                      {instagramNotice.permalink && (
+                        <a
+                          href={instagramNotice.permalink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-bold flex items-center gap-1.5 text-[11px] shrink-0 shadow-md shadow-pink-600/30"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Buka di IG</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Modal Footer Actions */}
-              <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex flex-wrap items-center justify-between gap-3">
-                <a
-                  href={creativeVideo.videoUrl}
-                  download="kompreskilat-video-reels.mp4"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  <Download className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Unduh MP4</span>
-                </a>
+              {/* Modal Footer Actions: Langsung Rilis ke Instagram */}
+              <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between gap-3">
+                <span className="text-[11px] text-slate-500 font-mono hidden sm:inline-block">
+                  📡 API Langsung: Terhubung ke @kompreskilat
+                </span>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 ml-auto">
                   <button
                     type="button"
                     onClick={() => setIsVideoModalOpen(false)}
-                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
                   >
                     Tutup
                   </button>
@@ -1139,16 +1170,16 @@ export default function VirtualOfficePage() {
                       )
                     }
                     disabled={instagramNotice?.status === 'publishing'}
-                    className="py-2 px-4 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
+                    className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
                   >
                     {instagramNotice?.status === 'publishing' ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Menerbitkan...</span>
+                        <span>Menerbitkan ke IG...</span>
                       </>
                     ) : (
                       <>
-                        <InstagramIcon className="w-3.5 h-3.5" />
+                        <InstagramIcon className="w-4 h-4" />
                         <span>Rilis ke Instagram</span>
                       </>
                     )}

@@ -3,10 +3,10 @@ import { GoogleGenAI } from '@google/genai';
 
 const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
 
-// Pustaka video showcase beresolusi tinggi yang terverifikasi aman dan dapat diputar langsung di HTML5 video player
+// Pustaka video showcase beresolusi tinggi yang terverifikasi aman dan dapat diputar langsung di HTML5 video player serta siap rilis ke Instagram
 const SAMPLE_VIDEOS = [
   {
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
     title: 'Teaser Kilat: Cetak Nota Thermal & Struk Kasir 58mm Gratis',
     caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal! 
@@ -20,7 +20,7 @@ Dukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di 
     aspectRatio: '9:16 (Vertical Reels)',
   },
   {
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+    url: 'https://vjs.zencdn.net/v/oceans.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1080&q=80',
     title: 'Solusi Cepat: Kompres Foto KTP & Dokumen PDF Tanpa Upload',
     caption: `⚡ Mau daftar kerja atau urus berkas tapi ukuran foto KTP dan PDF dibatasi 500KB?
@@ -34,7 +34,7 @@ Jangan panik! KompresKilat memproses berkasmu langsung di perangkat tanpa upload
     aspectRatio: '9:16 (Vertical Reels)',
   },
   {
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    url: 'https://media.w3.org/2010/05/sintel/trailer_hd.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1080&q=80',
     title: 'Showcase Suite KompresKilat 2026: Semua Alat Dokumen Jadi Satu',
     caption: `✨ Semua kebutuhan berkas UMKM dan pekerja modern ada di satu tempat:

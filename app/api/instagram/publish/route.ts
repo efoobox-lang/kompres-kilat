@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const targetMediaUrl =
       videoUrl ||
       imageUrl ||
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+      'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
     // 1. JIKA KREDENSIAL LENGKAP: EKSEKUSI LANGSUNG KE INSTAGRAM GRAPH API
     if (accessToken && igUserId) {
@@ -87,20 +87,24 @@ export async function POST(request: Request) {
           let attempts = 0;
           let isFinished = false;
 
-          while (attempts < 8 && !isFinished) {
+          while (attempts < 20 && !isFinished) {
             await new Promise((resolve) => setTimeout(resolve, 3000));
             attempts++;
 
             const statusRes = await fetch(
-              `https://graph.facebook.com/v21.0/${creationId}?fields=status_code&access_token=${accessToken}`
+              `https://graph.facebook.com/v21.0/${creationId}?fields=status_code,status&access_token=${accessToken}`
             );
             const statusData = await statusRes.json();
 
             if (statusData.status_code === 'FINISHED') {
               isFinished = true;
             } else if (statusData.status_code === 'ERROR') {
-              throw new Error('Instagram Graph API gagal memproses file video.');
+              throw new Error(statusData.status || 'Instagram Graph API gagal memproses file video.');
             }
+          }
+
+          if (!isFinished) {
+            throw new Error('Video sedang diproses di antrean Instagram. Silakan tekan tombol Rilis sekali lagi dalam beberapa detik.');
           }
         }
 
@@ -124,7 +128,17 @@ export async function POST(request: Request) {
         }
 
         const publishedPostId = publishData.id;
-        const permalink = `https://www.instagram.com/p/${publishedPostId}/`;
+        let permalink = `https://www.instagram.com/p/${publishedPostId}/`;
+
+        try {
+          const detailRes = await fetch(
+            `https://graph.facebook.com/v21.0/${publishedPostId}?fields=permalink&access_token=${accessToken}`
+          );
+          const detailData = await detailRes.json();
+          if (detailData.permalink) {
+            permalink = detailData.permalink;
+          }
+        } catch {}
 
         return NextResponse.json({
           success: true,
