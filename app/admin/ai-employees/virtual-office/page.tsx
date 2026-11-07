@@ -27,6 +27,8 @@ import {
   RefreshCw,
   AlertCircle,
   ExternalLink,
+  Layers,
+  Trash2,
   X,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -59,6 +61,19 @@ export interface OfficeDivision {
   level: number;
   xp: number;
   presetPrompts: string[];
+}
+
+export interface AgentTaskBatch {
+  id: string;
+  divisionId: string;
+  divisionName: string;
+  userPrompt: string;
+  outputContent: string;
+  extractedQuote?: string;
+  model: string;
+  timestamp: string;
+  status: 'completed' | 'published_to_social';
+  socialPermalink?: string;
 }
 
 const initialVirtualDivisions: OfficeDivision[] = [
@@ -251,6 +266,44 @@ export default function VirtualOfficePage() {
     permalink?: string;
   } | null>(null);
 
+  // State Batch Riwayat Perintah & Output Terpadu Agen AI (Workstation Batches)
+  const [agentBatches, setAgentBatches] = useState<AgentTaskBatch[]>([]);
+  const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
+
+  const handleDeleteBatch = (batchId: string) => {
+    setAgentBatches((prev) => {
+      const updated = prev.filter((b) => b.id !== batchId);
+      try {
+        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handlePublishBatchToSocial = async (batch: AgentTaskBatch) => {
+    await handlePublishToInstagram(
+      batch.outputContent,
+      creativeVideo.videoUrl,
+      batch.userPrompt.slice(0, 50)
+    );
+
+    setAgentBatches((prev) => {
+      const updated = prev.map((b) =>
+        b.id === batch.id
+          ? {
+              ...b,
+              status: 'published_to_social' as const,
+              socialPermalink: 'https://www.instagram.com/kompreskilat/',
+            }
+          : b
+      );
+      try {
+        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const handlePublishToInstagram = async (caption: string, videoUrl: string, title?: string) => {
     setInstagramNotice({
       status: 'publishing',
@@ -363,6 +416,13 @@ export default function VirtualOfficePage() {
       if (savedAuth === 'authorized_2026') {
         setIsAuthenticated(true);
       }
+
+      const savedBatches = localStorage.getItem('kk_agent_task_batches');
+      if (savedBatches) {
+        try {
+          setAgentBatches(JSON.parse(savedBatches));
+        } catch {}
+      }
     } catch {}
   }, []);
 
@@ -458,6 +518,28 @@ export default function VirtualOfficePage() {
           setCreativeVideo(data.videoData);
           setIsVideoModalOpen(true);
         }
+
+        // Rekam paket Perintah Input + Hasil Output AI ke dalam Batch History
+        const promptGiven = promptText || (customPrompt.trim() ? customPrompt.trim() : `Tugas Rutin Operasional (${targetDivision.name})`);
+        const newBatchItem: AgentTaskBatch = {
+          id: data.batchId || `batch-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          divisionId: targetDivision.id,
+          divisionName: targetDivision.name,
+          userPrompt: promptGiven,
+          outputContent: data.task,
+          extractedQuote: data.extractedQuote || '',
+          model: data.model || 'gemini-2.5-flash',
+          timestamp: `${timeStr} WIB`,
+          status: 'completed'
+        };
+
+        setAgentBatches((prev) => {
+          const updated = [newBatchItem, ...prev.slice(0, 49)];
+          try {
+            localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
 
         if (activeDivision?.id === id) {
           setModalOutput({
@@ -955,6 +1037,196 @@ export default function VirtualOfficePage() {
         </section>
 
         {/* ======================================================== */}
+        {/* PANEL BATCH PERINTAH & HASIL KERJA AGEN AI (TERCATAT LENGKAP) */}
+        {/* ======================================================== */}
+        <section className="rounded-3xl border-2 border-indigo-500/30 bg-slate-900/90 shadow-2xl overflow-hidden backdrop-blur-md">
+          {/* Header Panel */}
+          <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 font-mono">
+                  WORKSTATION BATCH LOG // PERINTAH & HASIL TERPADU
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                Batch Riwayat Perintah & Hasil Output Agen AI
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono font-semibold">
+                  {agentBatches.length} Batch Tercatat
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400 max-w-2xl">
+                Setiap instruksi/perintah input dari Anda langsung tercatat berdampingan dengan hasil output detail dari AI dalam satu paket batch siap tindak lanjut (rilis ke Instagram & Facebook, salin, atau arsip).
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+              <button
+                onClick={() => {
+                  const sosmedDiv = divisions.find((d) => d.id === 'sosmed') || divisions[0];
+                  setActiveDivision(sosmedDiv);
+                  setCustomPrompt('tolong buatkan quote posting otomatis ke facebook dan instagram');
+                  setModalOutput(null);
+                }}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-pink-600/25 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>+ Buat Quote Posting FB & IG</span>
+              </button>
+            </div>
+          </div>
+
+          {/* List of Batches */}
+          <div className="p-4 sm:p-6 space-y-4">
+            {agentBatches.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 space-y-2">
+                <Layers className="w-10 h-10 mx-auto text-slate-600" />
+                <p className="text-xs font-medium">Belum ada batch perintah yang tersimpan.</p>
+                <p className="text-[11px] text-slate-600">
+                  Gunakan tombol &quot;Instruksi Kustom&quot; atau &quot;Perintah AI&quot; pada salah satu divisi di atas.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {agentBatches.map((batch) => {
+                  const isPublished = batch.status === 'published_to_social';
+
+                  return (
+                    <div
+                      key={batch.id}
+                      className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-indigo-500/40 transition-all duration-200 space-y-3.5 shadow-lg"
+                    >
+                      {/* Batch Header Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] font-mono font-bold">
+                            #{batch.id.slice(0, 16)}
+                          </span>
+                          <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold">
+                            🏢 {batch.divisionName}
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-500">
+                            ⏱️ {batch.timestamp}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400">
+                            🤖 {batch.model}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {isPublished ? (
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              ✓ Terbit ke Instagram & FB
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
+                              ● Siap Eksekusi
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* BLOK 1: PERINTAH / INPUT AGEN (PROMPT USER) */}
+                      <div className="p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/30 space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] font-mono font-bold text-indigo-400">
+                          <span className="flex items-center gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            PERINTAH / INPUT AGEN:
+                          </span>
+                          <span className="text-[10px] text-indigo-300/70">Instruksi Pengguna</span>
+                        </div>
+                        <p className="text-xs font-semibold text-white leading-relaxed">
+                          &ldquo;{batch.userPrompt}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* BLOK 2: HASIL / OUTPUT AI TERPADU */}
+                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-mono font-bold text-emerald-400">
+                          <span className="flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            HASIL OUTPUT AI (DETAIL & TERCATAT):
+                          </span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(batch.outputContent);
+                              setCopiedBatchId(batch.id);
+                              setTimeout(() => setCopiedBatchId(null), 2000);
+                            }}
+                            className="text-slate-400 hover:text-white text-[11px] flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>{copiedBatchId === batch.id ? 'Tersalin!' : 'Salin Teks'}</span>
+                          </button>
+                        </div>
+
+                        {batch.extractedQuote && (
+                          <div className="p-2.5 rounded-lg bg-pink-950/30 border border-pink-500/30 text-pink-200 text-xs italic font-medium">
+                            💡 Kutipan Terdeteksi: &ldquo;{batch.extractedQuote}&rdquo;
+                          </div>
+                        )}
+
+                        <div className="text-xs text-slate-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                          {batch.outputContent}
+                        </div>
+                      </div>
+
+                      {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handlePublishBatchToSocial(batch)}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                          >
+                            {instagramNotice?.status === 'publishing' ? (
+                              <>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                <span>Menerbitkan ke Medsos...</span>
+                              </>
+                            ) : (
+                              <>
+                                <InstagramIcon className="w-3.5 h-3.5" />
+                                <span>Rilis ke Instagram & FB</span>
+                              </>
+                            )}
+                          </button>
+
+                          {batch.socialPermalink && (
+                            <a
+                              href={batch.socialPermalink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              <span>Lihat di Instagram</span>
+                            </a>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBatch(batch.id)}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+                            title="Hapus batch ini"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ======================================================== */}
         {/* MODAL INSTRUKSI KUSTOM */}
         {/* ======================================================== */}
         {activeDivision && (
@@ -1013,11 +1285,11 @@ export default function VirtualOfficePage() {
               </div>
 
               {modalOutput && (
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-2">
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/30 space-y-2.5 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between text-xs text-emerald-400 font-bold">
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 font-mono">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      Laporan Hasil Tugas ({modalOutput.timestamp} WIB)
+                      Batch Berhasil Tercatat ({modalOutput.timestamp} WIB)
                     </span>
                     <button
                       onClick={() => {
@@ -1031,7 +1303,31 @@ export default function VirtualOfficePage() {
                       <span>{copied ? 'Tersalin' : 'Salin'}</span>
                     </button>
                   </div>
-                  <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">{modalOutput.text}</p>
+                  <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                    {modalOutput.text}
+                  </p>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      🤖 Model: {modalOutput.source}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePublishToInstagram(
+                          modalOutput.text,
+                          creativeVideo.videoUrl,
+                          'Konten AI KompresKilat'
+                        )
+                      }
+                      disabled={instagramNotice?.status === 'publishing'}
+                      className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                    >
+                      <InstagramIcon className="w-3 h-3" />
+                      <span>Rilis Langsung ke Instagram & FB</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

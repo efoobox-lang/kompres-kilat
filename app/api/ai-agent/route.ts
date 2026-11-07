@@ -153,10 +153,67 @@ export async function POST(request: Request) {
       );
     }
 
-    // Susun prompt sistem terarah berdasarkan karakteristik divisi
+    // Susun prompt sistem terarah berdasarkan karakteristik divisi atau perintah kustom pengguna
     let systemPrompt = '';
 
-    if (divisionId === 'seo') {
+    // Jika ada perintah kustom dari pengguna, utamakan eksekusi perintah tersebut secara jelas dan terstruktur
+    if (customPrompt && customPrompt.trim()) {
+      const isQuoteOrSocial =
+        /quote|kutipan|facebook|instagram|sosmed|post|caption|fb|ig|konten/i.test(customPrompt);
+
+      if (isQuoteOrSocial) {
+        systemPrompt = `Anda adalah Spesialis Konten & Media Sosial (Facebook & Instagram) di kompreskilat.site.
+PERINTAH PENGGUNA (INPUT RESMI):
+"${customPrompt.trim()}"
+
+TUGAS ANDA:
+Hasilkan satu paket konten lengkap, jelas, detail, dan siap posting otomatis ke Facebook & Instagram dengan format Markdown berikut:
+
+### 💬 Perintah & Konteks Tugas
+**Instruksi Diterima:** "${customPrompt.trim()}"
+**Divisi:** ${divisionName}
+**Tujuan:** Otomasi posting konten ke media sosial (Facebook & Instagram).
+
+### 💡 Kutipan Utama / Quote Siap Rilis
+> "[Tuliskan teks quote yang inspiratif, berbobot, atau praktis seputar efisiensi kerja / UMKM / dokumen digital]"
+— **KompresKilat.site** *(Solusi Cepat, Gratis & Privasi Aman)*
+
+### 📱 Naskah Konten Siap Posting (Facebook & Instagram)
+**Hook (3 Detik Pertama):**
+[Kalimat pembuka yang langsung menarik perhatian audiens]
+
+**Isi Pesan:**
+[Teks edukatif atau ajakan menarik yang menjelaskan kemudahan kompres foto/PDF, cetak nota thermal kasir, dll]
+
+**Call To Action (CTA):**
+👉 Coba gratis sekarang langsung di browsermu: https://kompreskilat.site
+
+**Hashtags Viral:**
+#KompresKilat #NotaThermal #TipsUMKM #BisnisOnline #ToolsGratis #WorkHacks #Produktivitas
+
+### 🎨 Rekomendasi Visual & Penjadwalan
+- **Format:** Quote Card (1080x1080 Square) / Reels / Stories
+- **Nuansa Desain:** Modern Dark Slate dengan aksen Cyan & Purple Neon
+- **Status:** Siap dirilis langsung ke Instagram & Facebook.`;
+      } else {
+        systemPrompt = `Anda adalah Karyawan AI senior di divisi ${divisionName} kompreskilat.site.
+PERINTAH PENGGUNA (INPUT RESMI):
+"${customPrompt.trim()}"
+
+TUGAS ANDA:
+Jalankan perintah pengguna di atas secara komprehensif, jelas, terstruktur, dan mendalam.
+Format tanggapan Anda:
+### 📋 Perintah & Konteks Tugas
+**Instruksi:** "${customPrompt.trim()}"
+**Divisi:** ${divisionName}
+
+### ⚡ Hasil Eksekusi & Solusi Rinci
+[Uraian lengkap, detail, dan terstruktur poin demi poin dari solusi atau konten yang diminta]
+
+### 📌 Rekomendasi & Langkah Tindak Lanjut
+[Langkah aksi teknis atau operasional yang disarankan]`;
+      }
+    } else if (divisionId === 'seo') {
       // Divisi SEO bertindak khusus sebagai generator draf artikel blog untuk kurasi admin
       systemPrompt = `Anda adalah Senior SEO Specialist & Content Strategist untuk platform kompreskilat.site.
 Tugas Anda: Buat draf artikel blog berkualitas tinggi, edukatif, dan mematuhi kebijakan Google AdSense (Helpful Content, Original, No Keyword Stuffing, High Value).
@@ -432,9 +489,24 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
       };
     }
 
+    const batchId = `batch-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const effectivePrompt = customPrompt?.trim() || `Tugas Rutin Operasional (${divisionName})`;
+
+    // Ekstraksi kutipan quote jika ada dalam teks
+    let extractedQuote = '';
+    const quoteMatch =
+      taskResult.match(/>\s*"([^"]+)"/i) ||
+      taskResult.match(/Kutipan Utama[^:]*:\s*\n?>?\s*"?([^"\n]+)"?/i);
+    if (quoteMatch) {
+      extractedQuote = quoteMatch[1].trim();
+    }
+
     return NextResponse.json({
       success: true,
       draftId: randomUUID(),
+      batchId,
+      userPrompt: effectivePrompt,
+      extractedQuote,
       divisionId,
       divisionName,
       task: taskResult,

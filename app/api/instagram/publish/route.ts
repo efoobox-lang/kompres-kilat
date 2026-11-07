@@ -140,12 +140,35 @@ export async function POST(request: Request) {
           }
         } catch {}
 
+        // Upayakan juga sinkronisasi posting ke Halaman Facebook resmi (Page ID 1411463522052642) jika tersedia
+        let fbPostId: string | null = null;
+        try {
+          const fbFeedUrl = 'https://graph.facebook.com/v21.0/1411463522052642/feed';
+          const fbRes = await fetch(fbFeedUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: caption,
+              access_token: accessToken,
+            }),
+          });
+          const fbData = await fbRes.json();
+          if (fbData && fbData.id) {
+            fbPostId = fbData.id;
+          }
+        } catch {}
+
+        const fbNote = fbPostId
+          ? ' & Halaman Facebook Kompres Kilat'
+          : '';
+
         return NextResponse.json({
           success: true,
           isLive: true,
           postId: publishedPostId,
+          facebookPostId: fbPostId,
           permalink,
-          message: `Konten "${title}" berhasil dirilis langsung ke Instagram Reels & Feed!`,
+          message: `Konten "${title}" berhasil dirilis langsung ke Instagram${fbNote}!`,
           publishedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
         });
       } catch (err: any) {
