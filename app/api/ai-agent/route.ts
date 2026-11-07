@@ -5,6 +5,16 @@ import { GoogleGenAI } from '@google/genai';
 import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
 import { aiEmployeeStoreRequest, isAIEmployeeStoreConfigured, supabaseRpcRequest } from '@/lib/ai-employee-store';
 
+function cleanAgentOutput(text: string): string {
+  let cleaned = text.trim();
+  // Hapus basa-basi dan prolog AI agar output selalu ON POINT langsung ke sasaran
+  cleaned = cleaned.replace(/^(Tentu,?\s*(sebagai|berikut|ini|saya|karyawan).*?\n+)/i, '');
+  cleaned = cleaned.replace(/^(Baik,?\s*(sebagai|berikut|ini|saya|karyawan).*?\n+)/i, '');
+  cleaned = cleaned.replace(/^(Halo!?,?\s*(sebagai|berikut|ini|saya|karyawan).*?\n+)/i, '');
+  cleaned = cleaned.replace(/^(Sebagai\s+[^\n]+?(?:berikut|saya sajikan|ini).*?\n+)/i, '');
+  return cleaned.trim();
+}
+
 // Inisialisasi API Key dari environment variable (GEMINI_API_KEY atau GOOGLE_API_KEY)
 const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
 
@@ -36,17 +46,24 @@ const fallbackTasks: Record<string, string[]> = {
 - **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor untuk aktivasi kampanye.`
   ],
   sosmed: [
-    `### 📱 Paket Konten Media Sosial Siap Rilis: "Trik Kompres Foto KTP 200KB Anti Gagal"
-- **Platform Rekomendasi:** Instagram (@kompreskilat) & Facebook Page (Kompres Kilat)
-- **Hook Kalimat Pertama:** "Pernah kesel gagal upload berkas CPNS/BUMN gara-gara foto KTP lebih dari 200KB? 😤"
-- **Isi Naskah Caption:**
-  Gak perlu pusing edit lewat aplikasi rumit berbayar! Di kompreskilat.site, kamu bisa kompres foto KTP, KK, atau ijazah jadi pas di bawah 200KB hanya dalam 3 detik tanpa mengurangi ketajaman teks!
-  
-  🔒 Privasi 100% Aman: Foto kamu tidak pernah diunggah ke server mana pun, semua diproses langsung di browsermu!
-  
-  Coba gratis sekarang melalui tautan di bio kami! ⚡
-- **Hashtags:** #KompresKilat #TipsCPNS #LolosBerkas #KompresKTP #ToolsGratis #SolusiDigital
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor untuk dipublikasikan langsung ke Instagram & Facebook.`
+    `Ditolak sistem gara-gara ukuran foto KTP kegedean? Jangan emosi dulu, ini solusinya! 🤯
+
+Gak perlu pusing bayar aplikasi mahal atau ribet buka software berat. Di https://www.kompreskilat.site, kamu bisa kompres foto KTP, KK, atau dokumen lamaran kerja jadi pas di bawah 200KB dalam hitungan detik tanpa buram!
+
+🔒 Privasi 100% Terjaga: Foto tidak pernah diupload ke server mana pun, semua diproses langsung di browsermu!
+
+⚡ Coba gratis sekarang melalui tautan di bio kami!
+
+#KompresKilat #TipsCPNS #LolosBerkas #KompresKTP #ToolsGratis #SolusiDigital #UMKMIndonesia`,
+    `Mau cetak struk kasir toko atau olshop tapi gak mau langganan aplikasi kasir mahal? 🧾
+
+Gunakan Pembuat Invoice & Cetak Nota Kasir Thermal 58mm/80mm di https://www.kompreskilat.site! 100% Gratis, bisa langsung cetak ke printer Bluetooth atau USB, dan sudah ada stempel lunas digitalnya.
+
+Tanpa perlu login ribet. Langsung ketik belanjaan, atur diskon, dan klik Cetak!
+
+Kunjungi kompreskilat.site sekarang juga! ⚡
+
+#KompresKilat #AplikasiKasirGratis #NotaThermal #StrukKasir #UMKMNaikKelas #BisnisOnline`
   ],
   creative: [
     `### 🎬 Storyboard Video Singkat (15 Detik): "Kasir Cepat Struk Thermal"
@@ -199,37 +216,33 @@ export async function POST(request: Request) {
 
     if (instruction) {
       systemPrompt = `Anda adalah ${canonicalDivisionName} di platform kompreskilat.site.
-Peran Anda: Berikan analisis cerdas, problem-solving otomatis, dan strategi konkret untuk memajukan kompreskilat.site (platform utilitas kompresi foto KTP/CPNS, PDF converter, dan generator cetak nota thermal kasir 58mm/80mm gratis).
+Peran Anda: Berikan respons dan analisis konkret yang ON POINT langsung ke target tugas tanpa basa-basi pengantar.
 
-PENTING - ALUR SUPERVISOR (HUMAN-IN-THE-LOOP):
-Hasil kerja Anda adalah sebuah PROPOSAL REKOMENDASI / DRAF TINDAKAN yang ditujukan langsung ke SUPERVISOR (pemilik platform). Segala aksi eksternal (seperti publikasi media sosial, penulisan blog publik, atau penerapan kode) TIDAK AKAN dieksekusi sebelum disetujui secara sadar oleh Supervisor.
+ATURAN KETAT:
+1. JANGAN PERNAH menambahkan kalimat pembuka basa-basi seperti "Tentu...", "Berikut adalah...", "Sebagai...".
+2. LANGSUNG MULAI baris pertama dari inti naskah / solusi / draf tindakan yang diminta.
 
-${divisionId === 'analytics' ? `Data telemetri analitik situs aktual (pageview/click): ${JSON.stringify(analyticsMetrics)}` : ''}
+${divisionId === 'analytics' ? `Data telemetri analitik situs aktual: ${JSON.stringify(analyticsMetrics)}` : ''}
 
-Instruksi Supervisor:
-<supervisor_instruction>
-${instruction}
-</supervisor_instruction>
-
-Susun respons terstruktur rapi:
-1. Analisis Masalah & Kebutuhan
-2. Solusi Rekomendasi / Naskah Tindakan
-3. Rencana Eksekusi untuk Persetujuan Supervisor (akhiri dengan status: "⏳ Menunggu Persetujuan Supervisor")`;
+Instruksi Tugas:
+${instruction}`;
     } else if (divisionId === 'seo') {
       // Divisi SEO: Generator draf artikel berstandar Google Helpful Content & AdSense
-      systemPrompt = `Anda adalah Senior SEO Specialist & Content Strategist untuk platform kompreskilat.site.
-Tugas Anda: Buat draf artikel tutorial lengkap, edukatif, berperingkat tinggi di Google Indonesia, dan 100% mematuhi Google AdSense Helpful Content Guidelines.
-Fokus Topik: Utilitas berkas gratis (kompres KTP <200KB, ubah gambar ke PDF) atau panduan cetak nota kasir thermal 58mm/80mm online gratis untuk UMKM.
+      systemPrompt = `Anda adalah Senior SEO Specialist & Content Strategist untuk website kompreskilat.site.
+Tugas Anda: Buat draf artikel tutorial edukatif berperingkat tinggi di Google Indonesia mengenai fitur kompreskilat.site (kompres foto KTP <200KB, ubah gambar ke PDF, atau cetak nota thermal kasir 58mm/80mm gratis).
 
-Format Keluaran Wajib (Markdown):
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menambahkan kalimat pembuka basa-basi ("Tentu...", "Berikut artikel...").
+2. LANGSUNG MULAI dari baris pertama: Judul Markdown "# [Judul Artikel]".
+3. Format Keluaran Wajib (Markdown):
 # [Judul Artikel Menarik, Edukatif & SEO-Friendly]
 **Target Keyword:** [kata kunci utama] | **Estimasi Baca:** 3-4 menit
 **Meta Deskripsi:** [150-160 karakter ringkasan artikel]
 
 ## 1. Pendahuluan
-[Paragraf pengantar yang menjelaskan tantangan pengguna dan solusinya]
+[Tantangan pengguna berkas/cetak nota dan solusi kilatnya]
 
-## 2. Mengapa Menggunakan KompresKilat.site?
+## 2. Keunggulan Fitur KompresKilat.site
 [Poin keunggulan: 100% Client-side browser, privasi berkas aman, cepat tanpa instalasi aplikasi berat]
 
 ## 3. Panduan Langkah Demi Langkah
@@ -244,74 +257,76 @@ Format Keluaran Wajib (Markdown):
 - **Q:** [Pertanyaan 1]?
   **A:** [Jawaban 1]
 - **Q:** [Pertanyaan 2]?
-  **A:** [Jawaban 2]
-
----
-*Catatan Kurasi: Draf artikel siap ditinjau. Status: ⏳ Menunggu Persetujuan Supervisor sebelum dirilis ke blog publik.*`;
+  **A:** [Jawaban 2]`;
     } else {
       // Divisi Lainnya: Problem Solving Otomatis Memajukan kompreskilat.site
       switch (divisionId) {
         case 'it':
           systemPrompt = `Anda adalah Lead DevOps & SysAdmin di platform kompreskilat.site.
-Misi Utama: Analisis otomatis infrastruktur web kompreskilat.site, optimasi latensi Vercel Edge, efisiensi memori Canvas di browser pengguna, dan penguatan keamanan.
-Lakukan problem-solving otomatis untuk memajukan performa teknis kompreskilat.site.
-Format Output:
-### 🛠️ Laporan Problem-Solving IT & Infrastruktur kompreskilat.site
-- **Analisis Masalah:** [Identifikasi potensi bottleneck pada kompresi gambar lokal atau rendering nota thermal]
-- **Solusi Rekomendasi:** [Solusi teknis konkret, caching headers, atau optimasi Canvas]
-- **Estimasi Dampak:** [Proyeksi peningkatan performa dan efisiensi memori]
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor untuk dimasukkan ke roadmap implementasi.`;
+Misi Utama: Pengawasan keandalan website, audit keamanan sistem, pemantauan latensi serverless Vercel Edge 24ms, dan optimasi Canvas di browser.
+
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menyertakan kalimat pembuka ("Tentu...", "Berikut laporan...").
+2. LANGSUNG MULAI dari baris pertama laporan pengawasan:
+### 🛡️ Laporan Pengawasan & Keamanan Sistem Website
+- **Status Infrastruktur & Edge Latency:** [Optimal / Aman (24ms)]
+- **Temuan Pengawasan Sistem:** [Evaluasi memori Canvas, sanitasi input, kestabilan SSL/CDN]
+- **Tindakan Pemeliharaan / Solusi:** [Langkah preventif atau perbaikan teknis konkret]
+- **Rekomendasi Tindakan:** [Siap disetujui & dijalankan]`;
           break;
 
         case 'marketing':
-          systemPrompt = `Anda adalah Head of Growth & Funnel Optimizer di kompreskilat.site.
-Misi Utama: Rumuskan strategi akuisisi pengguna baru (pelaku UMKM warung/toko/olshop yang butuh cetak nota thermal 58mm gratis, serta pelamar kerja/CPNS yang butuh kompres KTP 200KB).
-Format Output:
-### 📈 Proposal Pertumbuhan & Funnel Konversi kompreskilat.site
-- **Analisis Peluang Pasar:** [Target audiens UMKM & pencari kerja Indonesia]
-- **Solusi Kampanye:** [Ide kampanye bernilai tinggi, Unique Value Proposition]
-- **Salinan CTA Unggulan:** [Teks tombol/banner ajakan bertindak yang persuasif]
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor untuk aktivasi kampanye.`;
+          systemPrompt = `Anda adalah Head of Growth & Marketing di kompreskilat.site.
+Misi Utama: Susun pesan promosi dan kampanye akuisisi pengguna (UMKM cetak nota thermal gratis & pelamar CPNS/BUMN kompres KTP 200KB) yang ON POINT siap rilis.
+
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menambahkan basa-basi pengantar ("Tentu...", "Berikut proposal...").
+2. LANGSUNG MULAI dari baris pertama: Headline promosi dan deskripsi penawaran nilai kompreskilat.site.
+3. Struktur teks:
+   - Headline / Penawaran Utama
+   - Solusi Masalah & Keunggulan Gratis Tanpa Aplikasi Berbayar
+   - Call to Action Terarah (Kunjungi kompreskilat.site)
+   - Hashtag Kampanye`;
           break;
 
         case 'sosmed':
-          systemPrompt = `Anda adalah Social Media Strategist & Community Manager di kompreskilat.site.
-Misi Utama: Susun paket posting media sosial yang viral dan edukatif untuk akun Instagram (@kompreskilat) dan Facebook Page (Kompres Kilat) guna mendatangkan trafik ke web kompreskilat.site.
-Format Output:
-### 📱 Paket Konten Media Sosial Siap Rilis
-- **Platform Rekomendasi:** Instagram (@kompreskilat) & Facebook Page (Kompres Kilat)
-- **Hook Kalimat Pertama:** [Kalimat pembuka yang memancing rasa penasaran / relate dengan masalah audiens]
-- **Naskah Caption Lengkap:** [Penjelasan solusi kompres foto KTP 200KB atau cetak nota thermal gratis langsung di browser]
-- **Call-to-Action:** [Ajak klik tautan di bio/link kompreskilat.site]
-- **Hashtags Pilihan:** [#KompresKilat #TipsUMKM #KompresKTP #ToolsGratis]
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor sebelum otomatis dirilis ke media sosial.`;
+          systemPrompt = `Anda adalah Social Media Strategist & Copywriter untuk akun resmi Instagram (@kompreskilat) dan Facebook Page (Kompres Kilat).
+Misi Utama: Susun naskah deskripsi / caption konten media sosial yang ON POINT langsung ke sasaran tanpa pengantar atau penjelasan tambahan.
+
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menambahkan kalimat pembuka atau penjelasan prolog seperti "Tentu...", "Berikut adalah naskah...", "Sebagai Social Media Strategist...".
+2. LANGSUNG MULAI dari baris pertama: Kalimat Hook pemikat rasa penasaran audiens.
+3. Struktur teks caption langsung siap publish:
+   - Kalimat Hook (1-2 baris pembuka tajam)
+   - Isi Solusi Singkat (Jelaskan cara cepat kompres foto KTP <200KB / cetak nota kasir thermal 58mm gratis di kompreskilat.site, 100% aman di browser tanpa server)
+   - Call to Action (Ajak klik link di bio / kunjungi kompreskilat.site)
+   - 4-6 Hashtag relevan (#KompresKilat #TipsCPNS #KompresFoto #ToolsGratis #UMKM)
+4. Teks harus 100% siap langsung dipublikasikan tanpa perlu menghapus penjelasan lagi.`;
           break;
 
         case 'creative':
           systemPrompt = `Anda adalah Creative Director & Multimedia Storyteller di kompreskilat.site.
-Misi Utama: Rancang storyboard video pendek 15 detik (TikTok/Instagram Reels) dan konsep visual promo yang menarik untuk kompreskilat.site.
-Format Output:
-### 🎬 Storyboard Video Singkat & Konsep Visual Promosi
-- **Judul Konsep:** [Judul video/tema visual]
-- **Detik 00-03 (Hook):** [Adegan pembuka visual mencolok]
-- **Detik 04-08 (Masalah):** [Pain point pengguna: dokumen ditolak karena kegedean atau kesulitan cetak nota]
-- **Detik 09-12 (Solusi KompresKilat):** [Demo kilat fitur kompreskilat.site]
-- **Detik 13-15 (Call to Action):** [Ajak coba gratis sekarang]
-- **Panduan Audio/SFX:** [Rekomendasi jenis musik & sound effect]
-- **Kutipan Utama:** "> \"[Kutipan inspiratif/solutif untuk konten gambar]\""
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor.`;
+Misi Utama: Rancang konsep visual atau naskah video pendek 15-30 detik (Instagram Reels & TikTok) yang ON POINT langsung ke naskah dan adegan.
+
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menambahkan basa-basi pengantar ("Tentu...", "Berikut storyboard...").
+2. LANGSUNG MULAI dari judul konsep dan breakdown detik/adegan: Hook visual, Masalah, Solusi KompresKilat, dan Call to Action.
+3. Di akhir sertakan kutipan teks poster: > "[Kutipan teks poster]"`;
           break;
 
         case 'analytics': {
-          systemPrompt = `Anda adalah Lead Data Scientist & Google AdSense Auditor di kompreskilat.site.
+          systemPrompt = `Anda adalah Lead Data Scientist & AdSense Compliance Officer di kompreskilat.site.
 Metrik situs aktual (telemetri): ${JSON.stringify(analyticsMetrics)}
-Misi Utama: Analisis tren interaksi pengguna, evaluasi keamanan tata letak iklan Google AdSense (Zero Violations, bebas tumpang tindih, tanpa accidental clicks), dan optimasi funnel konversi.
-Format Output:
-### 📊 Laporan Analitik & Audit Kepatuhan AdSense kompreskilat.site
-- **Rekapitulasi Metrik Kunci:** [Trafik, rasio CTR alat, halaman terpopuler]
-- **Audit Kepatuhan Iklan AdSense:** [Pemeriksaan isolasi iklan agar tidak mengganggu fungsi cetak & kompresi]
-- **Rekomendasi Problem-Solving:** [Langkah peningkatan retensi dan keamanan monetisasi]
-- **Status Tindakan:** ⏳ Menunggu Persetujuan Supervisor.`;
+Misi Utama: Pengawasan analitik situs, audit keamanan tata letak iklan Google AdSense, dan pemantauan tren pengunjung.
+
+ATURAN WAJIB & KETAT:
+1. JANGAN PERNAH menyertakan kalimat pembuka ("Tentu...", "Berikut laporan...").
+2. LANGSUNG MULAI dari baris pertama laporan pengawasan:
+### 📊 Laporan Pengawasan Analitik & Kepatuhan Website
+- **Rekapitulasi Pengawasan Trafik:** [Ringkasan pageviews & aktivitas pengguna]
+- **Audit Keamanan Tata Letak AdSense:** [Verifikasi isolasi iklan & proteksi accidental clicks]
+- **Rekomendasi Optimalisasi Situs:** [Tindakan pengawasan untuk menjaga kepatuhan dan performa]
+- **Rekomendasi Tindakan:** [Siap disetujui & dijalankan]`;
           break;
         }
 
@@ -389,7 +404,7 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
         }
 
         const taskResult =
-          typeof result.assistantText === 'string' ? result.assistantText.trim() : '';
+          typeof result.assistantText === 'string' ? cleanAgentOutput(result.assistantText) : '';
         if (!taskResult) {
           return NextResponse.json(
             { success: false, error: 'Hermes3D returned an empty agent response.' },
@@ -473,7 +488,7 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
           });
           const text = response.text?.trim() || '';
           if (text) {
-            taskResult = text;
+            taskResult = cleanAgentOutput(text);
             usedModel = modelCandidate;
             break;
           }

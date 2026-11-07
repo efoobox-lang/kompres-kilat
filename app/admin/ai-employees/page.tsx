@@ -59,7 +59,8 @@ import {
   Video,
   Download,
   Share2,
-  UploadCloud
+  UploadCloud,
+  Image as ImageIcon
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -171,7 +172,7 @@ export interface AgentTaskBatch {
   extractedQuote?: string;
   model: string;
   timestamp: string;
-  status: 'pending_approval' | 'approved' | 'revision' | 'rejected' | 'completed' | 'published_to_social';
+  status: 'pending_approval' | 'approved' | 'revision' | 'rejected' | 'completed' | 'published_to_social' | 'published';
   socialPermalink?: string;
   supervisorNotes?: string;
   reviewedAt?: string;
@@ -488,20 +489,34 @@ export default function AIEmployeesDashboard() {
     }
   };
 
-  // State Edit Redaksi Manual Batch
+  // Helper segmentasi peran divisi sesuai SOP KompresKilat
+  const isSocialDivision = (id: string) => ['sosmed', 'creative', 'marketing'].includes(id);
+  const isSystemMonitoringDivision = (id: string) => ['it', 'analytics'].includes(id);
+  const isSeoWebsiteDivision = (id: string) => id === 'seo';
+
+  // State Edit Redaksi Manual & Media Batch
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<string>('');
+  const [editingImageUrl, setEditingImageUrl] = useState<string>('');
+  const [editingVideoUrl, setEditingVideoUrl] = useState<string>('');
+  const [editingMediaType, setEditingMediaType] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
   const [uploadingBatchId, setUploadingBatchId] = useState<string | null>(null);
 
   const startEditingBatch = (batch: AgentTaskBatch) => {
     setEditingBatchId(batch.id);
     setEditingContent(batch.outputContent);
+    setEditingImageUrl(batch.imageUrl || 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg');
+    setEditingVideoUrl(batch.videoUrl || '');
+    setEditingMediaType(batch.mediaType === 'VIDEO' ? 'VIDEO' : 'IMAGE');
   };
 
   const cancelEditingBatch = () => {
     setEditingBatchId(null);
     setEditingContent('');
+    setEditingImageUrl('');
+    setEditingVideoUrl('');
+    setEditingMediaType('IMAGE');
   };
 
   const handleUploadMediaForBatch = async (batchId: string, file: File) => {
@@ -520,6 +535,16 @@ export default function AIEmployeesDashboard() {
       }
 
       const isVideo = data.mediaType === 'VIDEO';
+      if (editingBatchId === batchId) {
+        if (isVideo) {
+          setEditingVideoUrl(data.url);
+          setEditingMediaType('VIDEO');
+        } else {
+          setEditingImageUrl(data.url);
+          setEditingMediaType('IMAGE');
+        }
+      }
+
       await fetch('/api/ai-agent/history', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -550,17 +575,29 @@ export default function AIEmployeesDashboard() {
     }
   };
 
-  const handleSaveBatchEdit = async (batchId: string) => {
+  const handleSaveBatchEdit = async (
+    batchId: string,
+    targetStatus?: 'approved' | 'rejected' | 'pending_approval'
+  ) => {
     setIsSavingEdit(true);
     setStorageError(null);
     try {
+      const isVideo = editingMediaType === 'VIDEO';
+      const payload: Record<string, unknown> = {
+        id: batchId,
+        output: editingContent,
+        imageUrl: isVideo ? undefined : editingImageUrl,
+        videoUrl: isVideo ? editingVideoUrl : undefined,
+        mediaType: editingMediaType,
+      };
+      if (targetStatus) {
+        payload.status = targetStatus;
+      }
+
       const response = await fetch('/api/ai-agent/history', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: batchId,
-          output: editingContent,
-        }),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Gagal menyimpan perubahan redaksi.');
@@ -568,16 +605,135 @@ export default function AIEmployeesDashboard() {
       setAgentBatches((prev) =>
         prev.map((item) =>
           item.id === batchId
-            ? { ...item, outputContent: editingContent }
+            ? {
+                ...item,
+                outputContent: editingContent,
+                status: targetStatus || item.status,
+                imageUrl: isVideo ? undefined : editingImageUrl,
+                videoUrl: isVideo ? editingVideoUrl : undefined,
+                mediaType: editingMediaType,
+              }
             : item
         )
       );
-      setEditingBatchId(null);
-      setEditingContent('');
+      cancelEditingBatch();
     } catch (error) {
       setStorageError(error instanceof Error ? error.message : 'Gagal menyimpan perubahan redaksi.');
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  const handleApproveBatch = async (batchId: string, supervisorNotes?: string) => {
+    try {
+      await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batchId,
+          status: 'approved',
+          supervisorNotes: supervisorNotes || 'Disetujui & Dijalankan: Pengawasan Website Aman & Terjaga',
+        }),
+      });
+      setAgentBatches((prev) =>
+        prev.map((b) =>
+          b.id === batchId
+            ? {
+                ...b,
+                status: 'approved',
+                supervisorNotes: supervisorNotes || 'Disetujui & Dijalankan: Pengawasan Website Aman & Terjaga',
+              }
+            : b
+        )
+      );
+    } catch (err) {
+      setStorageError('Gagal menyetujui rekomendasi sistem.');
+    }
+  };
+
+  const handleRejectBatch = async (batchId: string, supervisorNotes?: string) => {
+    try {
+      await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batchId,
+          status: 'rejected',
+          supervisorNotes: supervisorNotes || 'Rekomendasi teknis ditolak',
+        }),
+      });
+      setAgentBatches((prev) =>
+        prev.map((b) =>
+          b.id === batchId
+            ? {
+                ...b,
+                status: 'rejected',
+                supervisorNotes: supervisorNotes || 'Rekomendasi teknis ditolak',
+              }
+            : b
+        )
+      );
+    } catch (err) {
+      setStorageError('Gagal menolak usulan.');
+    }
+  };
+
+  const handlePublishArticleToWebsite = async (batch: AgentTaskBatch, contentOverride?: string) => {
+    const textToPublish = (contentOverride !== undefined ? contentOverride : batch.outputContent || '').trim();
+    if (!textToPublish) {
+      setStorageError('Naskah artikel tidak boleh kosong.');
+      return;
+    }
+    const match = textToPublish.match(/^#\s+(.+)$/m);
+    const title = match ? match[1].trim() : `${batch.divisionName} - Fitur & Panduan`;
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+    const excerpt = textToPublish
+      .replace(/^#+.*$/gm, '')
+      .trim()
+      .slice(0, 150) + '...';
+
+    try {
+      const res = await fetch('/api/admin/blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          slug,
+          excerpt,
+          content: textToPublish,
+          category: 'Fitur & Panduan',
+          tags: ['kompres-kilat', 'panduan', 'fitur'],
+          status: 'published',
+          publishedAt: new Date().toISOString(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mempublikasikan ke website.');
+
+      await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batch.id,
+          status: 'published',
+          permalink: `/blog/${slug}`,
+        }),
+      }).catch(() => {});
+
+      setAgentBatches((prev) =>
+        prev.map((b) =>
+          b.id === batch.id
+            ? { ...b, outputContent: textToPublish, status: 'published', socialPermalink: `/blog/${slug}` }
+            : b
+        )
+      );
+      cancelEditingBatch();
+    } catch (err) {
+      setStorageError(err instanceof Error ? err.message : 'Gagal publish artikel ke website.');
     }
   };
 
@@ -597,7 +753,8 @@ export default function AIEmployeesDashboard() {
   const handlePublishBatchToSocial = async (
     batch: AgentTaskBatch,
     platform: 'facebook' | 'instagram' = 'facebook',
-    contentOverride?: string
+    contentOverride?: string,
+    mediaOverride?: { imageUrl?: string; videoUrl?: string; mediaType?: 'IMAGE' | 'VIDEO' }
   ) => {
     const textToPublish = (contentOverride !== undefined ? contentOverride : batch.outputContent || '').trim();
     if (!textToPublish) {
@@ -605,7 +762,11 @@ export default function AIEmployeesDashboard() {
       return;
     }
 
-    const isVideo = batch.mediaType === 'VIDEO' || Boolean(batch.videoUrl);
+    const currentMediaType = mediaOverride?.mediaType || batch.mediaType || 'IMAGE';
+    const currentVideoUrl = mediaOverride?.videoUrl || batch.videoUrl;
+    const currentImageUrl = mediaOverride?.imageUrl || batch.imageUrl || 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg';
+    const isVideo = currentMediaType === 'VIDEO' || Boolean(currentVideoUrl);
+
     setInstagramNotice({
       status: 'publishing',
       targetId: batch.id,
@@ -620,10 +781,10 @@ export default function AIEmployeesDashboard() {
     try {
       if (platform === 'facebook') {
         const fbBody: Record<string, unknown> = { message: textToPublish };
-        if (batch.videoUrl) {
-          fbBody.videoUrl = batch.videoUrl;
-        } else if (batch.imageUrl) {
-          fbBody.imageUrl = batch.imageUrl;
+        if (isVideo && currentVideoUrl) {
+          fbBody.videoUrl = currentVideoUrl;
+        } else if (currentImageUrl) {
+          fbBody.imageUrl = currentImageUrl;
         }
 
         const response = await fetch('/api/facebook/publish', {
@@ -643,6 +804,9 @@ export default function AIEmployeesDashboard() {
             permalink: result.permalink,
             publishedAt: result.publishedAt,
             platform: 'facebook',
+            imageUrl: isVideo ? undefined : currentImageUrl,
+            videoUrl: isVideo ? currentVideoUrl : undefined,
+            mediaType: isVideo ? 'VIDEO' : 'IMAGE',
           }),
         }).catch(() => {});
 
@@ -653,15 +817,14 @@ export default function AIEmployeesDashboard() {
             : item
         ));
       } else {
-        let targetImageUrl = batch.imageUrl || 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg';
         const igBody: Record<string, unknown> = {
           caption: textToPublish,
         };
-        if (isVideo && batch.videoUrl) {
-          igBody.videoUrl = batch.videoUrl;
+        if (isVideo && currentVideoUrl) {
+          igBody.videoUrl = currentVideoUrl;
           igBody.mediaType = 'REELS';
         } else {
-          igBody.imageUrl = targetImageUrl.replace('https://kompreskilat.site/', 'https://www.kompreskilat.site/');
+          igBody.imageUrl = currentImageUrl.replace('https://kompreskilat.site/', 'https://www.kompreskilat.site/');
           igBody.mediaType = 'IMAGE';
         }
 
@@ -682,6 +845,9 @@ export default function AIEmployeesDashboard() {
             permalink: result.permalink,
             publishedAt: result.publishedAt,
             platform: 'instagram',
+            imageUrl: isVideo ? undefined : currentImageUrl,
+            videoUrl: isVideo ? currentVideoUrl : undefined,
+            mediaType: isVideo ? 'VIDEO' : 'IMAGE',
           }),
         }).catch(() => {});
 
@@ -699,8 +865,7 @@ export default function AIEmployeesDashboard() {
       }
 
       if (editingBatchId === batch.id) {
-        setEditingBatchId(null);
-        setEditingContent('');
+        cancelEditingBatch();
       }
     } catch (error) {
       setInstagramNotice({
@@ -1963,50 +2128,77 @@ export default function AIEmployeesDashboard() {
                           </div>
                         </div>
 
-                        {/* ATTACHED MEDIA (FOTO / VIDEO) ATAU DEFAULT POSTER */}
+                        {/* ATTACHED MEDIA (FOTO / VIDEO) ATAU STATUS PENGAWASAN DIVISI */}
                         {editingBatchId !== batch.id && (
-                          <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-lg bg-slate-950/70 border border-slate-800 text-xs">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              {batch.videoUrl ? (
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-black flex items-center justify-center border border-purple-500/40 shrink-0">
-                                  <video src={batch.videoUrl} className="w-full h-full object-cover" />
-                                  <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-purple-600 text-white px-1 rounded">VIDEO</span>
+                          <>
+                            {/* DIVISI MEDIA SOSIAL: LAMPIRAN FOTO / VIDEO */}
+                            {isSocialDivision(batch.divisionId) && (
+                              <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-lg bg-slate-950/70 border border-slate-800 text-xs">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  {batch.videoUrl ? (
+                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-black flex items-center justify-center border border-purple-500/40 shrink-0">
+                                      <video src={batch.videoUrl} className="w-full h-full object-cover" />
+                                      <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-purple-600 text-white px-1 rounded">VIDEO</span>
+                                    </div>
+                                  ) : (
+                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-900 border border-pink-500/40 shrink-0">
+                                      <img
+                                        src={batch.imageUrl || '/images/kompreskilat-quote.jpg'}
+                                        alt="Pratinjau Media"
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-pink-600 text-white px-1 rounded">FOTO</span>
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <span className="font-semibold text-slate-200 text-xs block truncate">
+                                      {batch.videoUrl ? '🎬 Video Reels' : batch.imageUrl ? '📷 Foto Kustom' : '🖼️ Poster Resmi'}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 truncate block">
+                                      {batch.videoUrl || batch.imageUrl || 'Default Official 1080x1080'}
+                                    </span>
+                                  </div>
                                 </div>
-                              ) : (
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-900 border border-pink-500/40 shrink-0">
-                                  <img
-                                    src={batch.imageUrl || '/images/kompreskilat-quote.jpg'}
-                                    alt="Pratinjau Media"
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-pink-600 text-white px-1 rounded">FOTO</span>
-                                </div>
-                              )}
-                              <div className="min-w-0">
-                                <span className="font-semibold text-slate-200 text-xs block truncate">
-                                  {batch.videoUrl ? '🎬 Video Reels' : batch.imageUrl ? '📷 Foto Kustom' : '🖼️ Poster Resmi'}
-                                </span>
-                                <span className="text-[10px] text-slate-400 truncate block">
-                                  {batch.videoUrl || batch.imageUrl || 'Default Official 1080x1080'}
-                                </span>
-                              </div>
-                            </div>
 
-                            <label className="inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-300 hover:text-white text-[11px] font-medium transition cursor-pointer shrink-0">
-                              <UploadCloud className="w-3 h-3" />
-                              <span>{uploadingBatchId === batch.id ? 'Mengunggah...' : 'Unggah Foto/Video'}</span>
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
-                                className="hidden"
-                                disabled={uploadingBatchId === batch.id}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleUploadMediaForBatch(batch.id, file);
-                                }}
-                              />
-                            </label>
-                          </div>
+                                <label className="inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-300 hover:text-white text-[11px] font-medium transition cursor-pointer shrink-0">
+                                  <UploadCloud className="w-3 h-3" />
+                                  <span>{uploadingBatchId === batch.id ? 'Mengunggah...' : 'Unggah Foto/Video'}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                                    className="hidden"
+                                    disabled={uploadingBatchId === batch.id}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleUploadMediaForBatch(batch.id, file);
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
+                            {/* DIVISI PENGAWASAN & SISTEM: BADGE STATUS SISTEM TERJAGA & AMAN */}
+                            {isSystemMonitoringDivision(batch.divisionId) && (
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-cyan-950/30 border border-cyan-500/30 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                                  <span className="font-semibold text-cyan-300">🛡️ Laporan Pengawasan & Keamanan Sistem Website</span>
+                                </div>
+                                <span className="text-[10px] text-cyan-400 font-mono">kompreskilat.site monitoring</span>
+                              </div>
+                            )}
+
+                            {/* DIVISI SEO & KONTEN WEBSITE: BADGE POSTINGAN FITUR */}
+                            {isSeoWebsiteDivision(batch.divisionId) && (
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                  <span className="font-semibold text-emerald-300">🌐 Naskah Artikel & Fitur Website KompresKilat</span>
+                                </div>
+                                <span className="text-[10px] text-emerald-400 font-mono">Target: Blog / Panduan Fitur</span>
+                              </div>
+                            )}
+                          </>
                         )}
 
                         {batch.extractedQuote && (
@@ -2020,12 +2212,44 @@ export default function AIEmployeesDashboard() {
                             <div className="flex items-center justify-between text-[11px] text-amber-300 font-medium">
                               <span className="flex items-center gap-1">
                                 <Edit3 className="w-3.5 h-3.5" />
-                                <strong>Mode Edit Redaksi Manual:</strong>
+                                <strong>
+                                  {isSocialDivision(batch.divisionId)
+                                    ? 'Mode Edit Redaksi & Media Medsos:'
+                                    : isSeoWebsiteDivision(batch.divisionId)
+                                    ? 'Mode Edit Naskah Artikel Website:'
+                                    : 'Mode Edit Laporan & Instruksi Pengawasan:'}
+                                </strong>
                               </span>
                               <span className="text-slate-400 font-mono text-[10px]">
                                 {editingContent.length} karakter &bull; {editingContent.trim().split(/\s+/).filter(Boolean).length} kata
                               </span>
                             </div>
+
+                            {/* PENGATURAN MEDIA HANYA UNTUK DIVISI SOSMED */}
+                            {isSocialDivision(batch.divisionId) && (
+                              <div className="p-2 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                                    <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
+                                    Lampiran Media Konten (Foto / Video):
+                                  </span>
+                                  <label className="inline-flex items-center gap-1 py-1 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold cursor-pointer transition shadow">
+                                    <UploadCloud className="w-3 h-3" />
+                                    <span>{uploadingBatchId === batch.id ? 'Mengunggah...' : 'Pilih File (JPG/PNG/MP4)'}</span>
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                                      className="hidden"
+                                      disabled={uploadingBatchId === batch.id}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadMediaForBatch(batch.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                            )}
 
                             <textarea
                               value={editingContent}
@@ -2036,36 +2260,88 @@ export default function AIEmployeesDashboard() {
                             />
 
                             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800">
-                              <button
-                                type="button"
-                                disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
-                                onClick={() => handlePublishBatchToSocial(batch, 'instagram', editingContent)}
-                                className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-pink-600/20"
-                              >
-                                <InstagramIcon className="w-3.5 h-3.5" />
-                                <span>Simpan & Publish IG</span>
-                              </button>
+                              {/* 1. AKSI SIMPAN KHUSUS DIVISI MEDSOS */}
+                              {isSocialDivision(batch.divisionId) && (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
+                                    onClick={() => handlePublishBatchToSocial(batch, 'instagram', editingContent)}
+                                    className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-pink-600/20"
+                                  >
+                                    <InstagramIcon className="w-3.5 h-3.5" />
+                                    <span>Simpan & Publish IG</span>
+                                  </button>
 
-                              <button
-                                type="button"
-                                disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
-                                onClick={() => handlePublishBatchToSocial(batch, 'facebook', editingContent)}
-                                className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-600/20"
-                              >
-                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                </svg>
-                                <span>Simpan & Publish FB</span>
-                              </button>
+                                  <button
+                                    type="button"
+                                    disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
+                                    onClick={() => handlePublishBatchToSocial(batch, 'facebook', editingContent)}
+                                    className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-600/20"
+                                  >
+                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                    <span>Simpan & Publish FB</span>
+                                  </button>
+                                </>
+                              )}
+
+                              {/* 2. AKSI SIMPAN KHUSUS DIVISI SEO & WEBSITE */}
+                              {isSeoWebsiteDivision(batch.divisionId) && (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={isSavingEdit}
+                                    onClick={() => handlePublishArticleToWebsite(batch, editingContent)}
+                                    className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-600/20"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>Simpan & Publish ke Website</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    disabled={isSavingEdit}
+                                    onClick={() => handleSaveBatchEdit(batch.id, 'approved')}
+                                    className="py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Save className="w-3.5 h-3.5" />
+                                    <span>Simpan Draf</span>
+                                  </button>
+                                </>
+                              )}
+
+                              {/* 3. AKSI SIMPAN KHUSUS DIVISI IT & ANALYTICS (PENGAWASAN SISTEM) */}
+                              {isSystemMonitoringDivision(batch.divisionId) && (
+                                <button
+                                  type="button"
+                                  disabled={isSavingEdit}
+                                  onClick={() => handleSaveBatchEdit(batch.id, 'approved')}
+                                  className="py-1.5 px-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-600/20"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>✓ Simpan & Jalankan Rekomendasi</span>
+                                </button>
+                              )}
 
                               <button
                                 type="button"
                                 disabled={isSavingEdit}
                                 onClick={() => handleSaveBatchEdit(batch.id)}
-                                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-600/20"
+                                className="py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
                               >
                                 {isSavingEdit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                                 <span>Simpan Redaksi Saja</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isSavingEdit}
+                                onClick={() => handleSaveBatchEdit(batch.id, 'rejected')}
+                                className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-rose-950/50 text-rose-300 text-xs font-medium transition cursor-pointer"
+                              >
+                                <span>Tolak</span>
                               </button>
 
                               <button
@@ -2085,43 +2361,161 @@ export default function AIEmployeesDashboard() {
                         )}
                       </div>
 
-                      {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}
+                      {/* BLOK 3: AKSI EKSEKUSI BATCH SESUAI PERAN DIVISI */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
                         <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
-                            disabled={instagramNotice?.status === 'publishing'}
-                            title="Publikasikan langsung usulan ini ke Instagram @kompreskilat"
-                            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
-                          >
-                            <InstagramIcon className="w-3.5 h-3.5" />
-                            <span>Publikasikan ke Instagram</span>
-                          </button>
+                          {/* 1. PERAN DIVISI MEDIA SOSIAL */}
+                          {isSocialDivision(batch.divisionId) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
+                                disabled={instagramNotice?.status === 'publishing'}
+                                title="Publikasikan langsung usulan ini ke Instagram @kompreskilat"
+                                className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                              >
+                                <InstagramIcon className="w-3.5 h-3.5" />
+                                <span>Publikasikan ke Instagram</span>
+                              </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
-                            disabled={instagramNotice?.status === 'publishing'}
-                            title="Publikasikan langsung usulan ini ke Facebook Kompres Kilat"
-                            className="py-1.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
-                          >
-                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            <span>Publikasikan ke Facebook</span>
-                          </button>
+                              <button
+                                type="button"
+                                onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
+                                disabled={instagramNotice?.status === 'publishing'}
+                                title="Publikasikan langsung usulan ini ke Facebook Kompres Kilat"
+                                className="py-1.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
+                              >
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                </svg>
+                                <span>Publikasikan ke Facebook</span>
+                              </button>
 
-                          {batch.socialPermalink && (
-                            <a
-                              href={batch.socialPermalink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              <span>Lihat di Medsos</span>
-                            </a>
+                              {editingBatchId !== batch.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingBatch(batch)}
+                                  className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                  title="Edit kalimat atau deskripsi sebelum dipublikasikan"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Edit Sebelum Publish</span>
+                                </button>
+                              )}
+
+                              {batch.socialPermalink && (
+                                <a
+                                  href={batch.socialPermalink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>Lihat di Medsos</span>
+                                </a>
+                              )}
+                            </>
+                          )}
+
+                          {/* 2. PERAN DIVISI IT & ANALYTICS (PENGAWASAN SISTEM) */}
+                          {isSystemMonitoringDivision(batch.divisionId) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleApproveBatch(batch.id)}
+                                className="py-1.5 px-3.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-cyan-600/25 cursor-pointer"
+                                title="Setujui rekomendasi teknis & jalankan ke sistem website"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>✓ Setujui & Jalankan</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleRejectBatch(batch.id)}
+                                className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-rose-950/50 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                title="Tolak usulan teknis ini"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Tolak</span>
+                              </button>
+
+                              {editingBatchId !== batch.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingBatch(batch)}
+                                  className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Edit Catatan / Instruksi</span>
+                                </button>
+                              )}
+
+                              {batch.status === 'approved' && (
+                                <span className="text-[11px] text-cyan-400 font-semibold flex items-center gap-1 ml-1">
+                                  ✓ Sistem Berjalan & Keamanan Terjaga
+                                </span>
+                              )}
+                            </>
+                          )}
+
+                          {/* 3. PERAN DIVISI SEO & KONTEN WEBSITE */}
+                          {isSeoWebsiteDivision(batch.divisionId) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handlePublishArticleToWebsite(batch)}
+                                className="py-1.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/25 cursor-pointer"
+                                title="Publikasikan naskah artikel ini ke website / blog kompreskilat.site"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>Publikasikan ke Website</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleApproveBatch(batch.id, 'Disimpan sebagai Draf Siap Terbit di Website')}
+                                className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                title="Simpan artikel sebagai draf editorial"
+                              >
+                                <Save className="w-3.5 h-3.5" />
+                                <span>Simpan Draf</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleRejectBatch(batch.id, 'Draf artikel ditolak')}
+                                className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-rose-950/50 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                title="Tolak draf artikel"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Tolak</span>
+                              </button>
+
+                              {editingBatchId !== batch.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingBatch(batch)}
+                                  className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                                  title="Edit naskah artikel"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Edit Naskah</span>
+                                </button>
+                              )}
+
+                              {batch.socialPermalink && (
+                                <a
+                                  href={batch.socialPermalink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>Lihat di Blog Website</span>
+                                </a>
+                              )}
+                            </>
                           )}
                         </div>
 
