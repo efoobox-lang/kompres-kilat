@@ -26,6 +26,9 @@ import {
   Zap,
   ArrowLeftRight,
   RefreshCw,
+  Share2,
+  X,
+  Settings,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 
@@ -236,6 +239,45 @@ export default function MonitoringCenterPage() {
   const [isCheckingIntegrations, setIsCheckingIntegrations] = useState<boolean>(false);
   const [integrationCheckError, setIntegrationCheckError] = useState<string | null>(null);
   const [sfxEnabled, setSfxEnabled] = useState<boolean>(true);
+
+  // Modal Pengaturan Kredensial Medsos
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState<boolean>(false);
+  const [fbPageId, setFbPageId] = useState<string>('122094750927548983');
+  const [fbToken, setFbToken] = useState<string>('');
+  const [igUserId, setIgUserId] = useState<string>('17841420772273253');
+  const [igToken, setIgToken] = useState<string>('');
+  const [isSavingSocial, setIsSavingSocial] = useState<boolean>(false);
+  const [socialSaveSuccess, setSocialSaveSuccess] = useState<string | null>(null);
+
+  const handleSaveSocial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSocial(true);
+    setSocialSaveSuccess(null);
+    try {
+      const res = await fetch('/api/admin/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facebookPageId: fbPageId,
+          facebookToken: fbToken,
+          instagramUserId: igUserId,
+          instagramToken: igToken || fbToken,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSocialSaveSuccess('Kredensial berhasil disimpan! Memverifikasi koneksi...');
+        await fetchIntegrations();
+        setTimeout(() => setIsSocialModalOpen(false), 1200);
+      } else {
+        throw new Error(data.error || 'Gagal menyimpan kredensial.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Gagal menyimpan.');
+    } finally {
+      setIsSavingSocial(false);
+    }
+  };
 
   // Quick New Task Modal / Input
 
@@ -452,15 +494,25 @@ export default function MonitoringCenterPage() {
                 Memvalidasi koneksi server-side. Cek token tidak menjamin izin publikasi; validasi aksi aktual tetap perlu dilakukan.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={fetchIntegrations}
-              disabled={isCheckingIntegrations}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isCheckingIntegrations ? 'animate-spin' : ''}`} />
-              {isCheckingIntegrations ? 'Memeriksa...' : 'Periksa koneksi'}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSocialModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-600/20 px-3 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-600/30 transition cursor-pointer"
+              >
+                <Settings className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Atur Kredensial Medsos</span>
+              </button>
+              <button
+                type="button"
+                onClick={fetchIntegrations}
+                disabled={isCheckingIntegrations}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isCheckingIntegrations ? 'animate-spin' : ''}`} />
+                {isCheckingIntegrations ? 'Memeriksa...' : 'Periksa koneksi'}
+              </button>
+            </div>
           </div>
           {integrationCheckError && (
             <p role="alert" className="m-4 rounded-lg border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-200">
@@ -830,6 +882,115 @@ export default function MonitoringCenterPage() {
           </div>
         </section>
       </div>
+
+      {/* MODAL PENGATURAN KREDENSIAL MEDSOS */}
+      {isSocialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+                  <Share2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Pengaturan Kredensial Medsos</h3>
+                  <p className="text-xs text-slate-400">Hubungkan Meta Graph API (Facebook Page & Instagram)</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSocialModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSocial} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Facebook Page ID
+                </label>
+                <input
+                  type="text"
+                  value={fbPageId}
+                  onChange={(e) => setFbPageId(e.target.value)}
+                  placeholder="122094750927548983"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  required
+                />
+                <p className="text-[10px] text-slate-500 mt-1">ID Halaman Facebook Kompres Kilat.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Facebook Page Access Token
+                </label>
+                <textarea
+                  rows={2}
+                  value={fbToken}
+                  onChange={(e) => setFbToken(e.target.value)}
+                  placeholder="Paste Access Token aktif dari Meta Graph API Explorer..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  required
+                />
+                <p className="text-[10px] text-slate-500 mt-1">Token akses yang memiliki izin pages_show_list, pages_read_engagement, instagram_content_publish.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Instagram Business Account ID
+                </label>
+                <input
+                  type="text"
+                  value={igUserId}
+                  onChange={(e) => setIgUserId(e.target.value)}
+                  placeholder="17841420772273253"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  required
+                />
+                <p className="text-[10px] text-slate-500 mt-1">ID akun profesional Instagram @kompreskilat.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Instagram Access Token (Opsional jika sama dengan FB Token)
+                </label>
+                <textarea
+                  rows={2}
+                  value={igToken}
+                  onChange={(e) => setIgToken(e.target.value)}
+                  placeholder="Kosongkan jika menggunakan token yang sama dengan Facebook..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+
+              {socialSaveSuccess && (
+                <p className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400">
+                  {socialSaveSuccess}
+                </p>
+              )}
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSocialModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingSocial}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-lg shadow-indigo-600/30 disabled:opacity-50 cursor-pointer"
+                >
+                  {isSavingSocial ? 'Menyimpan & Memverifikasi...' : 'Simpan & Verifikasi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

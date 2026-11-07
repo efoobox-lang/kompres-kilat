@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/admin-auth';
 import { getSupabaseConfig } from '@/lib/ai-employee-store';
+import { getSocialCredentials, saveSocialCredentials } from '@/lib/social-config';
 
 type IntegrationStatus = 'connected' | 'missing' | 'error' | 'unverified';
 
@@ -20,10 +21,11 @@ export async function GET(request: Request) {
 
   const supabase = getSupabaseConfig();
   const geminiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
-  const instagramToken = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
-  const instagramUserId = process.env.INSTAGRAM_USER_ID?.trim();
-  const facebookPageId = process.env.FACEBOOK_PAGE_ID?.trim();
-  const facebookToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim();
+  const socialCreds = getSocialCredentials();
+  const instagramToken = socialCreds.instagramToken;
+  const instagramUserId = socialCreds.instagramUserId;
+  const facebookPageId = socialCreds.facebookPageId;
+  const facebookToken = socialCreds.facebookToken;
   const graphVersion = process.env.META_GRAPH_API_VERSION?.trim() || 'v26.0';
 
   const checks: IntegrationCheck[] = [];
@@ -228,4 +230,27 @@ export async function GET(request: Request) {
     { success: true, checkedAt: new Date().toISOString(), integrations: checks },
     { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
   );
+}
+
+export async function POST(request: Request) {
+  if (!verifyAdminSession(request)) {
+    return NextResponse.json({ error: 'Sesi administrator tidak valid.' }, { status: 401 });
+  }
+
+  let body: any = {};
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Format permintaan tidak valid.' }, { status: 400 });
+  }
+
+  const { facebookPageId, facebookToken, instagramToken, instagramUserId } = body;
+  const updated = saveSocialCredentials({
+    facebookPageId: typeof facebookPageId === 'string' && facebookPageId.trim() ? facebookPageId.trim() : undefined,
+    facebookToken: typeof facebookToken === 'string' && facebookToken.trim() ? facebookToken.trim() : undefined,
+    instagramToken: typeof instagramToken === 'string' && instagramToken.trim() ? instagramToken.trim() : undefined,
+    instagramUserId: typeof instagramUserId === 'string' && instagramUserId.trim() ? instagramUserId.trim() : undefined,
+  });
+
+  return NextResponse.json({ success: true, credentials: updated });
 }

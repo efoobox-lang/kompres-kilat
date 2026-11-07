@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
+import { getSocialCredentials } from '@/lib/social-config';
 
 export interface InstagramPublishRequest {
   caption: string;
@@ -47,11 +48,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Tipe media tidak valid.' }, { status: 400 });
     }
 
-    // Ambil kredensial resmi Instagram Graph API dari environment variables
+    // Ambil kredensial resmi Instagram Graph API dari environment variables atau config
+    const socialCreds = getSocialCredentials();
     const accessToken = (
       process.env.INSTAGRAM_ACCESS_TOKEN ||
       process.env.IG_ACCESS_TOKEN ||
       process.env.FACEBOOK_ACCESS_TOKEN ||
+      socialCreds.instagramToken ||
       ''
     ).trim();
 
@@ -59,6 +62,7 @@ export async function POST(request: Request) {
       process.env.INSTAGRAM_USER_ID ||
       process.env.IG_USER_ID ||
       process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID ||
+      socialCreds.instagramUserId ||
       ''
     ).trim();
 

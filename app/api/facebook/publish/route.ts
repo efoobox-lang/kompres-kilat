@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
+import { getSocialCredentials } from '@/lib/social-config';
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -9,8 +10,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
   }
 
-  const pageId = process.env.FACEBOOK_PAGE_ID?.trim();
-  const pageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim();
+  const socialCreds = getSocialCredentials();
+  const pageId = process.env.FACEBOOK_PAGE_ID?.trim() || socialCreds.facebookPageId;
+  const pageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim() || socialCreds.facebookToken;
   if (!pageId || !pageToken) {
     return NextResponse.json(
       { success: false, error: 'Facebook belum dikonfigurasi. Atur FACEBOOK_PAGE_ID dan FACEBOOK_PAGE_ACCESS_TOKEN.' },
