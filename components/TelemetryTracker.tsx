@@ -26,8 +26,7 @@ export default function TelemetryTracker() {
     if (lastPathRef.current !== pathname) {
       lastPathRef.current = pathname;
 
-      try {
-        fetch('/api/analytics', {
+      fetch('/api/analytics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -36,10 +35,7 @@ export default function TelemetryTracker() {
             visitorId,
           }),
           keepalive: true,
-        }).catch(() => {});
-      } catch {
-        // Abaikan error pada browser sandbox
-      }
+        }).catch((error) => console.warn('Gagal mengirim pageview telemetry:', error));
     }
 
     // Pelacak interaksi klik pengguna nyata
@@ -52,8 +48,7 @@ export default function TelemetryTracker() {
         target.closest('button') ||
         target.closest('a')
       ) {
-        try {
-          fetch('/api/analytics', {
+        fetch('/api/analytics', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -61,10 +56,7 @@ export default function TelemetryTracker() {
               visitorId,
             }),
             keepalive: true,
-          }).catch(() => {});
-        } catch {
-          // Abaikan error
-        }
+          }).catch((error) => console.warn('Gagal mengirim click telemetry:', error));
       }
     };
 

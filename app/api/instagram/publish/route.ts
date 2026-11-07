@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
 
 export interface InstagramPublishRequest {
   caption: string;
@@ -11,6 +12,13 @@ export interface InstagramPublishRequest {
 
 export async function POST(request: Request) {
   try {
+    if (!isSameOrigin(request)) {
+      return NextResponse.json({ success: false, error: 'Permintaan lintas origin ditolak.' }, { status: 403 });
+    }
+    if (!verifyAdminSession(request)) {
+      return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+    }
+
     const body: InstagramPublishRequest = await request.json().catch(() => ({}));
     const {
       caption = '',
@@ -26,6 +34,15 @@ export async function POST(request: Request) {
         { success: false, error: 'Caption konten Instagram tidak boleh kosong.' },
         { status: 400 }
       );
+    }
+    if (caption.length > 2200) {
+      return NextResponse.json(
+        { success: false, error: 'Caption Instagram maksimal 2.200 karakter.' },
+        { status: 400 }
+      );
+    }
+    if (mediaType !== 'REELS' && mediaType !== 'VIDEO' && mediaType !== 'IMAGE') {
+      return NextResponse.json({ success: false, error: 'Tipe media tidak valid.' }, { status: 400 });
     }
 
     // Ambil kredensial resmi Instagram Graph API dari environment variables
@@ -43,10 +60,21 @@ export async function POST(request: Request) {
       ''
     ).trim();
 
-    const targetMediaUrl =
-      videoUrl ||
-      imageUrl ||
-      'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+    const targetMediaUrl = videoUrl || imageUrl;
+    if (!targetMediaUrl) {
+      return NextResponse.json(
+        { success: false, error: 'Media publik yang nyata wajib disediakan sebelum publikasi.' },
+        { status: 400 }
+      );
+    }
+    try {
+      if (new URL(targetMediaUrl).protocol !== 'https:') throw new Error('HTTPS required');
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'URL media harus berupa alamat HTTPS publik yang valid.' },
+        { status: 400 }
+      );
+    }
 
     // 1. JIKA KREDENSIAL LENGKAP: EKSEKUSI LANGSUNG KE INSTAGRAM GRAPH API
     if (accessToken && igUserId) {
@@ -140,23 +168,34 @@ export async function POST(request: Request) {
           }
         } catch {}
 
-        // Upayakan juga sinkronisasi posting ke Halaman Facebook resmi (Page ID 1411463522052642) jika tersedia
+        // Instagram publication can succeed independently from an optional Facebook cross-post.
         let fbPostId: string | null = null;
-        try {
-          const fbFeedUrl = 'https://graph.facebook.com/v21.0/1411463522052642/feed';
+        let facebookStatus: 'published' | 'not_configured' | 'failed' = 'not_configured';
+        const facebookPageId = process.env.FACEBOOK_PAGE_ID?.trim();
+        const facebookPageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim();
+        if (facebookPageId && facebookPageToken) {
+          try {
+          const fbFeedUrl = `https://graph.facebook.com/v21.0/${encodeURIComponent(facebookPageId)}/feed`;
           const fbRes = await fetch(fbFeedUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               message: caption,
-              access_token: accessToken,
+              access_token: facebookPageToken,
             }),
           });
           const fbData = await fbRes.json();
           if (fbData && fbData.id) {
             fbPostId = fbData.id;
+            facebookStatus = 'published';
+          } else {
+            facebookStatus = 'failed';
           }
-        } catch {}
+          } catch (facebookError) {
+            console.error('Facebook Page publication failed:', facebookError);
+            facebookStatus = 'failed';
+          }
+        }
 
         const fbNote = fbPostId
           ? ' & Halaman Facebook Kompres Kilat'
@@ -167,8 +206,13 @@ export async function POST(request: Request) {
           isLive: true,
           postId: publishedPostId,
           facebookPostId: fbPostId,
+          facebookStatus,
           permalink,
-          message: `Konten "${title}" berhasil dirilis langsung ke Instagram${fbNote}!`,
+          message: facebookStatus === 'failed'
+            ? `Konten "${title}" berhasil dirilis ke Instagram, tetapi publikasi Facebook gagal.`
+            : facebookStatus === 'not_configured'
+              ? `Konten "${title}" berhasil dirilis ke Instagram. Facebook belum dikonfigurasi.`
+              : `Konten "${title}" berhasil dirilis ke Instagram${fbNote}!`,
           publishedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
         });
       } catch (err: any) {
@@ -183,22 +227,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. MODE SIMULASI / SANDBOX JIKA TOKEN BELUM DIISI DI .env.local
-    // Memberikan validasi alur penuh tanpa memblokir administrator
-    const mockPostId = `ig_reel_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const mockPermalink = `https://www.instagram.com/kompreskilat.site/`;
-
     return NextResponse.json({
-      success: true,
-      isLive: false,
-      isDemo: true,
-      postId: mockPostId,
-      permalink: mockPermalink,
-      message: `Konten "${title}" berhasil divalidasi dan disimulasikan siap rilis ke Instagram Graph API. (Atur INSTAGRAM_ACCESS_TOKEN & INSTAGRAM_USER_ID di .env.local untuk rilis live publik).`,
-      captionPreview: caption.slice(0, 100) + '...',
-      mediaUrl: targetMediaUrl,
-      publishedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
-    });
+      success: false,
+      error: 'Instagram belum dikonfigurasi. Atur INSTAGRAM_ACCESS_TOKEN dan INSTAGRAM_USER_ID.',
+    }, { status: 503 });
   } catch (error: any) {
     console.error('Error in /api/instagram/publish:', error);
     return NextResponse.json(

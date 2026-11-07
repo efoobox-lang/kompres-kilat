@@ -27,8 +27,8 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({
   currentTab,
-  latency = '24ms Edge',
-  uptime = '99.98%',
+  latency = 'Belum terukur',
+  uptime = 'Belum terukur',
   onSync,
   isSyncing = false,
   sfxEnabled = true,
@@ -112,10 +112,10 @@ export default function AdminHeader({
       <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
         {/* Edge Status Pill */}
         <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2 font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-slate-500" />
           <span className="text-slate-300">{latency}</span>
           <span className="text-slate-600">|</span>
-          <span className="text-emerald-400">{uptime}</span>
+          <span className="text-slate-400">{uptime}</span>
         </div>
 
         {/* Sync Button */}

@@ -1,142 +1,223 @@
-import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
+import { NextResponse } from 'next/server';
+import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
+import { aiEmployeeStoreRequest, isAIEmployeeStoreConfigured } from '@/lib/ai-employee-store';
 
 const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
-
-// Pustaka video showcase beresolusi tinggi yang terverifikasi aman dan dapat diputar langsung di HTML5 video player serta siap rilis ke Instagram
-const SAMPLE_VIDEOS = [
-  {
-    url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
-    title: 'Teaser Kilat: Cetak Nota Thermal & Struk Kasir 58mm Gratis',
-    caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal! 
-
-Dukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di browsermu.
-
-👉 Coba sekarang di https://kompreskilat.site/tools/invoice-generator
-
-#KompresKilat #NotaThermal #KasirUMKM #AplikasiGratis #SolusiBisnis #ReelsBisnis`,
-    duration: '0:15',
-    aspectRatio: '9:16 (Vertical Reels)',
-  },
-  {
-    url: 'https://vjs.zencdn.net/v/oceans.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1080&q=80',
-    title: 'Solusi Cepat: Kompres Foto KTP & Dokumen PDF Tanpa Upload',
-    caption: `⚡ Mau daftar kerja atau urus berkas tapi ukuran foto KTP dan PDF dibatasi 500KB?
-
-Jangan panik! KompresKilat memproses berkasmu langsung di perangkat tanpa upload ke server lain. Privasi terjaga 100%!
-
-👉 Coba di https://kompreskilat.site
-
-#KompresKilat #KompresPDF #TipsKerja #PrivasiAman #LifeHacks`,
-    duration: '0:15',
-    aspectRatio: '9:16 (Vertical Reels)',
-  },
-  {
-    url: 'https://media.w3.org/2010/05/sintel/trailer_hd.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1080&q=80',
-    title: 'Showcase Suite KompresKilat 2026: Semua Alat Dokumen Jadi Satu',
-    caption: `✨ Semua kebutuhan berkas UMKM dan pekerja modern ada di satu tempat:
-1. Kompres Gambar Super Cepat
-2. Pembuat Invoice & Nota Kasir Thermal
-3. Konversi PDF & Stempel Dokumen
-
-Akses gratis di https://kompreskilat.site!
-
-#KompresKilat #Produktivitas #ToolsOnline #UMKMGoDigital`,
-    duration: '0:15',
-    aspectRatio: '9:16 (Vertical Reels)',
-  },
-];
+const videoModel = (process.env.GOOGLE_VIDEO_MODEL || 'gemini-omni-1.2-flash').trim();
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json().catch(() => ({}));
-    const {
-      prompt = '',
-      title = 'Teaser Konten Video KompresKilat',
-      aspectRatio = '9:16',
-      generatorEngine = 'Google Video AI / Veo 2 Turbo',
-    } = body;
-
-    const timeStr = new Date().toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    // Pilih video acak atau berdasarkan tema prompt
-    const selectedTemplate =
-      SAMPLE_VIDEOS[Math.floor(Math.random() * SAMPLE_VIDEOS.length)];
-
-    let generatedTitle = title || selectedTemplate.title;
-    let generatedCaption = selectedTemplate.caption;
-    let storyboardSummary = `Scene 1: Hook dinamis pengenalan masalah berkas UMKM.\nScene 2: Demonstrasi kecepatan kompresi & cetak nota thermal browser.\nScene 3: CTA penutup dengan logo kompreskilat.site.`;
-
-    // Jika API Key Gemini tersedia, gunakan model Google untuk merancang prompt video & skrip reels viral
-    if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const promptInstruction = `Anda adalah Video Creative Director di Google Video AI / Veo Studio untuk kompreskilat.site.
-Pengguna meminta video dengan instruksi: "${prompt || 'Buat video promosi menarik untuk fitur kompres dokumen dan cetak nota thermal'}".
-
-Tugas:
-1. Buat judul video Reels yang sangat memikat (maks 10 kata).
-2. Buat caption Instagram Reels lengkap dengan hook di baris pertama, penjelasan nilai utama (100% lokal browser & gratis), CTA ke kompreskilat.site, dan 5 hashtag viral.
-3. Buat ringkasan storyboard 3 adegan singkat (total 15 detik).
-
-Format keluaran:
-JUDUL: [Judul Video]
-CAPTION: [Caption lengkap]
-STORYBOARD: [Storyboard 3 adegan]`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: promptInstruction,
-        });
-
-        const textOutput = response.text?.trim() || '';
-        if (textOutput) {
-          const titleMatch = textOutput.match(/JUDUL:\s*(.+)/i);
-          const captionMatch = textOutput.match(/CAPTION:\s*([\s\S]+?)(?=STORYBOARD:|$)/i);
-          const storyboardMatch = textOutput.match(/STORYBOARD:\s*([\s\S]+)/i);
-
-          if (titleMatch?.[1]) generatedTitle = titleMatch[1].trim();
-          if (captionMatch?.[1]) generatedCaption = captionMatch[1].trim();
-          if (storyboardMatch?.[1]) storyboardSummary = storyboardMatch[1].trim();
-        }
-      } catch (err: any) {
-        console.warn('Video AI Prompt enhancement note:', err?.message || err);
-      }
-    }
-
-    const videoPayload = {
-      id: `vid-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      title: generatedTitle,
-      caption: generatedCaption,
-      videoUrl: selectedTemplate.url,
-      thumbnailUrl: selectedTemplate.thumbnail,
-      duration: '0:15',
-      aspectRatio: `${aspectRatio} (Vertical Reels)`,
-      resolution: '1080x1920 (FHD)',
-      storyboard: storyboardSummary,
-      model: generatorEngine,
-      generatedAt: `${timeStr} WIB`,
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: videoPayload,
-      message: 'Video berhasil digenerate dan siap diputar atau dirilis ke Instagram.',
-    });
-  } catch (error: any) {
-    console.error('Error saat generate video:', error);
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ success: false, error: 'Permintaan lintas origin ditolak.' }, { status: 403 });
+  }
+  if (!verifyAdminSession(request)) {
+    return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+  }
+  if (!apiKey || !isAIEmployeeStoreConfigured()) {
     return NextResponse.json(
-      {
-        success: false,
-        error: error?.message || 'Gagal memproses pembuatan video AI.',
-      },
-      { status: 500 }
+      { success: false, error: 'Gemini dan Supabase wajib dikonfigurasi untuk membuat video produksi.' },
+      { status: 503 }
     );
   }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ success: false, error: 'Format permintaan tidak valid.' }, { status: 400 });
+  }
+
+  const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+  const aspectRatio = body.aspectRatio === '16:9' ? '16:9' : '9:16';
+  if (prompt.length < 10 || prompt.length > 2000) {
+    return NextResponse.json(
+      { success: false, error: 'Instruksi video harus berisi 10-2.000 karakter.' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const interaction = await ai.interactions.create({
+      model: videoModel,
+      input: `Buat video promosi orisinal untuk KompresKilat berdasarkan brief berikut. Hasilkan footage nyata, bukan storyboard atau penjelasan teks. Jangan menampilkan klaim faktual yang tidak ada di brief.\n\nBrief:\n${prompt}`,
+      response_format: { type: 'video', aspect_ratio: aspectRatio },
+      background: true,
+    });
+
+    if (!interaction.id) {
+      return NextResponse.json({ success: false, error: 'Provider tidak mengembalikan ID pekerjaan video.' }, { status: 502 });
+    }
+
+    const jobId = randomUUID();
+    await aiEmployeeStoreRequest('', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        id: jobId,
+        record_type: 'video_job',
+        division_id: 'creative',
+        division_name: 'Divisi Video & Kreatif',
+        prompt,
+        output: '',
+        model: videoModel,
+        status: 'running',
+        data: { interactionId: interaction.id, aspectRatio },
+      }),
+    });
+
+    return NextResponse.json({ success: true, jobId, status: interaction.status, model: videoModel });
+  } catch (error) {
+    console.error('Video generation request failed:', error);
+    return NextResponse.json(
+      { success: false, error: 'Provider video tidak dapat memulai generasi. Periksa akses model dan billing Gemini.' },
+      { status: 502 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  if (!verifyAdminSession(request)) {
+    return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+  }
+  if (!isAIEmployeeStoreConfigured()) {
+    return NextResponse.json({ success: false, error: 'Supabase belum dikonfigurasi.' }, { status: 503 });
+  }
+
+  const jobId = new URL(request.url).searchParams.get('jobId');
+  if (!jobId) {
+    try {
+      const jobs = await aiEmployeeStoreRequest<Array<{
+        id: string;
+        prompt: string;
+        status: string;
+        created_at: string;
+        data: { videoData?: CreativeVideoRecord };
+      }>>('?record_type=eq.video_job&select=id,prompt,status,created_at,data&order=created_at.desc&limit=20');
+      return NextResponse.json({
+        success: true,
+        jobs: jobs.map(({ id, prompt, status, created_at, data }) => ({
+          id,
+          prompt,
+          status,
+          createdAt: created_at,
+          videoData: status === 'completed' ? data.videoData || null : null,
+        })),
+      }, { headers: { 'Cache-Control': 'no-store' } });
+    } catch (error) {
+      console.error('Video job history request failed:', error);
+      return NextResponse.json({ success: false, error: 'Gagal memuat riwayat generasi video.' }, { status: 502 });
+    }
+  }
+  if (!/^[0-9a-f-]{36}$/i.test(jobId)) {
+    return NextResponse.json({ success: false, error: 'ID pekerjaan video tidak valid.' }, { status: 400 });
+  }
+  if (!apiKey) {
+    return NextResponse.json({ success: false, error: 'Gemini API belum dikonfigurasi.' }, { status: 503 });
+  }
+
+  try {
+    const rows = await aiEmployeeStoreRequest<Array<{
+      id: string;
+      prompt: string;
+      status: string;
+      data: { interactionId?: string; aspectRatio?: string; videoData?: CreativeVideoRecord };
+    }>>(
+      `?id=eq.${encodeURIComponent(jobId)}&record_type=eq.video_job&select=id,prompt,status,data&limit=1`
+    );
+    const job = rows[0];
+    if (!job) return NextResponse.json({ success: false, error: 'Pekerjaan video tidak ditemukan.' }, { status: 404 });
+    if (job.status === 'completed' && job.data.videoData) {
+      return NextResponse.json({ success: true, status: 'completed', data: job.data.videoData });
+    }
+    if (!job.data.interactionId) {
+      return NextResponse.json({ success: false, error: 'Data operasi video tidak lengkap.' }, { status: 500 });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const interaction = await ai.interactions.get(job.data.interactionId);
+    if (interaction.status === 'failed' || interaction.status === 'cancelled') {
+      await updateVideoJob(jobId, 'failed', { ...job.data, error: 'Provider gagal membuat video.' });
+      return NextResponse.json({ success: false, status: 'failed', error: 'Provider gagal membuat video.' }, { status: 502 });
+    }
+    if (interaction.status !== 'completed') {
+      return NextResponse.json({ success: true, status: interaction.status });
+    }
+
+    const encodedVideo = interaction.output_video?.data;
+    if (!encodedVideo) {
+      await updateVideoJob(jobId, 'failed', { ...job.data, error: 'Video output tidak tersedia.' });
+      return NextResponse.json({ success: false, status: 'failed', error: 'Provider menyelesaikan tugas tanpa mengembalikan file video.' }, { status: 502 });
+    }
+
+    const video = Buffer.from(encodedVideo, 'base64');
+    if (video.length === 0 || video.length > 100 * 1024 * 1024) {
+      await updateVideoJob(jobId, 'failed', { ...job.data, error: 'Ukuran file video tidak valid.' });
+      return NextResponse.json({ success: false, status: 'failed', error: 'Ukuran file video tidak valid.' }, { status: 502 });
+    }
+
+    const videoUrl = await uploadVideo(jobId, video);
+    const videoData: CreativeVideoRecord = {
+      id: jobId,
+      title: 'Video KompresKilat',
+      caption: job.prompt,
+      videoUrl,
+      duration: '15 detik',
+      aspectRatio: job.data.aspectRatio || '9:16',
+      model: videoModel,
+      generatedAt: new Date().toISOString(),
+    };
+    await updateVideoJob(jobId, 'completed', { ...job.data, videoData });
+    return NextResponse.json({ success: true, status: 'completed', data: videoData });
+  } catch (error) {
+    console.error('Video generation status check failed:', error);
+    return NextResponse.json(
+      { success: false, error: 'Gagal memeriksa atau menyimpan hasil video.' },
+      { status: 502 }
+    );
+  }
+}
+
+interface CreativeVideoRecord {
+  id: string;
+  title: string;
+  caption: string;
+  videoUrl: string;
+  duration: string;
+  aspectRatio: string;
+  model: string;
+  generatedAt: string;
+}
+
+async function updateVideoJob(id: string, status: string, data: Record<string, unknown>) {
+  await aiEmployeeStoreRequest(`?id=eq.${encodeURIComponent(id)}&record_type=eq.video_job`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ status, data, updated_at: new Date().toISOString() }),
+  });
+}
+
+async function uploadVideo(id: string, video: Buffer) {
+  const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!supabaseUrl || !key) throw new Error('Supabase Storage belum dikonfigurasi.');
+
+  const objectPath = `${supabaseUrl}/storage/v1/object/ai-employee-videos/${id}.mp4`;
+  const response = await fetch(objectPath, {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'video/mp4',
+      'x-upsert': 'true',
+    },
+    body: new Uint8Array(video),
+  });
+  if (!response.ok) {
+    const details = await response.text();
+    console.error('Generated video upload failed:', response.status, details.slice(0, 500));
+    throw new Error(`Supabase Storage menolak video (HTTP ${response.status}).`);
+  }
+  return `${supabaseUrl}/storage/v1/object/public/ai-employee-videos/${id}.mp4`;
 }

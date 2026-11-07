@@ -17,7 +17,6 @@ import {
   EyeOff,
   Flame,
   MessageSquare,
-  Trophy,
   SlidersHorizontal,
   ChevronRight,
   Copy,
@@ -30,6 +29,7 @@ import {
   Layers,
   Trash2,
   X,
+  Share2,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
@@ -224,7 +224,18 @@ export default function VirtualOfficePage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const [divisions, setDivisions] = useState<OfficeDivision[]>(initialVirtualDivisions);
+  const [divisions, setDivisions] = useState<OfficeDivision[]>(() => initialVirtualDivisions.map((division) => ({
+    ...division,
+    status: 'Idle',
+    currentTask: 'Belum ada tugas aktif.',
+    outputCount: 0,
+    lastUpdated: 'Belum ada aktivitas',
+    metricLabel: 'Status',
+    metricValue: 'Belum terukur',
+    movementState: 'lounge',
+    level: 1,
+    xp: 0,
+  })));
   const [activeDivision, setActiveDivision] = useState<OfficeDivision | null>(null);
   const [loadingDivisionId, setLoadingDivisionId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -234,14 +245,9 @@ export default function VirtualOfficePage() {
 
   // Special Zone Interactive States
   const [isMeetingActive, setIsMeetingActive] = useState<boolean>(false);
-  const [meetingTopic, setMeetingTopic] = useState<string>(
-    'Sinergi Antar Divisi: Peningkatan Kecepatan Rendering & Pertumbuhan Pengguna Baru'
-  );
-  const [coffeeCupsServed, setCoffeeCupsServed] = useState<number>(14);
+  const meetingTopic = 'Simulasi visual antar divisi; bukan rapat atau proses worker yang berjalan.';
   const [isJanitorSweeping, setIsJanitorSweeping] = useState<boolean>(false);
-  const [janitorCleanedTokens, setJanitorCleanedTokens] = useState<number>(0);
-  const [selectedGymDivision, setSelectedGymDivision] = useState<string>('it');
-  const [isGymTraining, setIsGymTraining] = useState<boolean>(false);
+  const [janitorDeletedItems, setJanitorDeletedItems] = useState<number>(0);
 
   // Live Telemetry Sync
   const [analyticsData, setAnalyticsData] = useState<any>(null);
@@ -250,13 +256,13 @@ export default function VirtualOfficePage() {
 
   // Video Generator & Instagram Release States
   const [creativeVideo, setCreativeVideo] = useState({
-    title: 'Teaser Video Reels: Solusi Berkas & Cetak Nota KompresKilat',
-    caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal!\n\nDukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di browsermu.\n\n👉 Coba sekarang di https://kompreskilat.site/tools/invoice-generator\n\n#KompresKilat #NotaThermal #KasirUMKM #SolusiBisnis`,
-    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
-    duration: '0:15',
-    resolution: '1080x1920 (9:16)',
-    model: 'Google Video AI / Veo 2 Turbo'
+    title: '',
+    caption: '',
+    videoUrl: '',
+    thumbnailUrl: '',
+    duration: '',
+    resolution: '',
+    model: ''
   });
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
 
@@ -269,39 +275,55 @@ export default function VirtualOfficePage() {
   // State Batch Riwayat Perintah & Output Terpadu Agen AI (Workstation Batches)
   const [agentBatches, setAgentBatches] = useState<AgentTaskBatch[]>([]);
   const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const handleDeleteBatch = (batchId: string) => {
-    setAgentBatches((prev) => {
-      const updated = prev.filter((b) => b.id !== batchId);
-      try {
-        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
+  const handleDeleteBatch = async (batchId: string) => {
+    setHistoryError(null);
+    try {
+      const response = await fetch(`/api/ai-agent/history?id=${encodeURIComponent(batchId)}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menghapus riwayat.');
+      setAgentBatches((prev) => prev.filter((batch) => batch.id !== batchId));
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : 'Gagal menghapus riwayat.');
+    }
   };
 
   const handlePublishBatchToSocial = async (batch: AgentTaskBatch) => {
-    await handlePublishToInstagram(
-      batch.outputContent,
-      creativeVideo.videoUrl,
-      batch.userPrompt.slice(0, 50)
-    );
-
-    setAgentBatches((prev) => {
-      const updated = prev.map((b) =>
-        b.id === batch.id
-          ? {
-              ...b,
-              status: 'published_to_social' as const,
-              socialPermalink: 'https://www.instagram.com/kompreskilat/',
-            }
-          : b
-      );
-      try {
-        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
+    if (batch.divisionId !== 'sosmed') {
+      setHistoryError('Hanya draf dari Divisi Admin & Sosmed yang dapat dipublikasikan ke Facebook.');
+      return;
+    }
+    setHistoryError(null);
+    setInstagramNotice({ status: 'publishing', message: 'Menerbitkan teks ke Facebook...' });
+    try {
+      const response = await fetch('/api/facebook/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: batch.outputContent }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Facebook gagal.');
+      const savedResponse = await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
+      });
+      if (!savedResponse.ok) {
+        throw new Error('Facebook berhasil memublikasikan, tetapi status publikasi gagal disimpan.');
+      }
+      setAgentBatches((prev) => prev.map((item) =>
+        item.id === batch.id
+          ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+          : item
+      ));
+      setInstagramNotice({ status: 'success', message: 'Berhasil dipublikasikan ke Facebook.', permalink: result.permalink });
+    } catch (error) {
+      setInstagramNotice({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Publikasi Facebook gagal.',
+      });
+    }
   };
 
   const handlePublishToInstagram = async (caption: string, videoUrl: string, title?: string) => {
@@ -334,10 +356,10 @@ export default function VirtualOfficePage() {
       } else {
         throw new Error(result.error || 'Gagal merilis ke Instagram.');
       }
-    } catch (err: any) {
+    } catch (err) {
       setInstagramNotice({
         status: 'error',
-        message: err.message || 'Terjadi gangguan saat mempublikasikan ke Instagram.'
+        message: err instanceof Error ? err.message : 'Terjadi gangguan saat mempublikasikan ke Instagram.'
       });
     }
   };
@@ -402,8 +424,8 @@ export default function VirtualOfficePage() {
       if (json.success && json.data) {
         setAnalyticsData(json.data);
       }
-    } catch (e) {
-      console.warn('Fallback analytics:', e);
+    } catch (error) {
+      console.error('Gagal memuat analitik virtual office:', error);
     } finally {
       setIsLoadingAnalytics(false);
     }
@@ -411,19 +433,51 @@ export default function VirtualOfficePage() {
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const savedAuth = localStorage.getItem('kk_admin_session');
-      if (savedAuth === 'authorized_2026') {
+    let active = true;
+    const loadSessionAndHistory = async () => {
+      try {
+        const sessionResponse = await fetch('/api/admin/auth', { cache: 'no-store' });
+        const session = await sessionResponse.json();
+        if (!active) return;
+        if (!sessionResponse.ok) {
+          if (sessionResponse.status !== 401) throw new Error(session.error || 'Autentikasi admin belum dikonfigurasi.');
+          return;
+        }
+        if (!session.authenticated) return;
         setIsAuthenticated(true);
-      }
 
-      const savedBatches = localStorage.getItem('kk_agent_task_batches');
-      if (savedBatches) {
-        try {
-          setAgentBatches(JSON.parse(savedBatches));
-        } catch {}
+        const historyResponse = await fetch('/api/ai-agent/history', { cache: 'no-store' });
+        const history = await historyResponse.json();
+        if (!historyResponse.ok) throw new Error(history.error || 'Gagal memuat riwayat tugas.');
+        if (active) {
+          setAgentBatches(history.data.map((row: Record<string, unknown>) => ({
+            id: String(row.id),
+            divisionId: String(row.division_id),
+            divisionName: String(row.division_name),
+            userPrompt: String(row.prompt),
+            outputContent: String(row.output),
+            model: String(row.model),
+            timestamp: typeof row.created_at === 'string' ? new Date(row.created_at).toLocaleString('id-ID') : '',
+            status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
+            socialPermalink: typeof row.data === 'object' &&
+              row.data !== null &&
+              typeof (row.data as Record<string, unknown>).socialPublication === 'object' &&
+              (row.data as Record<string, unknown>).socialPublication !== null &&
+              typeof ((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink === 'string'
+              ? String(((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink)
+              : undefined,
+          })));
+          setDivisions((current) => current.map((division) => ({
+            ...division,
+            outputCount: history.data.filter((row: Record<string, unknown>) => row.division_id === division.id).length,
+          })));
+        }
+      } catch (error) {
+        if (active) setAuthError(error instanceof Error ? error.message : 'Gagal memuat data produksi.');
       }
-    } catch {}
+    };
+    void loadSessionAndHistory();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -433,25 +487,28 @@ export default function VirtualOfficePage() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'kompreskilat2026';
-    if (passwordInput.trim() === validPassword) {
-      try {
-        localStorage.setItem('kk_admin_session', 'authorized_2026');
-      } catch {}
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Login gagal.');
       setIsAuthenticated(true);
-    } else {
-      setAuthError('Password salah. Akses ditolak.');
+      setPasswordInput('');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Login gagal.');
     }
   };
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem('kk_admin_session');
-    } catch {}
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
     setIsAuthenticated(false);
+    setPasswordInput('');
   };
 
   // Trigger Gemini Task
@@ -490,6 +547,9 @@ export default function VirtualOfficePage() {
       });
 
       const data = await res.json();
+      if (!res.ok || !data.success || typeof data.task !== 'string' || typeof data.batchId !== 'string') {
+        throw new Error(data.error || 'Tugas AI tidak berhasil diselesaikan.');
+      }
       if (data.success && data.task) {
         const timeStr = data.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         play8BitSound('success');
@@ -497,17 +557,13 @@ export default function VirtualOfficePage() {
         setDivisions((prev) =>
           prev.map((div) => {
             if (div.id === id) {
-              const newXp = div.xp + 45;
-              const newLevel = newXp >= div.level * 100 ? div.level + 1 : div.level;
               return {
                 ...div,
-                status: 'Working',
-                movementState: 'working',
+                status: 'Idle',
+                movementState: 'lounge',
                 currentTask: data.task,
                 outputCount: div.outputCount + 1,
                 lastUpdated: 'Baru saja',
-                xp: newXp,
-                level: newLevel,
               };
             }
             return div;
@@ -522,7 +578,7 @@ export default function VirtualOfficePage() {
         // Rekam paket Perintah Input + Hasil Output AI ke dalam Batch History
         const promptGiven = promptText || (customPrompt.trim() ? customPrompt.trim() : `Tugas Rutin Operasional (${targetDivision.name})`);
         const newBatchItem: AgentTaskBatch = {
-          id: data.batchId || `batch-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          id: data.batchId,
           divisionId: targetDivision.id,
           divisionName: targetDivision.name,
           userPrompt: promptGiven,
@@ -533,13 +589,7 @@ export default function VirtualOfficePage() {
           status: 'completed'
         };
 
-        setAgentBatches((prev) => {
-          const updated = [newBatchItem, ...prev.slice(0, 49)];
-          try {
-            localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-          } catch {}
-          return updated;
-        });
+        setAgentBatches((prev) => [newBatchItem, ...prev.filter((batch) => batch.id !== newBatchItem.id).slice(0, 99)]);
 
         if (activeDivision?.id === id) {
           setModalOutput({
@@ -549,11 +599,12 @@ export default function VirtualOfficePage() {
           });
         }
       }
-    } catch {
-      play8BitSound('success');
-      const fallbackMsg = `Divisi ${targetDivision.name} berhasil menyelesaikan sinkronisasi tugas: ${promptText || 'Tugas Otomasi'}.`;
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : 'Tugas AI gagal dijalankan.');
       setDivisions((prev) =>
-        prev.map((div) => (div.id === id ? { ...div, currentTask: fallbackMsg, lastUpdated: 'Baru saja', outputCount: div.outputCount + 1 } : div))
+        prev.map((division) => division.id === id
+          ? { ...division, status: 'Idle', movementState: 'lounge', currentTask: 'Tugas gagal dijalankan.' }
+          : division)
       );
     } finally {
       setLoadingDivisionId(null);
@@ -569,23 +620,21 @@ export default function VirtualOfficePage() {
 
     setTimeout(() => {
       // Clear redundant session caches
+      let deletedItems = 0;
       try {
         const keysToRemove = ['kk_last_preview_cache', 'kk_draft_scratch'];
-        keysToRemove.forEach((k) => localStorage.removeItem(k));
-      } catch {}
-
-      const freedTokens = Math.floor(1800 + Math.random() * 2400);
-      setJanitorCleanedTokens((prev) => prev + freedTokens);
+        keysToRemove.forEach((key) => {
+          if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            deletedItems += 1;
+          }
+        });
+      } catch (error) {
+        setHistoryError(error instanceof Error ? error.message : 'Cache browser tidak dapat dibersihkan.');
+      }
+      setJanitorDeletedItems((previous) => previous + deletedItems);
       setIsJanitorSweeping(false);
       play8BitSound('success');
-
-      // Reset idle divisions to fresh alert status
-      setDivisions((prev) =>
-        prev.map((div) => ({
-          ...div,
-          lastUpdated: 'Dibersihkan Janitor',
-        }))
-      );
     }, 1800);
   };
 
@@ -601,34 +650,6 @@ export default function VirtualOfficePage() {
         movementState: newState ? 'huddle' : div.status === 'Working' ? 'working' : 'lounge',
       }))
     );
-  };
-
-  // Special Zone: Gym Training
-  const handleGymTrain = () => {
-    setIsGymTraining(true);
-    play8BitSound('start');
-
-    setTimeout(() => {
-      setIsGymTraining(false);
-      play8BitSound('level');
-
-      setDivisions((prev) =>
-        prev.map((div) => {
-          if (div.id === selectedGymDivision) {
-            const nextXp = div.xp + 60;
-            const nextLvl = nextXp >= div.level * 100 ? div.level + 1 : div.level;
-            return {
-              ...div,
-              xp: nextXp,
-              level: nextLvl,
-              currentTask: `Selesai latihan di Gym AI! Kapabilitas prompt reasoning meningkat (Lvl ${nextLvl}).`,
-              lastUpdated: 'Baru selesai latihan',
-            };
-          }
-          return div;
-        })
-      );
-    }, 1500);
   };
 
   if (!mounted) return null;
@@ -691,8 +712,8 @@ export default function VirtualOfficePage() {
         {/* Navigation Header */}
         <AdminHeader
           currentTab="virtual-office"
-          latency={analyticsData?.latency || '24ms Edge'}
-          uptime={analyticsData?.uptime || '99.98%'}
+          latency={analyticsData?.latency || 'Belum terukur'}
+          uptime={analyticsData?.uptime || 'Belum terukur'}
           onSync={fetchAnalytics}
           isSyncing={isLoadingAnalytics}
           sfxEnabled={sfxEnabled}
@@ -700,7 +721,11 @@ export default function VirtualOfficePage() {
           onLogout={handleLogout}
         />
 
-        {/* NOTIFIKASI RILIS INSTAGRAM GRAPH API */}
+        <p className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs text-slate-400">
+          Kantor virtual adalah visualisasi UI. Status dan riwayat tugas berasal dari database; animasi huddle/lounge bukan worker runtime atau telemetry infrastruktur.
+        </p>
+
+        {/* Social publishing status */}
         {instagramNotice && (
           <div
             className={`p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 shadow-xl ${
@@ -732,8 +757,8 @@ export default function VirtualOfficePage() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-1.5">
-                    <InstagramIcon className="w-3.5 h-3.5 text-pink-400" />
-                    Instagram Graph API
+                    <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+                    Publikasi Media Sosial
                   </span>
                   {instagramNotice.status === 'success' && (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-mono text-emerald-300 font-bold">
@@ -754,7 +779,7 @@ export default function VirtualOfficePage() {
                   className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white text-xs font-bold font-mono transition flex items-center gap-1 shadow-md shadow-pink-600/30"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  <span>Buka di Instagram</span>
+                  <span>Buka publikasi</span>
                 </a>
               )}
               <button
@@ -768,7 +793,7 @@ export default function VirtualOfficePage() {
         )}
 
         {/* ======================================================== */}
-        {/* SPECIAL ZONES: RUANG RAPAT, AREA SANTAI, GYM & JANITOR */}
+        {/* Visual interactions and browser cache */}
         {/* ======================================================== */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Zona 1: Ruang Rapat (Huddle Room) */}
@@ -776,14 +801,14 @@ export default function VirtualOfficePage() {
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold font-mono uppercase text-indigo-400 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
-                Ruang Rapat HQ // 201
+                Huddle Visual // 201
               </span>
               <span
                 className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold ${
                   isMeetingActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse' : 'bg-slate-800 text-slate-400'
                 }`}
               >
-                {isMeetingActive ? 'Sedang Berlangsung' : 'Kosong'}
+                {isMeetingActive ? 'Simulasi berjalan' : 'Tidak aktif'}
               </span>
             </div>
 
@@ -803,7 +828,7 @@ export default function VirtualOfficePage() {
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>{isMeetingActive ? 'Bubarkan Rapat (Kembali)' : 'Mulai Rapat Koordinasi'}</span>
+              <span>{isMeetingActive ? 'Hentikan Simulasi' : 'Mulai Simulasi Huddle'}</span>
             </button>
           </div>
 
@@ -815,7 +840,7 @@ export default function VirtualOfficePage() {
                 Breakroom & Cafe
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                {coffeeCupsServed} Kopi Disajikan
+                Visual saja
               </span>
             </div>
 
@@ -824,20 +849,11 @@ export default function VirtualOfficePage() {
                 <span>☕ Mini Barista & Lounge</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Tempat agen AI yang berstatus <em>Idle</em> beristirahat untuk memulihkan kapasitas token memori.
+                Area lounge dekoratif; tidak mengubah kapasitas atau status model.
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                setCoffeeCupsServed((prev) => prev + 1);
-                play8BitSound('success');
-              }}
-              className="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-amber-300 transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Coffee className="w-3.5 h-3.5" />
-              <span>Sajikan Secangkir Kopi ☕</span>
-            </button>
+            <p className="text-[10px] text-slate-500">Interaksi kantor fisik tidak tersedia.</p>
           </div>
 
           {/* Zona 3: AI Training Gym (Peningkatan Kapabilitas) */}
@@ -848,33 +864,13 @@ export default function VirtualOfficePage() {
                 Sistem Gym AI
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                Level-Up Hub
+                Belum didukung
               </span>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-slate-400">Pilih Agen untuk Dilatih:</label>
-              <select
-                value={selectedGymDivision}
-                onChange={(e) => setSelectedGymDivision(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
-              >
-                {divisions.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} (Lvl {d.level} - {d.xp} XP)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={handleGymTrain}
-              disabled={isGymTraining}
-              className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold font-mono transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-600/30"
-            >
-              <Trophy className="w-3.5 h-3.5" />
-              <span>{isGymTraining ? 'Sedang Berlatih...' : 'Latih Agen (+60 XP)'}</span>
-            </button>
+            <p className="text-[11px] text-slate-400">
+              Model bekerja melalui instruksi dan provider AI; pelatihan atau kenaikan XP tidak tersedia di aplikasi ini.
+            </p>
           </div>
 
           {/* Zona 4: Fitur "Janitor" (Pembersih Konteks & Sesi) */}
@@ -885,7 +881,7 @@ export default function VirtualOfficePage() {
                 Sistem Janitor HQ
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                {janitorCleanedTokens > 0 ? `${janitorCleanedTokens} Token Bersih` : 'Siap Menyapu'}
+                {janitorDeletedItems} Item Cache Dihapus
               </span>
             </div>
 
@@ -894,7 +890,7 @@ export default function VirtualOfficePage() {
                 <span>🧹 Garbage Collector</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Bersihkan context window yang menumpuk, cache lokal sesi, serta segarkan antrean agen AI.
+                Hapus cache sementara tertentu dari browser ini. Ini tidak mengubah konteks model atau tugas yang tersimpan di Supabase.
               </p>
             </div>
 
@@ -958,7 +954,7 @@ export default function VirtualOfficePage() {
                       </span>
                     </div>
                     <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-indigo-300">
-                      LVL {division.level} ({division.xp} XP)
+                      Divisi AI
                     </span>
                   </div>
 
@@ -1056,7 +1052,7 @@ export default function VirtualOfficePage() {
                 </span>
               </h2>
               <p className="text-xs text-slate-400 max-w-2xl">
-                Setiap instruksi/perintah input dari Anda langsung tercatat berdampingan dengan hasil output detail dari AI dalam satu paket batch siap tindak lanjut (rilis ke Instagram & Facebook, salin, atau arsip).
+                Riwayat tugas tersimpan di Supabase. Teks dapat diterbitkan ke Facebook; Instagram memerlukan video hasil generasi.
               </p>
             </div>
 
@@ -1071,13 +1067,18 @@ export default function VirtualOfficePage() {
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-pink-600/25 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>+ Buat Quote Posting FB & IG</span>
+                <span>+ Buat Quote Posting</span>
               </button>
             </div>
           </div>
 
           {/* List of Batches */}
           <div className="p-4 sm:p-6 space-y-4">
+            {historyError && (
+              <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-200">
+                {historyError}
+              </p>
+            )}
             {agentBatches.length === 0 ? (
               <div className="py-12 text-center text-slate-500 space-y-2">
                 <Layers className="w-10 h-10 mx-auto text-slate-600" />
@@ -1117,7 +1118,7 @@ export default function VirtualOfficePage() {
                           {isPublished ? (
                             <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                              ✓ Terbit ke Instagram & FB
+                              ✓ Terbit ke Facebook
                             </span>
                           ) : (
                             <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
@@ -1178,18 +1179,18 @@ export default function VirtualOfficePage() {
                           <button
                             type="button"
                             onClick={() => handlePublishBatchToSocial(batch)}
-                            disabled={instagramNotice?.status === 'publishing'}
+                            disabled={instagramNotice?.status === 'publishing' || batch.divisionId !== 'sosmed'}
+                            title={batch.divisionId !== 'sosmed' ? 'Publikasi Facebook hanya tersedia untuk draf Divisi Admin & Sosmed.' : 'Publikasikan teks ini ke Facebook'}
                             className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
                           >
                             {instagramNotice?.status === 'publishing' ? (
                               <>
                                 <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Menerbitkan ke Medsos...</span>
+                                <span>Menerbitkan ke Facebook...</span>
                               </>
                             ) : (
                               <>
-                                <InstagramIcon className="w-3.5 h-3.5" />
-                                <span>Rilis ke Instagram & FB</span>
+                                <span>Publikasikan ke Facebook</span>
                               </>
                             )}
                           </button>
@@ -1202,7 +1203,7 @@ export default function VirtualOfficePage() {
                               className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              <span>Lihat di Instagram</span>
+                              <span>Lihat di Facebook</span>
                             </a>
                           )}
                         </div>
@@ -1325,7 +1326,7 @@ export default function VirtualOfficePage() {
                       className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
                     >
                       <InstagramIcon className="w-3 h-3" />
-                      <span>Rilis Langsung ke Instagram & FB</span>
+                      <span>Rilis ke Instagram</span>
                     </button>
                   </div>
                 </div>
@@ -1347,9 +1348,9 @@ export default function VirtualOfficePage() {
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      Pratinjau Video Reels AI
+                      Video Hasil Generasi
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-mono">
-                        {creativeVideo.resolution || '1080x1920'}
+                        {creativeVideo.resolution || 'Belum tersedia'}
                       </span>
                     </h3>
                     <p className="text-xs text-slate-400">Ruang 105 // Divisi Video & Kreatif</p>
@@ -1367,33 +1368,34 @@ export default function VirtualOfficePage() {
 
               {/* Modal Body */}
               <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
-                {/* Pemutar Video HTML5 Nyata */}
-                <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
-                  <video
-                    controls
-                    playsInline
-                    autoPlay
-                    preload="metadata"
-                    poster={creativeVideo.thumbnailUrl}
-                    src={creativeVideo.videoUrl}
-                    className="w-full max-h-[300px] object-cover bg-black"
-                  >
-                    Browser Anda tidak mendukung pemutar video HTML5.
-                  </video>
-
-                  <div className="absolute top-3 right-3 pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30">
-                      ⏱️ {creativeVideo.duration || '0:15'}
-                    </span>
+                {creativeVideo.videoUrl ? (
+                  <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
+                    <video
+                      controls
+                      playsInline
+                      preload="metadata"
+                      poster={creativeVideo.thumbnailUrl || undefined}
+                      src={creativeVideo.videoUrl}
+                      className="w-full max-h-[300px] object-cover bg-black"
+                    >
+                      Browser Anda tidak mendukung pemutar video HTML5.
+                    </video>
                   </div>
-                </div>
+                ) : (
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 text-center space-y-3">
+                    <p className="text-sm text-slate-300">Belum ada video hasil generasi yang tersimpan.</p>
+                    <Link href="/admin/ai-employees" className="inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500">
+                      Buka generator video
+                    </Link>
+                  </div>
+                )}
 
                 {/* Info Model & Judul */}
                 <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-white text-sm line-clamp-1">{creativeVideo.title}</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 shrink-0 ml-2">
-                      {creativeVideo.model || 'Google Video AI'}
+                      {creativeVideo.model || 'Belum tersedia'}
                     </span>
                   </div>
 
@@ -1433,7 +1435,7 @@ export default function VirtualOfficePage() {
                           className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-bold flex items-center gap-1.5 text-[11px] shrink-0 shadow-md shadow-pink-600/30"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          <span>Buka di IG</span>
+                          <span>Buka publikasi</span>
                         </a>
                       )}
                     </div>
@@ -1444,7 +1446,7 @@ export default function VirtualOfficePage() {
               {/* Modal Footer Actions: Langsung Rilis ke Instagram */}
               <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between gap-3">
                 <span className="text-[11px] text-slate-500 font-mono hidden sm:inline-block">
-                  📡 API Langsung: Terhubung ke @kompreskilat
+                  Instagram memerlukan konfigurasi akun bisnis dan video hasil generasi.
                 </span>
 
                 <div className="flex items-center gap-2.5 ml-auto">
@@ -1465,7 +1467,7 @@ export default function VirtualOfficePage() {
                         creativeVideo.title
                       )
                     }
-                    disabled={instagramNotice?.status === 'publishing'}
+                    disabled={instagramNotice?.status === 'publishing' || !creativeVideo.videoUrl}
                     className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
                   >
                     {instagramNotice?.status === 'publishing' ? (

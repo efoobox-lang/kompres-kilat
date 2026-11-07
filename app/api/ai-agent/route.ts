@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
+import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
+import { aiEmployeeStoreRequest, isAIEmployeeStoreConfigured, supabaseRpcRequest } from '@/lib/ai-employee-store';
 
 // Inisialisasi API Key dari environment variable (GEMINI_API_KEY atau GOOGLE_API_KEY)
 const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
@@ -140,79 +142,73 @@ function parseArticleDraft(markdownText: string) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const { divisionId, divisionName, customPrompt, analytics } = body;
-
-    if (!divisionId || !divisionName) {
+    if (!isSameOrigin(request)) {
+      return NextResponse.json({ success: false, error: 'Permintaan lintas origin ditolak.' }, { status: 403 });
+    }
+    if (!verifyAdminSession(request)) {
+      return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+    }
+    if (!isAIEmployeeStoreConfigured()) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Parameter divisionId dan divisionName wajib disertakan.'
-        },
-        { status: 400 }
+        { success: false, error: 'Supabase belum dikonfigurasi untuk menyimpan tugas secara persisten.' },
+        { status: 503 }
       );
     }
 
-    // Susun prompt sistem terarah berdasarkan karakteristik divisi atau perintah kustom pengguna
+    const body = await request.json().catch(() => ({}));
+    const { divisionId, customPrompt } = body;
+
+    const divisions: Record<string, string> = {
+      it: 'Divisi IT & Sistem',
+      analytics: 'Divisi Analytics',
+      marketing: 'Divisi Marketing & Growth',
+      sosmed: 'Divisi Admin & Sosmed',
+      creative: 'Divisi Video & Kreatif',
+      seo: 'Divisi SEO & Content Writer',
+    };
+    if (typeof divisionId !== 'string' || !divisions[divisionId]) {
+      return NextResponse.json(
+        { success: false, error: 'ID divisi tidak dikenal.' },
+        { status: 400 }
+      );
+    }
+    if (customPrompt !== undefined && typeof customPrompt !== 'string') {
+      return NextResponse.json({ success: false, error: 'Instruksi harus berupa teks.' }, { status: 400 });
+    }
+    if (typeof customPrompt === 'string' && customPrompt.length > 4000) {
+      return NextResponse.json({ success: false, error: 'Instruksi maksimal 4.000 karakter.' }, { status: 400 });
+    }
+    const canonicalDivisionName = divisions[divisionId];
+    const divisionName = canonicalDivisionName;
+    const instruction = typeof customPrompt === 'string' ? customPrompt.trim() : '';
+
+    let analyticsMetrics: unknown = null;
+    if (divisionId === 'analytics') {
+      try {
+        analyticsMetrics = await supabaseRpcRequest<unknown>('get_site_analytics_metrics', {
+          method: 'POST',
+          body: JSON.stringify({}),
+        });
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'Data analitik belum tersedia. Pastikan migrasi Supabase dan pencatatan event sudah aktif.' },
+          { status: 503 }
+        );
+      }
+    }
+
     let systemPrompt = '';
 
-    // Jika ada perintah kustom dari pengguna, utamakan eksekusi perintah tersebut secara jelas dan terstruktur
-    if (customPrompt && customPrompt.trim()) {
-      const isQuoteOrSocial =
-        /quote|kutipan|facebook|instagram|sosmed|post|caption|fb|ig|konten/i.test(customPrompt);
+    if (instruction) {
+      systemPrompt = `Anda adalah ${canonicalDivisionName} untuk KompresKilat.
+Kerjakan instruksi pengguna secara langsung dan utamakan maksudnya. Jangan mengganti tugas berdasarkan kata kunci, jangan menambahkan format atau pekerjaan yang tidak diminta.
+Nyatakan secara eksplisit bila tugas membutuhkan akses sistem/data yang tidak disediakan. Jangan mengarang metrik, audit, publikasi, hasil pemantauan, atau tindakan eksternal. Bedakan fakta yang diberikan, analisis, dan rekomendasi.
+${divisionId === 'analytics' ? `Data analitik situs aktual (pageview/click, 14 hari): ${JSON.stringify(analyticsMetrics)}` : ''}
 
-      if (isQuoteOrSocial) {
-        systemPrompt = `Anda adalah Spesialis Konten & Media Sosial (Facebook & Instagram) di kompreskilat.site.
-PERINTAH PENGGUNA (INPUT RESMI):
-"${customPrompt.trim()}"
-
-TUGAS ANDA:
-Hasilkan satu paket konten lengkap, jelas, detail, dan siap posting otomatis ke Facebook & Instagram dengan format Markdown berikut:
-
-### 💬 Perintah & Konteks Tugas
-**Instruksi Diterima:** "${customPrompt.trim()}"
-**Divisi:** ${divisionName}
-**Tujuan:** Otomasi posting konten ke media sosial (Facebook & Instagram).
-
-### 💡 Kutipan Utama / Quote Siap Rilis
-> "[Tuliskan teks quote yang inspiratif, berbobot, atau praktis seputar efisiensi kerja / UMKM / dokumen digital]"
-— **KompresKilat.site** *(Solusi Cepat, Gratis & Privasi Aman)*
-
-### 📱 Naskah Konten Siap Posting (Facebook & Instagram)
-**Hook (3 Detik Pertama):**
-[Kalimat pembuka yang langsung menarik perhatian audiens]
-
-**Isi Pesan:**
-[Teks edukatif atau ajakan menarik yang menjelaskan kemudahan kompres foto/PDF, cetak nota thermal kasir, dll]
-
-**Call To Action (CTA):**
-👉 Coba gratis sekarang langsung di browsermu: https://kompreskilat.site
-
-**Hashtags Viral:**
-#KompresKilat #NotaThermal #TipsUMKM #BisnisOnline #ToolsGratis #WorkHacks #Produktivitas
-
-### 🎨 Rekomendasi Visual & Penjadwalan
-- **Format:** Quote Card (1080x1080 Square) / Reels / Stories
-- **Nuansa Desain:** Modern Dark Slate dengan aksen Cyan & Purple Neon
-- **Status:** Siap dirilis langsung ke Instagram & Facebook.`;
-      } else {
-        systemPrompt = `Anda adalah Karyawan AI senior di divisi ${divisionName} kompreskilat.site.
-PERINTAH PENGGUNA (INPUT RESMI):
-"${customPrompt.trim()}"
-
-TUGAS ANDA:
-Jalankan perintah pengguna di atas secara komprehensif, jelas, terstruktur, dan mendalam.
-Format tanggapan Anda:
-### 📋 Perintah & Konteks Tugas
-**Instruksi:** "${customPrompt.trim()}"
-**Divisi:** ${divisionName}
-
-### ⚡ Hasil Eksekusi & Solusi Rinci
-[Uraian lengkap, detail, dan terstruktur poin demi poin dari solusi atau konten yang diminta]
-
-### 📌 Rekomendasi & Langkah Tindak Lanjut
-[Langkah aksi teknis atau operasional yang disarankan]`;
-      }
+Instruksi pengguna:
+<user_instruction>
+${instruction}
+</user_instruction>`;
     } else if (divisionId === 'seo') {
       // Divisi SEO bertindak khusus sebagai generator draf artikel blog untuk kurasi admin
       systemPrompt = `Anda adalah Senior SEO Specialist & Content Strategist untuk platform kompreskilat.site.
@@ -251,63 +247,35 @@ Format Keluaran Wajib (Markdown):
       switch (divisionId) {
         case 'it':
           systemPrompt = `Anda adalah Lead DevOps & SysAdmin di kompreskilat.site.
-Instruksi: "${customPrompt || 'Lakukan audit pemeliharaan rutin server Vercel edge, utilisasi worker, dan latensi sistem'}"
-Berikan laporan terstruktur dengan format Markdown:
-### 🛠️ Laporan Operasional IT & Sistem
-- **Status Edge CDN:** [Status terkini]
-- **Latensi Respons:** [e.g. 24ms - 28ms]
-- **Utilisasi Serverless Worker:** [e.g. 18% aman]
-- **Audit Keamanan & SSL:** [Status keamanan]
-- **Rekomendasi Pemeliharaan:** [Poin tindakan teknis konkret]`;
+Instruksi: "${customPrompt || 'Buat daftar pemeriksaan operasional IT untuk aplikasi web ini.'}"
+Tidak tersedia konektor pemantauan server, deployment, latensi, atau keamanan. Jangan mengklaim telah memeriksa sistem nyata. Kerjakan tugas yang diminta dari informasi yang tersedia dan tandai data eksternal sebagai belum terhubung.`;
           break;
 
         case 'marketing':
           systemPrompt = `Anda adalah Growth & Funnel Optimizer di kompreskilat.site.
-Instruksi: "${customPrompt || 'Analisis strategi konversi trial-to-subscription dan usulan salinan CTA promo'}"
-Berikan laporan terstruktur dengan format Markdown:
-### 📈 Analisis Pertumbuhan & Funnel Konversi
-- **Target Segmen:** [Segmen UMKM/Profesional/Mahasiswa]
-- **Metrik Analisis:** [Analisis konversi dan retensi]
-- **Salinan CTA Rekomendasi:** "[Kalimat ajakan bertindak yang persuasif]"
-- **Rencana Aksi:** [Langkah tindak lanjut terukur]`;
+Instruksi: "${customPrompt || 'Buat strategi pemasaran dan salinan CTA untuk KompresKilat.'}"
+Buat rekomendasi atau materi pemasaran, bukan laporan kinerja. Tidak tersedia data transaksi, konversi, atau funnel; jangan mengarang metrik maupun dampak kampanye.`;
           break;
 
         case 'sosmed':
           systemPrompt = `Anda adalah Social Media & Community Manager di kompreskilat.site.
-Instruksi: "${customPrompt || 'Buatkan paket caption media sosial promosi fitur kompres gambar & PDF lokal aman'}"
-Berikan konten terstruktur dengan format Markdown:
-### 📱 Paket Konten & Caption Media Sosial Siap Rilis
-- **Platform:** Instagram / TikTok / X (Twitter)
-- **Hook (3 Detik Pertama):** "[Kalimat pembuka yang memikat]"
-- **Isi Teks Utama:** [Teks caption menarik dan edukatif]
-- **Call-to-Action:** Coba langsung di 👉 https://kompreskilat.site
-- **Hashtag Pilihan:** [5-6 hashtag relevan]`;
+Instruksi: "${customPrompt || 'Buat draf caption media sosial yang menjelaskan fitur KompresKilat.'}"
+Buat draf teks saja. Jangan mengklaim konten telah dijadwalkan atau dipublikasikan. Jangan menambah klaim fitur yang tidak didukung instruksi atau informasi produk yang tersedia.`;
           break;
 
         case 'creative':
           systemPrompt = `Anda adalah Multimedia & Art Director di kompreskilat.site.
-Instruksi: "${customPrompt || 'Rancang storyboard video pendek 15 detik untuk mempromosikan fitur pembuat nota thermal'}"
-Berikan rencana kreatif terstruktur dengan format Markdown:
-### 🎬 Storyboard Video Singkat (15 Detik)
-- **Konsep:** [Ide utama video]
-- **Detik 00-03 (Hook):** [Visual & Narasi]
-- **Detik 04-08 (Masalah):** [Visual & Narasi]
-- **Detik 09-12 (Solusi):** [Visual & Narasi]
-- **Detik 13-15 (Call To Action):** [Visual penutup & URL kompreskilat.site]
-- **Rekomendasi Musik & Gaya:** [Gaya visual & audio]`;
+Instruksi: "${customPrompt || 'Buat konsep kreatif untuk KompresKilat.'}"
+Buat konsep/storyboard saja. Pembuatan file video harus dilakukan lewat fitur generator video terpisah; jangan menyatakan file media sudah dibuat.`;
           break;
 
-        case 'analytics':
-          systemPrompt = `Anda adalah Data Scientist & AdSense Auditor di kompreskilat.site.
-Instruksi: "${customPrompt || 'Rekapitulasi performa Google Search Console dan kepatuhan penempatan iklan AdSense'}"
-Berikan laporan analisis terstruktur dengan format Markdown:
-### 📊 Laporan Rekapitulasi Data & Kebijakan AdSense
-- **Google Search Console:** [Impresi dan rasio klik]
-- **Audit Kepatuhan AdSense:** [Verifikasi isolasi iklan aman dari tombol cetak]
-- **Rasio Interaksi (CTR):** [Persentase CTR]
-- **Rute Paling Populer:** [Daftar tools teratas]
-- **Rekomendasi Optimasi:** [Saran berbasis data]`;
+        case 'analytics': {
+          systemPrompt = `Anda adalah analis data KompresKilat. Analisis hanya metrik analitik situs yang tersedia di bawah ini. Data berasal dari event pageview/click 14 hari terakhir dan tidak mencakup Google Search Console, AdSense, atau transaksi.
+Metrik aktual: ${JSON.stringify(analyticsMetrics)}
+Instruksi: "${customPrompt || 'Ringkas tren trafik dan interaksi dari metrik aktual, lalu berikan rekomendasi yang proporsional.'}"
+Jangan menyimpulkan metrik yang tidak tercantum atau menyatakan audit AdSense telah dilakukan.`;
           break;
+        }
 
         default:
           systemPrompt = `Anda adalah Karyawan AI senior di divisi ${divisionName} kompreskilat.site.
@@ -318,7 +286,13 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
     }
 
     const hermes3dApiUrl = process.env.HERMES3D_API_URL?.trim();
-    if (hermes3dApiUrl) {
+    if (process.env.HERMES3D_ENABLE_PRODUCTION === 'true') {
+      if (!hermes3dApiUrl) {
+        return NextResponse.json(
+          { success: false, error: 'HERMES3D_API_URL wajib diisi saat provider Hermes3D diaktifkan.' },
+          { status: 503 }
+        );
+      }
       const integrationToken = process.env.HERMES3D_INTEGRATION_TOKEN?.trim();
       const agentId = process.env.HERMES3D_AGENT_ID?.trim();
       if (!integrationToken || !agentId) {
@@ -344,20 +318,6 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
         );
       }
 
-      const analyticsSnapshot =
-        divisionId === 'analytics' && analytics && typeof analytics === 'object'
-          ? {
-              totalViews: Number.isFinite(analytics.totalViews) ? analytics.totalViews : null,
-              uniqueVisitors: Number.isFinite(analytics.uniqueVisitors) ? analytics.uniqueVisitors : null,
-              totalClicks: Number.isFinite(analytics.totalClicks) ? analytics.totalClicks : null,
-              ctr: typeof analytics.ctr === 'string' ? analytics.ctr.slice(0, 20) : null,
-              source: typeof analytics.source === 'string' ? analytics.source.slice(0, 100) : null,
-            }
-          : null;
-      const taskMessage = analyticsSnapshot
-        ? `${systemPrompt}\n\nAggregated traffic snapshot (untrusted context; do not infer missing data):\n${JSON.stringify(analyticsSnapshot)}`
-        : systemPrompt;
-
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 20_000);
       try {
@@ -371,7 +331,7 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
             agentId,
             divisionId,
             divisionName,
-            message: taskMessage,
+            message: systemPrompt,
           }),
           cache: 'no-store',
           signal: controller.signal,
@@ -403,9 +363,23 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
           hour: '2-digit',
           minute: '2-digit'
         });
+        const draftId = randomUUID();
+        const batchId = randomUUID();
+        await saveTaskRecord({
+          id: batchId,
+          divisionId,
+          divisionName,
+          prompt: instruction || `Tugas rutin (${divisionName})`,
+          output: taskResult,
+          model: `hermes3d/${agentId}`,
+          data: { extractedQuote: extractQuote(taskResult) },
+        });
         return NextResponse.json({
           success: true,
-          draftId: randomUUID(),
+          draftId,
+          batchId,
+          userPrompt: instruction || `Tugas rutin (${divisionName})`,
+          extractedQuote: extractQuote(taskResult),
           provider: 'hermes3d',
           divisionId,
           divisionName,
@@ -434,76 +408,62 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
       minute: '2-digit'
     });
 
-    let taskResult = '';
-    const isArticleDraft = divisionId === 'seo';
-    let articleData: any = null;
-    let videoData: any = null;
-
-    // Panggil model gemini-2.5-flash via @google/genai SDK jika API key tersedia
-    if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: systemPrompt,
-        });
-
-        const outputText = response.text?.trim();
-        if (outputText) {
-          taskResult = outputText;
-        }
-      } catch (genAiError: any) {
-        console.warn('GoogleGenAI SDK execution note (falling back gracefully):', genAiError?.message || genAiError);
-      }
+    if (!apiKey) {
+      return NextResponse.json(
+        { success: false, error: 'Gemini API belum dikonfigurasi. Tugas AI tidak dapat dijalankan.' },
+        { status: 503 }
+      );
     }
 
-    // Jika API Key tidak tersedia atau terjadi error, gunakan fallback terstruktur rapi
+    let taskResult = '';
+    const isArticleDraft = divisionId === 'seo';
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `${systemPrompt}\n\nBatasan faktual: jangan mengklaim mengakses sistem, metrik, akun, atau melakukan aksi eksternal kecuali data/alat tersebut benar-benar disediakan. Bila tidak ada data, katakan bahwa data belum terhubung.`,
+      });
+      taskResult = response.text?.trim() || '';
+    } catch (genAiError) {
+      console.error('GoogleGenAI task generation failed:', genAiError);
+      return NextResponse.json(
+        { success: false, error: 'Gemini gagal menjalankan tugas. Periksa konfigurasi dan log provider.' },
+        { status: 502 }
+      );
+    }
+
     if (!taskResult) {
-      const fallbackList = fallbackTasks[divisionId] || fallbackTasks['it'];
-      taskResult = fallbackList[Math.floor(Math.random() * fallbackList.length)];
+      return NextResponse.json(
+        { success: false, error: 'Gemini mengembalikan output kosong. Tugas tidak disimpan.' },
+        { status: 502 }
+      );
     }
 
     // Jika divisi SEO, parse draf artikel terstruktur
-    if (isArticleDraft) {
-      articleData = parseArticleDraft(taskResult);
-    }
+    const articleData = isArticleDraft ? parseArticleDraft(taskResult) : null;
+    const batchId = randomUUID();
+    const draftId = randomUUID();
+    const effectivePrompt = instruction || `Tugas rutin (${divisionName})`;
+    const extractedQuote = extractQuote(taskResult);
 
-    // Jika divisi Creative, siapkan paket data video generator terverifikasi
-    if (divisionId === 'creative') {
-      const sampleVideos = [
-        'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-        'https://vjs.zencdn.net/v/oceans.mp4',
-        'https://media.w3.org/2010/05/sintel/trailer_hd.mp4'
-      ];
-      const selectedVideoUrl = sampleVideos[Math.floor(Math.random() * sampleVideos.length)];
-      videoData = {
-        id: `vid-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        videoUrl: selectedVideoUrl,
-        title: 'Teaser Video Reels: Kompres Dokumen & Nota Thermal Kilat',
-        caption: `⚡ Mau urus berkas atau cetak nota kasir tanpa ribet?\n\nKompres gambar, gabung PDF, dan cetak struk kasir thermal 58mm langsung di browsermu 100% gratis!\n\n👉 Coba sekarang di https://kompreskilat.site\n\n#KompresKilat #NotaThermal #ToolsUMKM #ReelsBisnis`,
-        duration: '0:15',
-        aspectRatio: '9:16 (Vertical Reels)',
-        resolution: '1080x1920 (FHD)',
-        model: 'Google Video AI / Veo 2 Turbo',
-        generatedAt: `${currentTimestamp} WIB`
-      };
-    }
-
-    const batchId = `batch-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    const effectivePrompt = customPrompt?.trim() || `Tugas Rutin Operasional (${divisionName})`;
-
-    // Ekstraksi kutipan quote jika ada dalam teks
-    let extractedQuote = '';
-    const quoteMatch =
-      taskResult.match(/>\s*"([^"]+)"/i) ||
-      taskResult.match(/Kutipan Utama[^:]*:\s*\n?>?\s*"?([^"\n]+)"?/i);
-    if (quoteMatch) {
-      extractedQuote = quoteMatch[1].trim();
+    try {
+      await saveTaskRecord({
+        id: batchId,
+        divisionId,
+        divisionName,
+        prompt: effectivePrompt,
+        output: taskResult,
+        model: 'gemini-2.5-flash',
+        data: { extractedQuote },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal menyimpan tugas AI.';
+      return NextResponse.json({ success: false, error: message }, { status: 503 });
     }
 
     return NextResponse.json({
       success: true,
-      draftId: randomUUID(),
+      draftId,
       batchId,
       userPrompt: effectivePrompt,
       extractedQuote,
@@ -512,7 +472,6 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
       task: taskResult,
       isArticleDraft,
       articleDraft: articleData,
-      videoData,
       model: 'gemini-2.5-flash',
       timestamp: currentTimestamp
     });
@@ -526,4 +485,37 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
       { status: 500 }
     );
   }
+}
+
+function extractQuote(text: string) {
+  const quoteMatch =
+    text.match(/>\s*"([^"]+)"/i) ||
+    text.match(/Kutipan Utama[^:]*:\s*\n?>?\s*"?([^"\n]+)"?/i);
+  return quoteMatch?.[1]?.trim() || '';
+}
+
+async function saveTaskRecord(record: {
+  id: string;
+  divisionId: string;
+  divisionName: string;
+  prompt: string;
+  output: string;
+  model: string;
+  data: Record<string, unknown>;
+}) {
+  await aiEmployeeStoreRequest('', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      id: record.id,
+      record_type: 'task',
+      division_id: record.divisionId,
+      division_name: record.divisionName,
+      prompt: record.prompt,
+      output: record.output,
+      model: record.model,
+      status: 'completed',
+      data: record.data,
+    }),
+  });
 }

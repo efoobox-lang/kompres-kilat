@@ -25,8 +25,6 @@ import {
   Terminal,
   Zap,
   ArrowLeftRight,
-  Plus,
-  Trash2,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 
@@ -37,8 +35,8 @@ export interface MonitoredAgent {
   name: string;
   role: string;
   status: AgentStatusType;
-  cpuLoad: number;
-  memoryUsage: string;
+  cpuLoad: number | null;
+  memoryUsage: string | null;
   currentAction: string;
   blockedReason?: string;
   lastActive: string;
@@ -59,9 +57,9 @@ export interface KanbanItem {
   title: string;
   divisionId: string;
   divisionName: string;
-  priority: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'medium' | 'high';
   stage: 'backlog' | 'in_progress' | 'review' | 'done';
-  dueDate: string;
+  createdAt: string;
 }
 
 const initialMonitoredAgents: MonitoredAgent[] = [
@@ -168,7 +166,7 @@ const initialKanban: KanbanItem[] = [
     divisionName: 'Analytics',
     priority: 'high',
     stage: 'done',
-    dueDate: 'Hari ini',
+    createdAt: 'Hari ini',
   },
   {
     id: 'kb-2',
@@ -177,7 +175,7 @@ const initialKanban: KanbanItem[] = [
     divisionName: 'SEO & Content',
     priority: 'high',
     stage: 'review',
-    dueDate: 'Hari ini',
+    createdAt: 'Hari ini',
   },
   {
     id: 'kb-3',
@@ -186,7 +184,7 @@ const initialKanban: KanbanItem[] = [
     divisionName: 'IT & Sistem',
     priority: 'medium',
     stage: 'in_progress',
-    dueDate: 'Besok',
+    createdAt: 'Besok',
   },
   {
     id: 'kb-4',
@@ -195,7 +193,7 @@ const initialKanban: KanbanItem[] = [
     divisionName: 'Admin & Sosmed',
     priority: 'low',
     stage: 'in_progress',
-    dueDate: 'Besok',
+    createdAt: 'Besok',
   },
   {
     id: 'kb-5',
@@ -204,7 +202,7 @@ const initialKanban: KanbanItem[] = [
     divisionName: 'SEO & Content',
     priority: 'medium',
     stage: 'backlog',
-    dueDate: 'Lusa',
+    createdAt: 'Lusa',
   },
 ];
 
@@ -215,9 +213,9 @@ export default function MonitoringCenterPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const [agents, setAgents] = useState<MonitoredAgent[]>(initialMonitoredAgents);
-  const [handovers, setHandovers] = useState<TaskHandover[]>(initialHandovers);
-  const [kanban, setKanban] = useState<KanbanItem[]>(initialKanban);
+  const [agents, setAgents] = useState<MonitoredAgent[]>([]);
+  const handovers: TaskHandover[] = [];
+  const [kanban, setKanban] = useState<KanbanItem[]>([]);
   const [agentFilter, setAgentFilter] = useState<'all' | AgentStatusType>('all');
   const [kanbanSearch, setKanbanSearch] = useState<string>('');
 
@@ -227,8 +225,6 @@ export default function MonitoringCenterPage() {
   const [sfxEnabled, setSfxEnabled] = useState<boolean>(true);
 
   // Quick New Task Modal / Input
-  const [newKanbanTitle, setNewKanbanTitle] = useState<string>('');
-  const [newKanbanDivision, setNewKanbanDivision] = useState<string>('it');
 
   const fetchAnalytics = async () => {
     setIsLoadingAnalytics(true);
@@ -247,12 +243,62 @@ export default function MonitoringCenterPage() {
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const savedAuth = localStorage.getItem('kk_admin_session');
-      if (savedAuth === 'authorized_2026') {
-        setIsAuthenticated(true);
-      }
-    } catch {}
+    let active = true;
+    void fetch('/api/admin/auth', { cache: 'no-store' })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!active) return;
+        if (!response.ok && response.status !== 401) {
+          setAuthError(result.error || 'Autentikasi admin belum dikonfigurasi.');
+          return;
+        }
+        setIsAuthenticated(Boolean(result.authenticated));
+        if (!result.authenticated) return;
+
+        const historyResponse = await fetch('/api/ai-agent/history', { cache: 'no-store' });
+        const history = await historyResponse.json();
+        if (!historyResponse.ok || !Array.isArray(history.data)) {
+          throw new Error(history.error || 'Gagal memuat riwayat tugas.');
+        }
+        const rows = history.data as Array<Record<string, unknown>>;
+        const divisions = [
+          ['it', 'Divisi IT & Sistem', 'SysAdmin'],
+          ['analytics', 'Divisi Analytics', 'Data Analyst'],
+          ['marketing', 'Divisi Marketing & Growth', 'Growth'],
+          ['sosmed', 'Divisi Admin & Sosmed', 'Community Manager'],
+          ['creative', 'Divisi Video & Kreatif', 'Art Director'],
+          ['seo', 'Divisi SEO & Content Writer', 'SEO Strategist'],
+        ] as const;
+        setAgents(divisions.map(([id, name, role]) => {
+          const tasks = rows.filter((row) => row.division_id === id);
+          const latest = tasks[0];
+          return {
+            id,
+            name,
+            role,
+            status: 'Idle',
+            cpuLoad: null,
+            memoryUsage: null,
+            currentAction: typeof latest?.prompt === 'string' ? `Instruksi terakhir: ${latest.prompt}` : 'Belum ada tugas tersimpan.',
+            lastActive: typeof latest?.created_at === 'string'
+              ? new Date(latest.created_at).toLocaleString('id-ID')
+              : 'Belum ada aktivitas',
+            totalCompleted: tasks.length,
+          };
+        }));
+        setKanban(rows.map((row) => ({
+          id: String(row.id),
+          title: typeof row.prompt === 'string' && row.prompt ? row.prompt : String(row.division_name),
+          divisionId: String(row.division_id),
+          divisionName: String(row.division_name),
+          stage: 'done',
+          createdAt: typeof row.created_at === 'string' ? new Date(row.created_at).toLocaleString('id-ID') : '',
+        })));
+      })
+      .catch(() => {
+        if (active) setAuthError('Tidak dapat memeriksa sesi administrator.');
+      });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -262,74 +308,28 @@ export default function MonitoringCenterPage() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'kompreskilat2026';
-    if (passwordInput.trim() === validPassword) {
-      try {
-        localStorage.setItem('kk_admin_session', 'authorized_2026');
-      } catch {}
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Login gagal.');
       setIsAuthenticated(true);
-    } else {
-      setAuthError('Password salah. Akses ditolak.');
+      setPasswordInput('');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Login gagal.');
     }
   };
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem('kk_admin_session');
-    } catch {}
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
     setIsAuthenticated(false);
-  };
-
-  // Move Kanban Stage
-  const moveKanban = (id: string, direction: 'next' | 'prev') => {
-    const stages: Array<KanbanItem['stage']> = ['backlog', 'in_progress', 'review', 'done'];
-    setKanban((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const currentIndex = stages.indexOf(item.stage);
-          const nextIndex = direction === 'next' ? Math.min(stages.length - 1, currentIndex + 1) : Math.max(0, currentIndex - 1);
-          return { ...item, stage: stages[nextIndex] };
-        }
-        return item;
-      })
-    );
-  };
-
-  const addKanbanItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newKanbanTitle.trim()) return;
-
-    const divisionNames: Record<string, string> = {
-      it: 'IT & Sistem',
-      analytics: 'Analytics',
-      marketing: 'Marketing',
-      sosmed: 'Admin & Sosmed',
-      creative: 'Kreatif',
-      seo: 'SEO & Content',
-    };
-
-    const newItem: KanbanItem = {
-      id: `kb-${Date.now()}`,
-      title: newKanbanTitle.trim(),
-      divisionId: newKanbanDivision,
-      divisionName: divisionNames[newKanbanDivision] || 'General',
-      priority: 'medium',
-      stage: 'backlog',
-      dueDate: 'Baru dibuat',
-    };
-
-    setKanban((prev) => [newItem, ...prev]);
-    setNewKanbanTitle('');
-  };
-
-  // Toggle Agent Status (Working / Idle / Blocked for testing)
-  const toggleAgentStatus = (id: string, newStatus: AgentStatusType) => {
-    setAgents((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: newStatus, lastActive: 'Baru diubah' } : a))
-    );
+    setPasswordInput('');
   };
 
   const formatIDR = (val: number) => {
@@ -401,8 +401,8 @@ export default function MonitoringCenterPage() {
         {/* Navigation Header */}
         <AdminHeader
           currentTab="monitoring"
-          latency={analyticsData?.latency || '24ms Edge'}
-          uptime={analyticsData?.uptime || '99.98%'}
+          latency={analyticsData?.latency || 'Belum terukur'}
+          uptime={analyticsData?.uptime || 'Belum terukur'}
           onSync={fetchAnalytics}
           isSyncing={isLoadingAnalytics}
           sfxEnabled={sfxEnabled}
@@ -422,14 +422,14 @@ export default function MonitoringCenterPage() {
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live
+                7 hari
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
               {analyticsData ? analyticsData.totalViews.toLocaleString('id-ID') : <span className="animate-pulse text-lg text-slate-500">Menghitung...</span>}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              {analyticsData ? `Rata-rata: ~${analyticsData.avgDailyViews}/hari` : 'Sinkronisasi...'}
+              {analyticsData ? `Rata-rata: ~${analyticsData.avgDailyViews}/hari` : 'Belum terhubung'}
             </div>
           </div>
 
@@ -440,7 +440,7 @@ export default function MonitoringCenterPage() {
                 Total Clicks
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.clicksGrowth || 'Live'}
+                {analyticsData?.clicksGrowth || 'Belum terhubung'}
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
@@ -459,14 +459,14 @@ export default function MonitoringCenterPage() {
               </span>
               <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
-                Real-Time
+                7 hari
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
               {analyticsData ? analyticsData.uniqueVisitors.toLocaleString('id-ID') : <span className="animate-pulse text-lg text-slate-500">Menghitung...</span>}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              {analyticsData ? `${analyticsData.uniqueVisitors} pengunjung aktif` : 'Menghubungkan...'}
+              {analyticsData ? `${analyticsData.uniqueVisitors} pengunjung unik (7 hari)` : 'Menghubungkan...'}
             </div>
           </div>
 
@@ -477,13 +477,13 @@ export default function MonitoringCenterPage() {
                 Monetisasi
               </span>
               <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.salesGrowth || '0%'}
+                {analyticsData?.salesGrowth || 'Belum terukur'}
               </span>
             </div>
             <div className="mt-2 text-xl sm:text-2xl font-extrabold text-white font-mono">
-              {analyticsData ? formatIDR(analyticsData.totalSales) : formatIDR(0)}
+              {analyticsData && analyticsData.totalSales !== null ? formatIDR(analyticsData.totalSales) : 'Belum diukur'}
             </div>
-            <div className="text-[10px] text-slate-500 mt-1 font-mono">Tahap awal platform</div>
+            <div className="text-[10px] text-slate-500 mt-1 font-mono">Data transaksi belum diintegrasikan</div>
           </div>
         </section>
 
@@ -496,11 +496,11 @@ export default function MonitoringCenterPage() {
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono">
-                  AGENT STATUS MATRIX // LIVE TELEMETRY
+                  STATUS DIVISI // DATA TUGAS TERSIMPAN
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-white mt-1">
-                Status Kapasitas & Beban Kerja 6 Divisi AI
+                Aktivitas Tugas 6 Divisi AI
               </h2>
             </div>
 
@@ -521,6 +521,11 @@ export default function MonitoringCenterPage() {
           </div>
 
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAgents.length === 0 && (
+              <p className="md:col-span-2 lg:col-span-3 py-8 text-center text-sm text-slate-500">
+                Data agen belum tersedia. Jalankan tugas melalui AI Employee untuk mencatat aktivitas.
+              </p>
+            )}
             {filteredAgents.map((agent) => {
               const isWorking = agent.status === 'Working';
               const isBlocked = agent.status === 'Blocked';
@@ -558,19 +563,21 @@ export default function MonitoringCenterPage() {
                   {/* CPU / Token Load Progress Bar */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                      <span>Beban Agen (CPU / Token):</span>
-                      <strong className="text-slate-200">{agent.cpuLoad}%</strong>
+                      <span>Beban CPU / token:</span>
+                      <strong className="text-slate-200">{agent.cpuLoad === null ? 'Belum diukur' : `${agent.cpuLoad}%`}</strong>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          agent.cpuLoad > 45 ? 'bg-indigo-400' : 'bg-emerald-400'
-                        }`}
-                        style={{ width: `${agent.cpuLoad}%` }}
-                      />
-                    </div>
+                    {agent.cpuLoad !== null && (
+                      <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            agent.cpuLoad > 45 ? 'bg-indigo-400' : 'bg-emerald-400'
+                          }`}
+                          style={{ width: `${agent.cpuLoad}%` }}
+                        />
+                      </div>
+                    )}
                     <div className="text-[9px] font-mono text-slate-500 text-right">
-                      Memori: {agent.memoryUsage}
+                      Memori: {agent.memoryUsage || 'Belum diukur'}
                     </div>
                   </div>
 
@@ -581,15 +588,8 @@ export default function MonitoringCenterPage() {
 
                   {/* Status Toggle Quick Buttons */}
                   <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-slate-500">{agent.totalCompleted} tugas tuntas</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => toggleAgentStatus(agent.id, isWorking ? 'Idle' : 'Working')}
-                        className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition cursor-pointer"
-                      >
-                        Set: {isWorking ? 'Idle' : 'Work'}
-                      </button>
-                    </div>
+                    <span className="text-slate-500">{agent.totalCompleted} tugas tersimpan</span>
+                    <span className="text-slate-500">Terakhir: {agent.lastActive}</span>
                   </div>
                 </div>
               );
@@ -617,6 +617,11 @@ export default function MonitoringCenterPage() {
           </div>
 
           <div className="p-6 space-y-3">
+            {handovers.length === 0 && (
+              <p className="py-6 text-center text-sm text-slate-500">
+                Alur handover antar divisi belum diimplementasikan; tidak ada aktivitas yang ditampilkan sebagai data nyata.
+              </p>
+            )}
             {handovers.map((ho) => (
               <div
                 key={ho.id}
@@ -674,35 +679,9 @@ export default function MonitoringCenterPage() {
             </div>
           </div>
 
-          {/* Form Tambah Kartu Cepat */}
-          <form onSubmit={addKanbanItem} className="p-4 border-b border-slate-800/80 bg-slate-950/40 flex flex-col sm:flex-row items-center gap-2">
-            <input
-              type="text"
-              value={newKanbanTitle}
-              onChange={(e) => setNewKanbanTitle(e.target.value)}
-              placeholder="Tambahkan tugas atau item backlog baru..."
-              className="flex-1 w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
-            />
-            <select
-              value={newKanbanDivision}
-              onChange={(e) => setNewKanbanDivision(e.target.value)}
-              className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 font-mono"
-            >
-              <option value="it">IT & Sistem</option>
-              <option value="analytics">Analytics</option>
-              <option value="marketing">Marketing</option>
-              <option value="sosmed">Admin & Sosmed</option>
-              <option value="creative">Kreatif</option>
-              <option value="seo">SEO & Content</option>
-            </select>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/30 shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Tambah Kartu</span>
-            </button>
-          </form>
+          <div className="px-5 py-3 border-b border-slate-800/80 text-xs text-slate-500">
+            Papan ini menampilkan hanya tugas yang tersimpan dan sudah selesai. Backlog, prioritas, QA, serta perubahan status belum terhubung ke workflow persisten.
+          </div>
 
           {/* 4 Kolom Kanban */}
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -740,40 +719,13 @@ export default function MonitoringCenterPage() {
                             <span className="px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-500/20">
                               {item.divisionName}
                             </span>
-                            <span
-                              className={`px-1.5 py-0.5 rounded uppercase font-bold text-[9px] ${
-                                item.priority === 'high'
-                                  ? 'text-rose-400 bg-rose-500/10'
-                                  : item.priority === 'medium'
-                                  ? 'text-amber-400 bg-amber-500/10'
-                                  : 'text-slate-400 bg-slate-800'
-                              }`}
-                            >
-                              {item.priority}
-                            </span>
+                            <span className="text-[9px] text-slate-500">Tercatat</span>
                           </div>
 
                           <p className="text-xs text-slate-200 leading-snug">{item.title}</p>
 
-                          {/* Tombol Geser Kolom */}
                           <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
-                            <button
-                              onClick={() => moveKanban(item.id, 'prev')}
-                              disabled={col.stage === 'backlog'}
-                              className="text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                              title="Pindahkan ke kolom sebelumnya"
-                            >
-                              ← Mundur
-                            </button>
-                            <span className="text-slate-600 text-[9px]">{item.dueDate}</span>
-                            <button
-                              onClick={() => moveKanban(item.id, 'next')}
-                              disabled={col.stage === 'done'}
-                              className="text-indigo-400 hover:text-indigo-300 disabled:opacity-30 cursor-pointer font-bold"
-                              title="Pindahkan ke kolom selanjutnya"
-                            >
-                              Maju →
-                            </button>
+                            <span className="text-slate-600 text-[9px]">Disimpan: {item.createdAt}</span>
                           </div>
                         </div>
                       ))

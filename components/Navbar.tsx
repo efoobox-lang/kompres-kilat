@@ -340,6 +340,31 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Media Sosial Resmi di Mobile Menu */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+              Media Sosial Resmi
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <a
+                href="https://www.instagram.com/kompreskilat/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-1.5 px-2.5 rounded-xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200/60 dark:border-pink-800/40 text-pink-600 dark:text-pink-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+              >
+                <span>Instagram</span>
+              </a>
+              <a
+                href="https://www.facebook.com/1411463522052642"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-1.5 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+              >
+                <span>Facebook</span>
+              </a>
+            </div>
+          </div>
+
           {/* Privacy Note */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />

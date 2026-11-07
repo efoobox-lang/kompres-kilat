@@ -1,113 +1,112 @@
+import { createHmac } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import {
-  getFormattedAnalyticsMetrics,
-  recordPageView,
-  recordClick,
-} from '@/lib/telemetry';
+import { verifyAdminSession } from '@/lib/admin-auth';
+import { getSupabaseConfig, supabaseRpcRequest, supabaseTableRequest } from '@/lib/ai-employee-store';
+import { checkRateLimit } from '@/lib/security';
 
-export interface AnalyticsMetricData {
+const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+interface AnalyticsRpcResult {
   totalViews: number;
   totalClicks: number;
-  totalSales: number;
   uniqueVisitors: number;
   viewsGrowth: string;
   clicksGrowth: string;
-  salesGrowth: string;
-  avgDailyViews: number;
-  peakViews: number;
-  ctr: string;
-  latency: string;
-  uptime: string;
-  weekly: {
-    day: string;
-    date: string;
-    views: number;
-    clicks: number;
-    sales: number;
-  }[];
-  source: string;
-  syncedAt: string;
+  weekly: Array<{ date: string; views: number; clicks: number }>;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verifyAdminSession(request)) {
+    return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+  }
+  if (!getSupabaseConfig()) {
+    return NextResponse.json({ success: false, error: 'Supabase Analytics belum dikonfigurasi.' }, { status: 503 });
+  }
+
   try {
-    // 1. Integrasi Vercel Web Analytics API jika VERCEL_AUTH_TOKEN dan VERCEL_PROJECT_ID disediakan
-    const vercelToken = process.env.VERCEL_AUTH_TOKEN;
-    const vercelProjectId = process.env.VERCEL_PROJECT_ID;
+    const metrics = await supabaseRpcRequest<AnalyticsRpcResult>('get_site_analytics_metrics', {
+      method: 'POST',
+      body: '{}',
+    });
+    const weekly = metrics.weekly.map((day) => {
+      const date = new Date(`${day.date}T00:00:00Z`);
+      return {
+        day: DAY_NAMES[date.getUTCDay()],
+        date: `${String(date.getUTCDate()).padStart(2, '0')} ${MONTH_NAMES[date.getUTCMonth()]}`,
+        views: day.views,
+        clicks: day.clicks,
+        sales: null,
+      };
+    });
 
-    let vercelLiveStats: any = null;
-
-    if (vercelToken && vercelProjectId) {
-      try {
-        const vercelRes = await fetch(
-          `https://api.vercel.com/v1/analytics/stats?projectId=${vercelProjectId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${vercelToken}`,
-            },
-            cache: 'no-store',
-          }
-        );
-        if (vercelRes.ok) {
-          vercelLiveStats = await vercelRes.json();
-        }
-      } catch (err) {
-        console.warn('Vercel Analytics API call fallback to telemetry engine:', err);
-      }
-    }
-
-    // 2. Data dinamis dari real-time telemetry engine
-    const metrics: AnalyticsMetricData = getFormattedAnalyticsMetrics(vercelLiveStats);
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: metrics,
+    return NextResponse.json({
+      success: true,
+      data: {
+        totalViews: metrics.totalViews,
+        totalClicks: metrics.totalClicks,
+        totalSales: null,
+        uniqueVisitors: metrics.uniqueVisitors,
+        viewsGrowth: metrics.viewsGrowth,
+        clicksGrowth: metrics.clicksGrowth,
+        salesGrowth: 'not tracked',
+        avgDailyViews: Math.round(metrics.totalViews / 7),
+        peakViews: Math.max(0, ...weekly.map((day) => day.views)),
+        ctr: `${((metrics.totalClicks / Math.max(1, metrics.totalViews)) * 100).toFixed(2)}%`,
+        latency: 'not measured',
+        uptime: 'not measured',
+        weekly,
+        source: 'Supabase event tracking (7-day window)',
+        syncedAt: new Date().toISOString(),
       },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        },
-      }
-    );
-  } catch (error: any) {
+    }, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
+  } catch (error) {
     console.error('Error in GET /api/analytics:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Gagal memuat analitik',
-      },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Gagal memuat analitik.';
+    return NextResponse.json({ success: false, error: message }, { status: 502 });
   }
 }
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json().catch(() => ({}));
-    const { action = 'pageview', visitorId } = body;
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous';
+  if (!checkRateLimit(`analytics:${ip}`, 120, 60_000).allowed) {
+    return NextResponse.json({ success: false, error: 'Batas pencatatan analitik tercapai.' }, { status: 429 });
+  }
 
-    let updatedStore;
-    if (action === 'click') {
-      updatedStore = recordClick();
-    } else {
-      updatedStore = recordPageView(visitorId);
+  const config = getSupabaseConfig();
+  if (!config) {
+    return NextResponse.json({ success: false, error: 'Supabase Analytics belum dikonfigurasi.' }, { status: 503 });
+  }
+
+  try {
+    const body = await request.json();
+    const eventType = body?.action;
+    if (eventType !== 'pageview' && eventType !== 'click') {
+      return NextResponse.json({ success: false, error: 'Jenis event analitik tidak valid.' }, { status: 400 });
     }
 
-    return NextResponse.json({
-      success: true,
-      totalViews: updatedStore.totalViews,
-      uniqueVisitors: updatedStore.uniqueVisitors.length,
-      totalClicks: updatedStore.totalClicks,
+    const visitorId = typeof body.visitorId === 'string' ? body.visitorId.slice(0, 128) : '';
+    const pagePath = typeof body.path === 'string' && body.path.startsWith('/')
+      ? body.path.slice(0, 300)
+      : '/';
+    const visitorHash = visitorId
+      ? createHmac('sha256', config.key).update(visitorId).digest('hex')
+      : null;
+
+    await supabaseTableRequest('site_analytics_events', '', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        event_type: eventType,
+        visitor_hash: eventType === 'pageview' ? visitorHash : null,
+        page_path: pagePath,
+      }),
     });
-  } catch (error: any) {
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
     console.error('Error in POST /api/analytics:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Gagal merekam telemetri',
-      },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Gagal mencatat analitik.';
+    return NextResponse.json({ success: false, error: message }, { status: 502 });
   }
 }

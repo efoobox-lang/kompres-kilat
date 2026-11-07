@@ -109,13 +109,13 @@ export interface DailyMetric {
   date: string;
   views: number;
   clicks: number;
-  sales: number;
+  sales: number | null;
 }
 
 export interface AnalyticsData {
   totalViews: number;
   totalClicks: number;
-  totalSales: number;
+  totalSales: number | null;
   uniqueVisitors: number;
   viewsGrowth: string;
   clicksGrowth: string;
@@ -172,6 +172,17 @@ export interface AgentTaskBatch {
   socialPermalink?: string;
 }
 
+function isSeoArticleDraft(value: unknown): value is SeoArticleDraft {
+  if (!value || typeof value !== 'object') return false;
+  const draft = value as Record<string, unknown>;
+  return (
+    typeof draft.id === 'string' &&
+    typeof draft.title === 'string' &&
+    typeof draft.content === 'string' &&
+    ['pending_review', 'approved', 'revision'].includes(String(draft.status))
+  );
+}
+
 const initialDivisions: Division[] = [
   {
     id: 'it',
@@ -184,7 +195,7 @@ const initialDivisions: Division[] = [
     accentColor: 'from-cyan-500/20 via-blue-500/10 to-transparent text-cyan-400',
     borderColor: 'border-cyan-500/40 hover:border-cyan-400',
     badgeBg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-    status: 'Working',
+    status: 'Idle',
     currentTask: 'Memeriksa Uptime Vercel, latensi edge CDN, dan pemindaian error log kompreskilat.site',
     outputCount: 14,
     lastUpdated: '2 menit yang lalu',
@@ -327,7 +338,16 @@ export default function AIEmployeesDashboard() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  const [divisions, setDivisions] = useState<Division[]>(initialDivisions);
+  const [divisions, setDivisions] = useState<Division[]>(() =>
+    initialDivisions.map((division) => ({
+      ...division,
+      status: 'Idle',
+      currentTask: 'Belum ada tugas yang dijalankan.',
+      outputCount: 0,
+      lastUpdated: 'Belum dijalankan',
+      metricValue: 'Belum terhubung',
+    }))
+  );
   const [activeDivision, setActiveDivision] = useState<Division | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -344,23 +364,21 @@ export default function AIEmployeesDashboard() {
 
   // State khusus kurasi draf artikel Divisi SEO (Google AdSense Safety Queue)
   const [seoDrafts, setSeoDrafts] = useState<SeoArticleDraft[]>([]);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<SeoArticleDraft | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
 
   // State Generator Video & Pratinjau Divisi Video & Kreatif
   const [creativeVideo, setCreativeVideo] = useState<CreativeVideoData>({
-    id: 'vid-reels-showcase',
-    title: 'Teaser Video Reels: Cetak Nota Kasir Thermal & Kompres Kilat',
-    caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal!\n\nDukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di browsermu.\n\n👉 Coba sekarang di https://kompreskilat.site/tools/invoice-generator\n\n#KompresKilat #NotaThermal #KasirUMKM #AplikasiGratis #SolusiBisnis #ReelsBisnis`,
-    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
-    duration: '0:15',
-    aspectRatio: '9:16 (Vertical Reels)',
-    resolution: '1080x1920 (FHD)',
-    model: 'Google Video AI / Veo 2 Turbo',
-    generatedAt: 'Hari ini'
+    id: '',
+    title: '',
+    caption: '',
+    videoUrl: '',
   });
+  const [videoPrompt, setVideoPrompt] = useState<string>('');
+  const [videoGenerationError, setVideoGenerationError] = useState<string | null>(null);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState<boolean>(false);
+  const [videoJobId, setVideoJobId] = useState<string | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
 
   // State Notifikasi Rilis ke Instagram Graph API
@@ -377,7 +395,15 @@ export default function AIEmployeesDashboard() {
     videoUrl?: string;
     draftId?: string;
     title?: string;
-  }) => {
+  }): Promise<string | null> => {
+    if (!params.videoUrl) {
+      setInstagramNotice({
+        status: 'error',
+        targetId: params.draftId || 'creative',
+        message: 'File video hasil generasi belum tersedia. Buat video terlebih dahulu.',
+      });
+      return null;
+    }
     setInstagramNotice({
       status: 'publishing',
       targetId: params.draftId || 'creative',
@@ -392,10 +418,9 @@ export default function AIEmployeesDashboard() {
         body: JSON.stringify({
           caption: params.caption,
           videoUrl: params.videoUrl,
-          imageUrl: !params.videoUrl ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80' : undefined,
           title: params.title || 'Konten KompresKilat',
           draftId: params.draftId,
-          mediaType: params.videoUrl ? 'REELS' : 'IMAGE'
+          mediaType: 'REELS'
         }),
       });
 
@@ -411,14 +436,14 @@ export default function AIEmployeesDashboard() {
         });
 
         if (params.draftId) {
-          setSeoDrafts((prev) => {
-            const updated = prev.map((d) =>
-              d.id === params.draftId ? { ...d, isPublishedToInstagram: true, status: 'approved' as const } : d
-            );
-            saveDraftsToStorage(updated);
-            return updated;
-          });
+          const updated = seoDrafts.map((draft) =>
+            draft.id === params.draftId
+              ? { ...draft, isPublishedToInstagram: true, instagramPermalink: result.permalink, status: 'approved' as const }
+              : draft
+          );
+          await saveDraftsToStorage(updated);
         }
+        return typeof result.permalink === 'string' ? result.permalink : null;
       } else {
         throw new Error(result.error || 'Gagal mempublikasikan ke Instagram.');
       }
@@ -428,50 +453,156 @@ export default function AIEmployeesDashboard() {
         targetId: params.draftId || 'creative',
         message: err.message || 'Terjadi gangguan saat mempublikasikan ke Instagram.'
       });
+      return null;
     }
   };
 
-  // Helper simpan draf ke localStorage
-  const saveDraftsToStorage = (updated: SeoArticleDraft[]) => {
+  const saveDraftsToStorage = async (updated: SeoArticleDraft[]) => {
     setSeoDrafts(updated);
     try {
-      localStorage.setItem('kk_seo_article_drafts', JSON.stringify(updated));
-    } catch (e) {}
+      const response = await fetch('/api/ai-agent/drafts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menyimpan draf ke database.');
+
+      const retainedIds = new Set(updated.map((draft) => draft.id));
+      const removedIds = seoDrafts.filter((draft) => !retainedIds.has(draft.id));
+      await Promise.all(removedIds.map(async (draft) => {
+        const deleteResponse = await fetch(`/api/ai-agent/drafts?id=${encodeURIComponent(draft.id)}`, { method: 'DELETE' });
+        if (!deleteResponse.ok) throw new Error('Gagal menghapus draf dari database.');
+      }));
+      setStorageError(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal menyimpan perubahan.';
+      setStorageError(message);
+      console.error('AI Employee persistence failed:', error);
+    }
   };
 
   // Helper kelola Batch Perintah & Hasil Agen AI
-  const handleDeleteBatch = (batchId: string) => {
+  const handleDeleteBatch = async (batchId: string) => {
+    const response = await fetch(`/api/ai-agent/history?id=${encodeURIComponent(batchId)}`, { method: 'DELETE' });
+    if (!response.ok) {
+      setStorageError('Gagal menghapus riwayat tugas dari database.');
+      return;
+    }
     setAgentBatches((prev) => {
-      const updated = prev.filter((b) => b.id !== batchId);
-      try {
-        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-      } catch {}
-      return updated;
+      return prev.filter((batch) => batch.id !== batchId);
     });
+    setActivityLogs((prev) => prev.filter((log) => log.id !== batchId));
   };
 
   const handlePublishBatchToSocial = async (batch: AgentTaskBatch) => {
-    await handlePublishToInstagram({
-      caption: batch.outputContent,
-      title: batch.userPrompt.slice(0, 50),
-      draftId: batch.id,
-    });
+    if (batch.divisionId !== 'sosmed') {
+      setInstagramNotice({
+        status: 'error',
+        targetId: batch.id,
+        message: 'Hanya draf dari Divisi Admin & Sosmed yang dapat dipublikasikan ke Facebook.',
+      });
+      return;
+    }
+    setInstagramNotice({ status: 'publishing', targetId: batch.id, message: 'Mengirim posting teks ke Facebook...' });
+    try {
+      const response = await fetch('/api/facebook/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: batch.outputContent }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Gagal mempublikasikan ke Facebook.');
+      const savedResponse = await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
+      });
+      if (!savedResponse.ok) {
+        throw new Error('Facebook berhasil memublikasikan, tetapi status publikasi gagal disimpan.');
+      }
+      setInstagramNotice({ status: 'success', targetId: batch.id, message: 'Posting berhasil dikirim ke Facebook.', permalink: result.permalink });
+      setAgentBatches((previous) => previous.map((item) =>
+        item.id === batch.id
+          ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+          : item
+      ));
+    } catch (error) {
+      setInstagramNotice({
+        status: 'error',
+        targetId: batch.id,
+        message: error instanceof Error ? error.message : 'Publikasi Facebook gagal.',
+      });
+    }
+  };
 
-    setAgentBatches((prev) => {
-      const updated = prev.map((b) =>
-        b.id === batch.id
-          ? {
-              ...b,
-              status: 'published_to_social' as const,
-              socialPermalink: 'https://www.instagram.com/kompreskilat/',
-            }
-          : b
-      );
-      try {
-        localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
+  const resumeVideoJob = async (jobId: string) => {
+    setIsGeneratingVideo(true);
+    setVideoGenerationError(null);
+    try {
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 8000));
+        const statusResponse = await fetch(`/api/video/generate?jobId=${encodeURIComponent(jobId)}`, {
+          cache: 'no-store',
+        });
+        const statusResult = await statusResponse.json();
+        if (!statusResponse.ok) throw new Error(statusResult.error || 'Gagal memeriksa status video.');
+        if (statusResult.status === 'failed') throw new Error(statusResult.error || 'Generasi video gagal.');
+        if (statusResult.status !== 'completed') continue;
+
+        const generatedVideo = statusResult.data as CreativeVideoData;
+        setCreativeVideo(generatedVideo);
+        const draft: SeoArticleDraft = {
+          id: generatedVideo.id,
+          title: generatedVideo.title,
+          slug: `video-${generatedVideo.id}`,
+          category: 'Video & Media Sosial',
+          keywords: 'video promosi KompresKilat',
+          metaDescription: generatedVideo.caption.slice(0, 160),
+          content: generatedVideo.caption,
+          status: 'pending_review',
+          createdAt: generatedVideo.generatedAt || new Date().toISOString(),
+          type: 'video',
+          videoUrl: generatedVideo.videoUrl,
+        };
+        await saveDraftsToStorage([draft, ...seoDrafts.filter((item) => item.id !== draft.id)]);
+        setVideoJobId(null);
+        setVideoPrompt('');
+        return;
+      }
+      setVideoGenerationError(`Generasi masih berjalan. ID pekerjaan: ${jobId}. Lanjutkan pemeriksaan kapan saja.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Generasi video gagal.';
+      setVideoGenerationError(message);
+      console.error('Video generation failed:', error);
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (videoPrompt.trim().length < 10) {
+      setVideoGenerationError('Brief video minimal 10 karakter.');
+      return;
+    }
+    setVideoGenerationError(null);
+    try {
+      const startResponse = await fetch('/api/video/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: videoPrompt.trim(), aspectRatio: '9:16' }),
+      });
+      const startResult = await startResponse.json();
+      if (!startResponse.ok || typeof startResult.jobId !== 'string') {
+        throw new Error(startResult.error || 'Provider video gagal memulai pekerjaan.');
+      }
+      setVideoJobId(startResult.jobId);
+      await resumeVideoJob(startResult.jobId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Generasi video gagal.';
+      setVideoGenerationError(message);
+      console.error('Video generation start failed:', error);
+    }
   };
 
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
@@ -514,35 +645,7 @@ export default function AIEmployeesDashboard() {
     } catch (e) {}
   };
 
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
-    {
-      id: 'log-1',
-      divisionId: 'seo',
-      divisionName: 'Divisi SEO & Content Writer',
-      taskTitle: 'Audit sitemap.xml dan struktur data Schema.org terverifikasi sukses dengan 105 rute terindeks.',
-      timestamp: '19:35',
-      source: 'gemini-2.5-flash',
-      status: 'success'
-    },
-    {
-      id: 'log-2',
-      divisionId: 'it',
-      divisionName: 'Divisi IT & Sistem',
-      taskTitle: 'Pemeriksaan uptime Vercel: 99.98% dengan latensi respons 24ms edge CDN network.',
-      timestamp: '19:30',
-      source: 'gemini-2.5-flash',
-      status: 'success'
-    },
-    {
-      id: 'log-3',
-      divisionId: 'analytics',
-      divisionName: 'Divisi Analytics',
-      taskTitle: 'Audit unit iklan AdSense: Seluruh slot terisolasi aman dari mode cetak nota/struk.',
-      timestamp: '19:22',
-      source: 'gemini-2.5-flash',
-      status: 'success'
-    }
-  ]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
 
   // Fungsi asinkron memuat data metrik riil secara dinamis dan real-time dari API
   const fetchAnalytics = async () => {
@@ -574,81 +677,104 @@ export default function AIEmployeesDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const savedAuth = localStorage.getItem('kk_admin_session');
-      if (savedAuth === 'authorized_2026') {
-        setIsAuthenticated(true);
-      }
+    let active = true;
+    const loadProductionData = async () => {
+      try {
+        const sessionResponse = await fetch('/api/admin/auth', { cache: 'no-store' });
+        const session = await sessionResponse.json();
+        if (!active) return;
+        if (!sessionResponse.ok) {
+          if (sessionResponse.status !== 401) throw new Error(session.error || 'Autentikasi admin belum dikonfigurasi.');
+          return;
+        }
+        if (!session.authenticated) return;
+        if (!isAuthenticated) {
+          setIsAuthenticated(true);
+          return;
+        }
 
-      // Muat daftar batch perintah & hasil tugas terpadu yang tersimpan
-      const savedBatches = localStorage.getItem('kk_agent_task_batches');
-      if (savedBatches) {
+        const [historyResponse, draftsResponse] = await Promise.all([
+          fetch('/api/ai-agent/history', { cache: 'no-store' }),
+          fetch('/api/ai-agent/drafts', { cache: 'no-store' }),
+        ]);
+        const history = await historyResponse.json();
+        const draftResult = await draftsResponse.json();
+        if (!historyResponse.ok) throw new Error(history.error || 'Gagal memuat riwayat tugas.');
+        if (!draftsResponse.ok) throw new Error(draftResult.error || 'Gagal memuat draf.');
+        if (!active) return;
+
+        const batches: AgentTaskBatch[] = history.data.map((row: Record<string, unknown>) => {
+          const createdAt = typeof row.created_at === 'string' ? new Date(row.created_at) : new Date();
+          const data = row.data && typeof row.data === 'object' ? row.data as Record<string, unknown> : {};
+          return {
+            id: String(row.id),
+            divisionId: String(row.division_id),
+            divisionName: String(row.division_name),
+            userPrompt: String(row.prompt),
+            outputContent: String(row.output),
+            extractedQuote: typeof data.extractedQuote === 'string' ? data.extractedQuote : '',
+            model: String(row.model),
+            timestamp: createdAt.toLocaleString('id-ID'),
+            status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
+            socialPermalink: typeof data.socialPublication === 'object' &&
+              data.socialPublication !== null &&
+              typeof (data.socialPublication as Record<string, unknown>).permalink === 'string'
+              ? String((data.socialPublication as Record<string, unknown>).permalink)
+              : undefined,
+          };
+        });
+        setAgentBatches(batches);
+        setActivityLogs(batches.map((batch) => ({
+          id: batch.id,
+          divisionId: batch.divisionId,
+          divisionName: batch.divisionName,
+          taskTitle: batch.outputContent,
+          timestamp: batch.timestamp,
+          source: batch.model,
+          status: 'success',
+        })));
+        setSeoDrafts(draftResult.data
+          .map((row: Record<string, unknown>) => row.data)
+          .filter(isSeoArticleDraft));
+
         try {
-          setAgentBatches(JSON.parse(savedBatches));
-        } catch {}
-      } else {
-        const initialBatch: AgentTaskBatch = {
-          id: 'batch-init-quote-01',
-          divisionId: 'sosmed',
-          divisionName: 'Divisi Media Sosial & Komunitas',
-          userPrompt: 'tolong buatkan quote posting otomatis ke facebook dan instagram',
-          outputContent: `### 💬 Perintah & Konteks Tugas
-**Instruksi Diterima:** "tolong buatkan quote posting otomatis ke facebook dan instagram"
-**Divisi:** Divisi Media Sosial & Komunitas
-**Tujuan:** Otomasi posting konten ke media sosial (Facebook & Instagram).
+          const videoJobsResponse = await fetch('/api/video/generate', { cache: 'no-store' });
+          const videoJobsResult = await videoJobsResponse.json();
+          if (!videoJobsResponse.ok || !Array.isArray(videoJobsResult.jobs)) {
+            throw new Error(videoJobsResult.error || 'Gagal memuat pekerjaan video.');
+          }
+          const runningJob = videoJobsResult.jobs.find((job: Record<string, unknown>) =>
+            job.status === 'running' || job.status === 'in_progress'
+          );
+          if (runningJob && typeof runningJob.id === 'string') setVideoJobId(runningJob.id);
+          const completedJob = videoJobsResult.jobs.find((job: Record<string, unknown>) =>
+            job.status === 'completed' && job.videoData && typeof job.videoData === 'object'
+          );
+          if (completedJob) setCreativeVideo(completedJob.videoData as CreativeVideoData);
+        } catch (error) {
+          setVideoGenerationError(error instanceof Error ? error.message : 'Gagal memuat pekerjaan video.');
+        }
 
-### 💡 Kutipan Utama / Quote Siap Rilis
-> "Waktu Anda terlalu berharga untuk dihabiskan mengurus berkas lambat. Satu klik di browser, ribuan pekerjaan tuntas seketika."
-— **KompresKilat.site** *(Solusi Cepat, Gratis & Privasi Aman)*
-
-### 📱 Naskah Konten Siap Posting (Facebook & Instagram)
-**Hook (3 Detik Pertama):**
-Pernah nggak sih mau kirim berkas lamaran atau cetak nota kasir, tapi terhambat ukuran file kegedean?
-
-**Isi Pesan:**
-Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM dan profesional di Indonesia untuk kompres gambar, gabung PDF, hingga cetak nota kasir thermal 58mm/80mm 100% GRATIS langsung dari browser tanpa instalasi software!
-
-**Call To Action (CTA):**
-👉 Coba sekarang langsung di browsermu: https://kompreskilat.site
-
-**Hashtags Viral:**
-#KompresKilat #NotaThermal #TipsUMKM #BisnisOnline #ToolsGratis #WorkHacks #Produktivitas
-
-### 🎨 Rekomendasi Visual & Penjadwalan
-- **Format:** Quote Card (1080x1080 Square) / Reels / Stories
-- **Nuansa Desain:** Modern Dark Slate dengan aksen Cyan & Purple Neon
-- **Status:** Siap dirilis langsung ke Instagram & Facebook.`,
-          extractedQuote: 'Waktu Anda terlalu berharga untuk dihabiskan mengurus berkas lambat. Satu klik di browser, ribuan pekerjaan tuntas seketika.',
-          model: 'gemini-2.5-flash',
-          timestamp: '11:15 WIB',
-          status: 'completed'
-        };
-        setAgentBatches([initialBatch]);
-        try {
-          localStorage.setItem('kk_agent_task_batches', JSON.stringify([initialBatch]));
-        } catch {}
+        setDivisions((previous) => previous.map((division) => {
+          const divisionTasks = batches.filter((batch) => batch.divisionId === division.id);
+          const latestTask = divisionTasks[0];
+          return {
+            ...division,
+            outputCount: divisionTasks.length,
+            currentTask: latestTask?.outputContent || 'Belum ada tugas yang dijalankan.',
+            lastUpdated: latestTask?.timestamp || 'Belum dijalankan',
+          };
+        }));
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : 'Gagal memuat data produksi.';
+        setStorageError(message);
+        setAuthError(message);
       }
-
-      // Muat daftar draf artikel SEO yang tersimpan
-      const savedDrafts = localStorage.getItem('kk_seo_article_drafts');
-      if (savedDrafts) {
-        setSeoDrafts(JSON.parse(savedDrafts));
-      } else {
-        const initialDraft: SeoArticleDraft = {
-          id: 'draft-initial-sample',
-          title: 'Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM',
-          slug: 'cara-membuat-invoice-nota-thermal-online-gratis',
-          category: 'Panduan & Tutorial UMKM',
-          keywords: 'cara membuat nota thermal online, cetak struk kasir 58mm gratis',
-          metaDescription: 'Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.',
-          content: `# Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM\n\n**Target Keyword:** cara membuat nota thermal online | **Estimasi Baca:** 4 Menit\n**Meta Deskripsi:** Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.\n\n## 1. Pendahuluan\nBagi pelaku Usaha Mikro, Kecil, dan Menengah (UMKM), bukti transaksi rapi adalah kunci kepercayaan pelanggan...\n\n## 2. Fitur Unggulan KompresKilat\n- Cetak Thermal 58mm & 80mm\n- Stempel Lunas Digital Fleksibel\n- Privasi 100% aman di browser\n\n## 3. Langkah-Langkah Pembuatan\n1. Masuk ke generator nota kompreskilat.site\n2. Isi produk dan harga\n3. Klik tombol Cetak langsung ke printer thermal`,
-          status: 'pending_review',
-          createdAt: '19:35 WIB'
-        };
-        setSeoDrafts([initialDraft]);
-      }
-    } catch (e) {}
-  }, []);
+    };
+    void loadProductionData();
+    return () => { active = false; };
+  }, [isAuthenticated]);
 
   // Hook sinkronisasi otomatis analitik real-time (polling + event visibility change)
   useEffect(() => {
@@ -676,31 +802,30 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
     };
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
     setAuthError(null);
-
-    const validPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'kompreskilat2026';
-
-    if (passwordInput.trim() === validPassword) {
-      try {
-        localStorage.setItem('kk_admin_session', 'authorized_2026');
-      } catch (e) {}
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Login gagal.');
       setIsAuthenticated(true);
       setPasswordInput('');
       setAuthError(null);
-      fetchAnalytics();
-    } else {
-      setAuthError('Kata sandi administrator salah. Silakan coba lagi!');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Login gagal.');
+    } finally {
+      setIsVerifying(false);
     }
-    setIsVerifying(false);
   };
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem('kk_admin_session');
-    } catch (e) {}
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
     setIsAuthenticated(false);
     setPasswordInput('');
     setAuthError(null);
@@ -722,7 +847,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
           return {
             ...div,
             status: 'Working',
-            currentTask: 'Sedang mengeksekusi tugas otomatis melalui Gemini 2.5 Flash...',
+            currentTask: 'Sedang menjalankan instruksi menggunakan provider AI produksi...',
             lastUpdated: 'Memproses...'
           };
         }
@@ -769,7 +894,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
             if (div.id === id) {
               return {
                 ...div,
-                status: 'Working',
+                status: 'Idle',
                 currentTask: resultTask,
                 outputCount: div.outputCount + 1,
                 lastUpdated: 'Baru saja'
@@ -781,7 +906,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
 
         // Masukkan riwayat log aktivitas global baru ke dalam daftar log
         const newLogEntry: ActivityLog = {
-          id: `log-${crypto.randomUUID()}`,
+          id: data.batchId,
           divisionId: targetDivision.id,
           divisionName: targetDivision.name,
           taskTitle: resultTask,
@@ -793,9 +918,9 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
         setActivityLogs((prev) => [newLogEntry, ...prev.slice(0, 49)]);
 
         // Rekam paket Perintah Input + Hasil Output AI ke dalam Batch History (Tercatat & Terpadu)
-        const promptGiven = promptText || (customPrompt.trim() ? customPrompt.trim() : `Tugas Rutin Operasional (${targetDivision.name})`);
+        const promptGiven = data.userPrompt || promptText || customPrompt.trim() || `Tugas rutin (${targetDivision.name})`;
         const newBatchItem: AgentTaskBatch = {
-          id: data.batchId || `batch-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          id: data.batchId,
           divisionId: targetDivision.id,
           divisionName: targetDivision.name,
           userPrompt: promptGiven,
@@ -806,13 +931,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
           status: 'completed'
         };
 
-        setAgentBatches((prev) => {
-          const updated = [newBatchItem, ...prev.slice(0, 49)];
-          try {
-            localStorage.setItem('kk_agent_task_batches', JSON.stringify(updated));
-          } catch {}
-          return updated;
-        });
+        setAgentBatches((prev) => [newBatchItem, ...prev.slice(0, 99)]);
 
         // Jika tugas dari Divisi SEO, simpan otomatis ke antrean draf kurasi admin (AdSense Safety)
         if (id === 'seo') {
@@ -829,12 +948,12 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
             type: 'article'
           };
 
-          saveDraftsToStorage([draftPayload, ...seoDrafts]);
+          await saveDraftsToStorage([draftPayload, ...seoDrafts]);
         }
 
         if (id === 'sosmed') {
           const socialDraft: SeoArticleDraft = {
-            id: `${data.draftId}-social`,
+            id: crypto.randomUUID(),
             title: 'Draf Konten Sosial Media KompresKilat',
             slug: 'draf-sosial-media-kompreskilat',
             category: 'Media Sosial',
@@ -846,44 +965,24 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
             type: 'social'
           };
 
-          saveDraftsToStorage([socialDraft, ...seoDrafts]);
+          await saveDraftsToStorage([socialDraft, ...seoDrafts]);
         }
 
-        // Jika tugas dari Divisi Video & Kreatif, update video player dan antrean draf konten
+        // Creative agent outputs a script; video generation is a separate, real provider operation.
         if (id === 'creative') {
-          if (data.videoData) {
-            setCreativeVideo(data.videoData);
-            const videoDraft: SeoArticleDraft = {
-              id: data.videoData.id || `${data.draftId}-video`,
-              title: data.videoData.title || 'Teaser Video Reels: Cetak Nota Thermal & Solusi Berkas',
-              slug: 'teaser-video-reels-kompreskilat',
-              category: 'Video & Media Sosial',
-              keywords: 'video reels, konten promo, cetak nota thermal, kompres kilat',
-              metaDescription: data.videoData.caption?.slice(0, 160) || resultTask.slice(0, 160),
-              content: data.videoData.caption || resultTask,
-              status: 'pending_review',
-              createdAt: `${timeStr} WIB`,
-              type: 'video',
-              videoUrl: data.videoData.videoUrl
-            };
-
-            saveDraftsToStorage([videoDraft, ...seoDrafts]);
-          } else if (data.provider === 'hermes3d') {
-            const scriptDraft: SeoArticleDraft = {
-              id: `${data.draftId}-video`,
-              title: 'Draf Skrip Video KompresKilat',
-              slug: 'draf-skrip-video-kompreskilat',
-              category: 'Skrip Video & Media Sosial',
-              keywords: 'skrip video, storyboard, konten promosi',
-              metaDescription: resultTask.slice(0, 160),
-              content: resultTask,
-              status: 'pending_review',
-              createdAt: `${timeStr} WIB`,
-              type: 'video'
-            };
-
-            saveDraftsToStorage([scriptDraft, ...seoDrafts]);
-          }
+          const scriptDraft: SeoArticleDraft = {
+            id: data.draftId,
+            title: 'Draf Skrip Video KompresKilat',
+            slug: `skrip-video-${data.draftId}`,
+            category: 'Skrip Video & Media Sosial',
+            keywords: 'skrip video, storyboard, konten promosi',
+            metaDescription: resultTask.slice(0, 160),
+            content: resultTask,
+            status: 'pending_review',
+            createdAt: `${timeStr} WIB`,
+            type: 'video'
+          };
+          await saveDraftsToStorage([scriptDraft, ...seoDrafts]);
         }
 
         if (activeDivision?.id === id) {
@@ -896,9 +995,11 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
       } else {
         throw new Error(data.error || 'Respon AI tidak valid');
       }
-    } catch (err: any) {
-      console.error('Gagal memproses tugas AI:', err);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Tugas AI gagal diproses.';
+      console.error('Gagal memproses tugas AI:', error);
       const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      setStorageError(message);
 
       setDivisions((prev) =>
         prev.map((div) => {
@@ -906,7 +1007,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
             return {
               ...div,
               status: 'Idle',
-              currentTask: 'Tugas gagal diproses. Periksa koneksi gateway dan log server.',
+              currentTask: message,
               lastUpdated: timeStr
             };
           }
@@ -918,9 +1019,9 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
         id: `log-${crypto.randomUUID()}`,
         divisionId: targetDivision.id,
         divisionName: targetDivision.name,
-        taskTitle: `Tugas gagal: ${err instanceof Error ? err.message : 'Kesalahan tidak diketahui'}`,
+        taskTitle: `Tugas gagal: ${error instanceof Error ? error.message : 'Kesalahan tidak diketahui'}`,
         timestamp: timeStr,
-        source: 'hermes3d',
+        source: 'AI provider',
         status: 'info'
       };
 
@@ -928,8 +1029,8 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
 
       if (activeDivision?.id === id) {
         setModalOutput({
-          text: err instanceof Error ? err.message : 'Tugas gagal diproses.',
-          source: 'Hermes3D',
+          text: error instanceof Error ? error.message : 'Tugas gagal diproses.',
+          source: 'AI provider',
           timestamp: timeStr
         });
       }
@@ -1041,7 +1142,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
               Akses Kantor Virtual HQ
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-              Halaman ini diproteksi. Masukkan kata sandi administrator untuk mengelola simulasi kantor 2D karyawan AI kompreskilat.site.
+                Halaman ini diproteksi. Masukkan kata sandi administrator untuk mengelola karyawan AI kompreskilat.site.
             </p>
           </div>
 
@@ -1125,8 +1226,8 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
         {/* ======================================================== */}
         <AdminHeader
           currentTab="hub"
-          latency={analyticsData?.latency || '24ms Edge'}
-          uptime={analyticsData?.uptime || '99.98%'}
+          latency={analyticsData?.latency || 'Belum terukur'}
+          uptime={analyticsData?.uptime || 'Belum terukur'}
           onSync={fetchAnalytics}
           isSyncing={isLoadingAnalytics}
           sfxEnabled={sfxEnabled}
@@ -1202,7 +1303,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
         )}
 
         {/* ======================================================== */}
-        {/* PANEL METRIK PENDUKUNG (VERCEL ANALYTICS RIIL) */}
+        {/* METRIK EVENT ANALYTICS DARI SUPABASE */}
         {/* ======================================================== */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Metrik 1: Total Views */}
@@ -1214,7 +1315,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live Telemetry
+                7 hari
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
@@ -1241,7 +1342,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                 Total Clicks
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.clicksGrowth || 'Live'}
+                {analyticsData?.clicksGrowth || 'Belum terukur'}
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
@@ -1265,7 +1366,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
               </span>
               <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
-                Real-Time
+                7 hari
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
@@ -1279,7 +1380,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
               {analyticsData ? (
                 `${analyticsData.uniqueVisitors.toLocaleString('id-ID')} pengunjung unik terdata`
               ) : (
-                'Menghubungkan live telemetry...'
+                'Menghitung pengunjung unik 7 hari...'
               )}
             </div>
           </div>
@@ -1292,14 +1393,14 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                 Total Monetisasi
               </span>
               <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.salesGrowth || '0%'}
+                {analyticsData?.salesGrowth || 'Belum terukur'}
               </span>
             </div>
             <div className="mt-2 text-xl sm:text-2xl font-extrabold text-white font-mono">
-              {analyticsData ? formatIDR(analyticsData.totalSales) : formatIDR(0)}
+              {analyticsData?.totalSales !== null && analyticsData ? formatIDR(analyticsData.totalSales) : 'Belum diukur'}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              Tahap awal rilis platform
+              Konektor transaksi belum tersedia
             </div>
           </div>
         </section>
@@ -1530,7 +1631,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                 </span>
               </h2>
               <p className="text-xs text-slate-400 max-w-2xl">
-                Setiap instruksi/perintah input dari Anda langsung tercatat berdampingan dengan hasil output detail dari AI dalam satu paket batch siap tindak lanjut (rilis ke Instagram & Facebook, salin, atau arsip).
+                Riwayat instruksi dan hasil yang tersimpan di Supabase. Teks dapat dipublikasikan ke Facebook; Instagram memerlukan video hasil generasi.
               </p>
             </div>
 
@@ -1539,13 +1640,13 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                 onClick={() => {
                   const sosmedDiv = divisions.find(d => d.id === 'sosmed') || divisions[0];
                   setActiveDivision(sosmedDiv);
-                  setCustomPrompt('tolong buatkan quote posting otomatis ke facebook dan instagram');
+                  setCustomPrompt('Buatkan quote singkat untuk posting Facebook berdasarkan fitur KompresKilat.');
                   setModalOutput(null);
                 }}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-pink-600/25 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>+ Buat Quote Posting FB & IG</span>
+                <span>+ Buat Quote Posting Facebook</span>
               </button>
             </div>
           </div>
@@ -1591,7 +1692,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                           {isPublished ? (
                             <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                              ✓ Terbit ke Instagram & FB
+                              ✓ Terbit ke Facebook
                             </span>
                           ) : (
                             <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
@@ -1652,18 +1753,19 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                           <button
                             type="button"
                             onClick={() => handlePublishBatchToSocial(batch)}
-                            disabled={instagramNotice?.status === 'publishing'}
+                            disabled={instagramNotice?.status === 'publishing' || batch.divisionId !== 'sosmed'}
+                            title={batch.divisionId !== 'sosmed' ? 'Publikasi Facebook hanya tersedia untuk draf Divisi Admin & Sosmed.' : 'Publikasikan teks ini ke Facebook'}
                             className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
                           >
                             {instagramNotice?.status === 'publishing' && instagramNotice.targetId === batch.id ? (
                               <>
                                 <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Menerbitkan ke Medsos...</span>
+                                <span>Menerbitkan ke Facebook...</span>
                               </>
                             ) : (
                               <>
-                                <InstagramIcon className="w-3.5 h-3.5" />
-                                <span>Rilis ke Instagram & FB</span>
+                                <Share2 className="w-3.5 h-3.5" />
+                                <span>Publikasikan ke Facebook</span>
                               </>
                             )}
                           </button>
@@ -1676,7 +1778,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                               className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              <span>Lihat di Instagram</span>
+                              <span>Lihat di Facebook</span>
                             </a>
                           )}
                         </div>
@@ -1747,6 +1849,11 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
 
           {/* Table / List of SEO Drafts */}
           <div className="p-4 sm:p-6 space-y-4">
+            {storageError && (
+              <div role="alert" className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs">
+                Data belum tersimpan atau termuat dari server: {storageError}
+              </div>
+            )}
             {seoDrafts.length === 0 ? (
               <div className="py-12 text-center text-slate-500 space-y-2">
                 <BookOpen className="w-10 h-10 mx-auto text-slate-600" />
@@ -1838,7 +1945,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                           onClick={() =>
                             handlePublishToInstagram({
                               caption: draft.content,
-                              videoUrl: draft.videoUrl || creativeVideo.videoUrl,
+                              videoUrl: draft.videoUrl,
                               title: draft.title,
                               draftId: draft.id,
                             })
@@ -1846,13 +1953,13 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                           disabled={
                             instagramNotice?.status === 'publishing' ||
                             !isApproved ||
-                            ((draft.type === 'video' || draft.type === 'social') && !draft.videoUrl)
+                            !draft.videoUrl
                           }
                           title={
                             !isApproved
                               ? 'Setujui draf terlebih dahulu sebelum merilis.'
-                              : (draft.type === 'video' || draft.type === 'social') && !draft.videoUrl
-                                ? 'Draf ini belum memiliki file media untuk dirilis.'
+                              : !draft.videoUrl
+                                ? 'Draf ini belum memiliki video hasil generasi.'
                                 : 'Rilis ke Akun Instagram Bisnis via Graph API'
                           }
                           className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md ${
@@ -2225,20 +2332,9 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                       🤖 Model: {modalOutput.source}
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handlePublishToInstagram({
-                          caption: modalOutput.text,
-                          title: 'Konten AI KompresKilat',
-                        })
-                      }
-                      disabled={instagramNotice?.status === 'publishing'}
-                      className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
-                    >
-                      <InstagramIcon className="w-3 h-3" />
-                      <span>Rilis Langsung ke Instagram & FB</span>
-                    </button>
+                    <span className="text-[11px] text-slate-500">
+                      Hasil tersimpan di riwayat. Publikasi Facebook tersedia dari batch; Instagram memerlukan video.
+                    </span>
                   </div>
                 </div>
               )}
@@ -2387,12 +2483,12 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                   onClick={() => {
                     handlePublishToInstagram({
                       caption: editingDraft.content,
-                      videoUrl: editingDraft.videoUrl || creativeVideo.videoUrl,
+                      videoUrl: editingDraft.videoUrl,
                       title: editingDraft.title,
                       draftId: editingDraft.id,
                     });
                   }}
-                  disabled={instagramNotice?.status === 'publishing'}
+                  disabled={instagramNotice?.status === 'publishing' || !editingDraft.videoUrl}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-pink-600/25 disabled:opacity-50"
                 >
                   <InstagramIcon className="w-3.5 h-3.5" />
@@ -2464,39 +2560,75 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
 
             {/* Modal Body */}
             <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
-              {/* Pemutar Video HTML5 Nyata */}
-              <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
-                <video
-                  controls
-                  playsInline
-                  autoPlay
-                  preload="metadata"
-                  poster={creativeVideo.thumbnailUrl}
-                  src={creativeVideo.videoUrl}
-                  className="w-full max-h-[300px] object-cover bg-black"
+              <div className="space-y-2">
+                <label htmlFor="video-prompt" className="block text-xs font-bold text-slate-300">
+                  Brief video AI
+                </label>
+                <textarea
+                  id="video-prompt"
+                  rows={3}
+                  value={videoPrompt}
+                  onChange={(event) => setVideoPrompt(event.target.value)}
+                  placeholder="Jelaskan adegan, gaya visual, pesan, dan audiens video yang ingin dibuat."
+                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => videoJobId ? resumeVideoJob(videoJobId) : handleGenerateVideo()}
+                  disabled={isGeneratingVideo || (!videoJobId && videoPrompt.trim().length < 10)}
+                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold disabled:opacity-50"
                 >
-                  Browser Anda tidak mendukung pemutar video HTML5.
-                </video>
-
-                <div className="absolute top-3 right-3 pointer-events-none">
-                  <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30">
-                    ⏱️ {creativeVideo.duration || '0:15'}
-                  </span>
-                </div>
+                  {isGeneratingVideo
+                    ? 'Memeriksa status video...'
+                    : videoJobId
+                      ? 'Lanjutkan pemeriksaan video'
+                      : 'Generate video asli'}
+                </button>
+                {videoGenerationError && (
+                  <p role="alert" className="text-xs text-rose-300">{videoGenerationError}</p>
+                )}
               </div>
+
+              {creativeVideo.videoUrl ? (
+                <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
+                  <video
+                    controls
+                    playsInline
+                    preload="metadata"
+                    poster={creativeVideo.thumbnailUrl}
+                    src={creativeVideo.videoUrl}
+                    className="w-full max-h-[300px] object-cover bg-black"
+                  >
+                    Browser Anda tidak mendukung pemutar video HTML5.
+                  </video>
+                  {creativeVideo.duration && (
+                    <div className="absolute top-3 right-3 pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-full bg-black/80 text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30">
+                        {creativeVideo.duration}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-8 rounded-2xl bg-slate-950 border border-slate-800 text-center text-xs text-slate-400">
+                  Belum ada video produksi. Masukkan brief lalu jalankan generasi video.
+                </div>
+              )}
 
               {/* Info Model & Judul */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-white text-sm line-clamp-1">{creativeVideo.title}</span>
+                  <span className="font-bold text-white text-sm line-clamp-1">{creativeVideo.title || 'Belum ada video'}</span>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 shrink-0 ml-2">
-                    {creativeVideo.model || 'Google Video AI'}
+                    {creativeVideo.model || 'Belum dibuat'}
                   </span>
                 </div>
 
-                <div className="text-slate-300 text-xs leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 font-sans">
-                  {creativeVideo.caption}
-                </div>
+                {creativeVideo.caption && (
+                  <div className="text-slate-300 text-xs leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 font-sans">
+                    {creativeVideo.caption}
+                  </div>
+                )}
 
                 {/* Status Rilis Instagram Langsung di Dalam Modal */}
                 {instagramNotice && instagramNotice.targetId === 'creative' && (
@@ -2530,7 +2662,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                         className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-bold flex items-center gap-1.5 text-[11px] shrink-0 shadow-md shadow-pink-600/30"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>Buka di IG</span>
+                        <span>Buka publikasi</span>
                       </a>
                     )}
                   </div>
@@ -2541,7 +2673,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
             {/* Modal Footer Actions: Langsung Rilis ke Instagram */}
             <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between gap-3">
               <span className="text-[11px] text-slate-500 font-mono hidden sm:inline-block">
-                📡 API Langsung: Terhubung ke @kompreskilat
+                Publikasi hanya aktif jika Instagram Business API dan video valid dikonfigurasi.
               </span>
 
               <div className="flex items-center gap-2.5 ml-auto">
@@ -2562,7 +2694,7 @@ Mulai sekarang nggak perlu pusing lagi! KompresKilat hadir membantu jutaan UMKM 
                       title: creativeVideo.title,
                     })
                   }
-                  disabled={instagramNotice?.status === 'publishing'}
+                  disabled={instagramNotice?.status === 'publishing' || !creativeVideo.videoUrl}
                   className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
                 >
                   {instagramNotice?.status === 'publishing' && instagramNotice.targetId === 'creative' ? (
