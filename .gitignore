@@ -36,7 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
+# runtime data
+data/
+
 *.tsbuildinfo
 next-env.d.ts
 app/ai-presentation-maker/translations.ts

@@ -343,6 +343,7 @@ export default function AIEmployeesDashboard() {
     generatedAt: 'Hari ini'
   });
   const [isGeneratingVideo, setIsGeneratingVideo] = useState<boolean>(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
 
   // State Notifikasi Rilis ke Instagram Graph API
   const [instagramNotice, setInstagramNotice] = useState<{
@@ -634,13 +635,26 @@ export default function AIEmployeesDashboard() {
         body: JSON.stringify({
           divisionId: targetDivision.id,
           divisionName: targetDivision.name,
-          customPrompt: promptText || (customPrompt.trim() ? customPrompt.trim() : undefined)
+          customPrompt: promptText || (customPrompt.trim() ? customPrompt.trim() : undefined),
+          analytics:
+            targetDivision.id === 'analytics' && analyticsData
+              ? {
+                  totalViews: analyticsData.totalViews,
+                  uniqueVisitors: analyticsData.uniqueVisitors,
+                  totalClicks: analyticsData.totalClicks,
+                  ctr: analyticsData.ctr,
+                  source: analyticsData.source,
+                }
+              : undefined,
         })
       });
 
       const data = await res.json();
 
       if (data.success && data.task) {
+        if (typeof data.draftId !== 'string' || !data.draftId) {
+          throw new Error('Respon AI tidak menyertakan ID draf yang valid.');
+        }
         const resultTask = data.task;
         const timeStr = data.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         const sourceModel = data.model || 'gemini-2.5-flash';
@@ -664,7 +678,7 @@ export default function AIEmployeesDashboard() {
 
         // Masukkan riwayat log aktivitas global baru ke dalam daftar log
         const newLogEntry: ActivityLog = {
-          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          id: `log-${crypto.randomUUID()}`,
           divisionId: targetDivision.id,
           divisionName: targetDivision.name,
           taskTitle: resultTask,
@@ -678,7 +692,7 @@ export default function AIEmployeesDashboard() {
         // Jika tugas dari Divisi SEO, simpan otomatis ke antrean draf kurasi admin (AdSense Safety)
         if (id === 'seo') {
           const draftPayload: SeoArticleDraft = {
-            id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            id: data.draftId,
             title: data.articleDraft?.title || 'Draf Artikel SEO Baru: Panduan KompresKilat',
             slug: data.articleDraft?.slug || 'panduan-kompres-kilat-artikel-baru',
             category: data.articleDraft?.category || 'Panduan & Tutorial UMKM',
@@ -693,32 +707,64 @@ export default function AIEmployeesDashboard() {
           saveDraftsToStorage([draftPayload, ...seoDrafts]);
         }
 
+        if (id === 'sosmed') {
+          const socialDraft: SeoArticleDraft = {
+            id: `${data.draftId}-social`,
+            title: 'Draf Konten Sosial Media KompresKilat',
+            slug: 'draf-sosial-media-kompreskilat',
+            category: 'Media Sosial',
+            keywords: 'caption, konten sosial media, kompres kilat',
+            metaDescription: resultTask.slice(0, 160),
+            content: resultTask,
+            status: 'pending_review',
+            createdAt: `${timeStr} WIB`,
+            type: 'social'
+          };
+
+          saveDraftsToStorage([socialDraft, ...seoDrafts]);
+        }
+
         // Jika tugas dari Divisi Video & Kreatif, update video player dan antrean draf konten
         if (id === 'creative') {
           if (data.videoData) {
             setCreativeVideo(data.videoData);
-          }
-          const videoDraft: SeoArticleDraft = {
-            id: `draft-vid-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            title: data.videoData?.title || 'Teaser Video Reels: Cetak Nota Thermal & Solusi Berkas',
-            slug: 'teaser-video-reels-kompreskilat',
-            category: 'Video & Media Sosial',
-            keywords: 'video reels, konten promo, cetak nota thermal, kompres kilat',
-            metaDescription: data.videoData?.caption?.slice(0, 160) || resultTask.slice(0, 160),
-            content: data.videoData?.caption || resultTask,
-            status: 'approved',
-            createdAt: `${timeStr} WIB`,
-            type: 'video',
-            videoUrl: data.videoData?.videoUrl || creativeVideo.videoUrl
-          };
+            const videoDraft: SeoArticleDraft = {
+              id: data.videoData.id || `${data.draftId}-video`,
+              title: data.videoData.title || 'Teaser Video Reels: Cetak Nota Thermal & Solusi Berkas',
+              slug: 'teaser-video-reels-kompreskilat',
+              category: 'Video & Media Sosial',
+              keywords: 'video reels, konten promo, cetak nota thermal, kompres kilat',
+              metaDescription: data.videoData.caption?.slice(0, 160) || resultTask.slice(0, 160),
+              content: data.videoData.caption || resultTask,
+              status: 'pending_review',
+              createdAt: `${timeStr} WIB`,
+              type: 'video',
+              videoUrl: data.videoData.videoUrl
+            };
 
-          saveDraftsToStorage([videoDraft, ...seoDrafts]);
+            saveDraftsToStorage([videoDraft, ...seoDrafts]);
+          } else if (data.provider === 'hermes3d') {
+            const scriptDraft: SeoArticleDraft = {
+              id: `${data.draftId}-video`,
+              title: 'Draf Skrip Video KompresKilat',
+              slug: 'draf-skrip-video-kompreskilat',
+              category: 'Skrip Video & Media Sosial',
+              keywords: 'skrip video, storyboard, konten promosi',
+              metaDescription: resultTask.slice(0, 160),
+              content: resultTask,
+              status: 'pending_review',
+              createdAt: `${timeStr} WIB`,
+              type: 'video'
+            };
+
+            saveDraftsToStorage([scriptDraft, ...seoDrafts]);
+          }
         }
 
         if (activeDivision?.id === id) {
           setModalOutput({
             text: resultTask,
-            source: `Google ${sourceModel}`,
+            source: sourceModel === 'gemini-2.5-flash' ? `Google ${sourceModel}` : sourceModel,
             timestamp: timeStr
           });
         }
@@ -726,8 +772,7 @@ export default function AIEmployeesDashboard() {
         throw new Error(data.error || 'Respon AI tidak valid');
       }
     } catch (err: any) {
-      console.warn('Gagal memanggil API AI, menggunakan respon operasional cadangan:', err);
-      const fallbackMsg = `Divisi ${targetDivision.name} telah menyelesaikan instruksi: "${promptText || 'Tugas optimasi platform'}" dan menyelaraskan metrik operasional kompreskilat.site.`;
+      console.error('Gagal memproses tugas AI:', err);
       const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
       setDivisions((prev) =>
@@ -735,66 +780,31 @@ export default function AIEmployeesDashboard() {
           if (div.id === id) {
             return {
               ...div,
-              status: 'Working',
-              currentTask: fallbackMsg,
-              outputCount: div.outputCount + 1,
-              lastUpdated: 'Baru saja'
+              status: 'Idle',
+              currentTask: 'Tugas gagal diproses. Periksa koneksi gateway dan log server.',
+              lastUpdated: timeStr
             };
           }
           return div;
         })
       );
 
-      // Masukkan riwayat cadangan ke dalam daftar log
-      const fallbackLogEntry: ActivityLog = {
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      const failureLogEntry: ActivityLog = {
+        id: `log-${crypto.randomUUID()}`,
         divisionId: targetDivision.id,
         divisionName: targetDivision.name,
-        taskTitle: fallbackMsg,
+        taskTitle: `Tugas gagal: ${err instanceof Error ? err.message : 'Kesalahan tidak diketahui'}`,
         timestamp: timeStr,
-        source: 'simulated-agent',
+        source: 'hermes3d',
         status: 'info'
       };
 
-      setActivityLogs((prev) => [fallbackLogEntry, ...prev.slice(0, 49)]);
-
-      if (id === 'seo') {
-        const fallbackDraft: SeoArticleDraft = {
-          id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          title: 'Panduan Lengkap: Cara Membuat Invoice & Nota Kasir Thermal Online Gratis untuk UMKM',
-          slug: 'cara-membuat-invoice-nota-thermal-online-gratis',
-          category: 'Panduan & Tutorial UMKM',
-          keywords: 'cara membuat nota thermal online, cetak struk kasir 58mm gratis',
-          metaDescription: 'Pelajari cara mudah membuat invoice dan mencetak struk thermal 58mm/80mm secara gratis tanpa aplikasi kasir berbayar hanya di kompreskilat.site.',
-          content: fallbackMsg,
-          status: 'pending_review',
-          createdAt: `${timeStr} WIB`
-        };
-
-        saveDraftsToStorage([fallbackDraft, ...seoDrafts]);
-      }
-
-      if (id === 'creative') {
-        const fallbackVidDraft: SeoArticleDraft = {
-          id: `draft-vid-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          title: 'Teaser Video Reels: Solusi Berkas KompresKilat',
-          slug: 'teaser-video-reels-kompreskilat',
-          category: 'Video & Media Sosial',
-          keywords: 'video reels, konten promo, cetak nota thermal',
-          metaDescription: 'Video promosi Reels 15 detik siap rilis untuk Instagram kompreskilat.site',
-          content: `⚡ Butuh kompres foto KTP 500KB atau cetak nota thermal kasir langsung di browser?\n\nKunjungi kompreskilat.site sekarang! Gratis, cepat, dan 100% aman tanpa simpan data di server.\n\n#KompresKilat #NotaThermal #ToolsGratis`,
-          status: 'approved',
-          createdAt: `${timeStr} WIB`,
-          type: 'video',
-          videoUrl: creativeVideo.videoUrl
-        };
-        saveDraftsToStorage([fallbackVidDraft, ...seoDrafts]);
-      }
+      setActivityLogs((prev) => [failureLogEntry, ...prev.slice(0, 49)]);
 
       if (activeDivision?.id === id) {
         setModalOutput({
-          text: fallbackMsg,
-          source: 'Agen Cerdas Otomasi',
+          text: err instanceof Error ? err.message : 'Tugas gagal diproses.',
+          source: 'Hermes3D',
           timestamp: timeStr
         });
       }
@@ -1326,89 +1336,22 @@ export default function AIEmployeesDashboard() {
                         </button>
                       </div>
 
-                      {/* PEMUTAR VIDEO / VIDEO PLAYER PRATINJAU DIVISI VIDEO & KREATIF */}
+                      {/* TOMBOL POP-UP PRATINJAU VIDEO AI & AKSI RILIS */}
                       {division.id === 'creative' && (
-                        <div className="mt-3 pt-3 border-t border-amber-500/30 space-y-2.5 animate-in fade-in duration-300">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold font-mono text-amber-400 flex items-center gap-1.5">
-                              <Film className="w-3.5 h-3.5" />
-                              Pratinjau Video Player (Generator AI)
+                        <div className="pt-2 border-t border-amber-500/20">
+                          <button
+                            type="button"
+                            onClick={() => setIsVideoModalOpen(true)}
+                            className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-pink-500/10 hover:from-amber-500/20 hover:to-pink-500/20 border border-amber-500/30 hover:border-amber-400 text-amber-300 hover:text-white text-xs font-bold transition flex items-center justify-between cursor-pointer group shadow-sm"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Film className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                              <span>Pratinjau Video & Aksi Rilis</span>
                             </span>
-                            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                              {creativeVideo.resolution || '1080x1920 (9:16)'}
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-[10px] font-mono text-amber-200">
+                              🎬 Buka Pop-up
                             </span>
-                          </div>
-
-                          {/* Pemutar Video Nyata HTML5 */}
-                          <div className="relative rounded-xl overflow-hidden bg-black border border-amber-500/40 shadow-lg group/video">
-                            <video
-                              controls
-                              playsInline
-                              preload="metadata"
-                              poster={creativeVideo.thumbnailUrl}
-                              src={creativeVideo.videoUrl}
-                              className="w-full max-h-[220px] object-cover bg-black"
-                            >
-                              Browser Anda tidak mendukung pemutar tag video HTML5.
-                            </video>
-                            
-                            <div className="absolute top-2 right-2 pointer-events-none">
-                              <span className="px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-mono font-bold text-amber-300 border border-amber-500/30">
-                                ⏱️ {creativeVideo.duration || '0:15'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Detail & Info Generator */}
-                          <div className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1 text-xs">
-                            <div className="flex items-center justify-between text-[11px] font-medium text-white">
-                              <span className="line-clamp-1">{creativeVideo.title}</span>
-                              <span className="text-[10px] font-mono text-slate-500 shrink-0 ml-2">
-                                {creativeVideo.model || 'Google Video AI'}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
-                              {creativeVideo.caption}
-                            </p>
-                          </div>
-
-                          {/* Action Buttons: Unduh & Rilis ke Instagram */}
-                          <div className="grid grid-cols-2 gap-2 pt-1">
-                            <a
-                              href={creativeVideo.videoUrl}
-                              download="kompreskilat-video-teaser.mp4"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="py-1.5 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
-                            >
-                              <Download className="w-3.5 h-3.5 text-slate-400" />
-                              <span>Unduh MP4</span>
-                            </a>
-
-                            <button
-                              onClick={() =>
-                                handlePublishToInstagram({
-                                  caption: creativeVideo.caption,
-                                  videoUrl: creativeVideo.videoUrl,
-                                  title: creativeVideo.title,
-                                })
-                              }
-                              disabled={instagramNotice?.status === 'publishing'}
-                              className="py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-pink-600/30 cursor-pointer disabled:opacity-50"
-                            >
-                              {instagramNotice?.status === 'publishing' && instagramNotice.targetId === 'creative' ? (
-                                <>
-                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                  <span>Mengunggah...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <InstagramIcon className="w-3.5 h-3.5" />
-                                  <span>Rilis ke Instagram</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1585,8 +1528,18 @@ export default function AIEmployeesDashboard() {
                               draftId: draft.id,
                             })
                           }
-                          disabled={instagramNotice?.status === 'publishing'}
-                          title="Rilis Otomatis ke Akun Instagram Bisnis via Graph API"
+                          disabled={
+                            instagramNotice?.status === 'publishing' ||
+                            !isApproved ||
+                            ((draft.type === 'video' || draft.type === 'social') && !draft.videoUrl)
+                          }
+                          title={
+                            !isApproved
+                              ? 'Setujui draf terlebih dahulu sebelum merilis.'
+                              : (draft.type === 'video' || draft.type === 'social') && !draft.videoUrl
+                                ? 'Draf ini belum memiliki file media untuk dirilis.'
+                                : 'Rilis ke Akun Instagram Bisnis via Graph API'
+                          }
                           className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md ${
                             draft.isPublishedToInstagram
                               ? 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-300'
@@ -2139,6 +2092,127 @@ export default function AIEmployeesDashboard() {
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* POP-UP MODAL: PEMUTAR VIDEO AI & AKSI RILIS KE INSTAGRAM */}
+      {/* ======================================================== */}
+      {isVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-amber-500/40 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    Pratinjau Video Reels AI
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-mono">
+                      {creativeVideo.resolution || '1080x1920'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">Ruang 105 // Divisi Video & Kreatif</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsVideoModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
+              {/* Pemutar Video HTML5 Nyata */}
+              <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
+                <video
+                  controls
+                  playsInline
+                  autoPlay
+                  preload="metadata"
+                  poster={creativeVideo.thumbnailUrl}
+                  src={creativeVideo.videoUrl}
+                  className="w-full max-h-[300px] object-cover bg-black"
+                >
+                  Browser Anda tidak mendukung pemutar video HTML5.
+                </video>
+
+                <div className="absolute top-3 right-3 pointer-events-none">
+                  <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30">
+                    ⏱️ {creativeVideo.duration || '0:15'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Info Model & Judul */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-white text-sm line-clamp-1">{creativeVideo.title}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 shrink-0 ml-2">
+                    {creativeVideo.model || 'Google Video AI'}
+                  </span>
+                </div>
+
+                <div className="text-slate-300 text-xs leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 font-sans">
+                  {creativeVideo.caption}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex flex-wrap items-center justify-between gap-3">
+              <a
+                href={creativeVideo.videoUrl}
+                download="kompreskilat-video-reels.mp4"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-400" />
+                <span>Unduh MP4</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsVideoModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
+                >
+                  Tutup
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handlePublishToInstagram({
+                      caption: creativeVideo.caption,
+                      videoUrl: creativeVideo.videoUrl,
+                      title: creativeVideo.title,
+                    })
+                  }
+                  disabled={instagramNotice?.status === 'publishing'}
+                  className="py-2 px-4 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
+                >
+                  {instagramNotice?.status === 'publishing' && instagramNotice.targetId === 'creative' ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Mengunggah ke IG...</span>
+                    </>
+                  ) : (
+                    <>
+                      <InstagramIcon className="w-3.5 h-3.5" />
+                      <span>Rilis ke Instagram</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

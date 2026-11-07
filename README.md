@@ -16,6 +16,20 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Local Hermes3D task prototype
+
+To send admin AI tasks through a locally running Hermes3D instance:
+
+1. Add `HERMES3D_API_URL=http://localhost:3000`, `HERMES3D_AGENT_ID=demo-orchestrator`,
+   and a random `HERMES3D_INTEGRATION_TOKEN` to `.env.local`.
+2. Set the same token in Hermes3D's `.env.local`, connect Hermes3D to its demo gateway, and restart it.
+3. Run this app on another port with `npm run dev -- --port 3001`.
+4. Open `/admin/ai-employees` on port 3001 and trigger a division task.
+
+When `HERMES3D_API_URL` is configured, `/api/ai-agent` forwards the task to Hermes3D.
+Drafts remain local to the admin browser for this prototype. Keep it on localhost:
+production use requires server-side admin authorization and durable shared storage.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

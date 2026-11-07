@@ -243,6 +243,7 @@ export default function VirtualOfficePage() {
     resolution: '1080x1920 (9:16)',
     model: 'Google Video AI / Veo 2 Turbo'
   });
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
 
   const [instagramNotice, setInstagramNotice] = useState<{
     status: 'idle' | 'publishing' | 'success' | 'error';
@@ -455,6 +456,7 @@ export default function VirtualOfficePage() {
 
         if (id === 'creative' && data.videoData) {
           setCreativeVideo(data.videoData);
+          setIsVideoModalOpen(true);
         }
 
         if (activeDivision?.id === id) {
@@ -927,70 +929,22 @@ export default function VirtualOfficePage() {
                       </button>
                     </div>
 
-                    {/* PRATINJAU VIDEO PLAYER REAL-TIME DIVISI VIDEO & KREATIF */}
+                    {/* TOMBOL POP-UP PRATINJAU VIDEO AI & AKSI RILIS */}
                     {division.id === 'creative' && (
-                      <div className="mt-3 pt-3 border-t border-amber-500/30 space-y-2.5 animate-in fade-in duration-300">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold font-mono text-amber-400 flex items-center gap-1.5">
-                            <Film className="w-3.5 h-3.5" />
-                            Pratinjau Video (Generator AI)
+                      <div className="pt-2 border-t border-amber-500/20">
+                        <button
+                          type="button"
+                          onClick={() => setIsVideoModalOpen(true)}
+                          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-pink-500/10 hover:from-amber-500/20 hover:to-pink-500/20 border border-amber-500/30 hover:border-amber-400 text-amber-300 hover:text-white text-xs font-bold transition flex items-center justify-between cursor-pointer group shadow-sm"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Film className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                            <span>Pratinjau Video & Aksi Rilis</span>
                           </span>
-                          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                            {creativeVideo.resolution || '1080x1920'}
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-[10px] font-mono text-amber-200">
+                            🎬 Buka Pop-up
                           </span>
-                        </div>
-
-                        {/* Player Video HTML5 */}
-                        <div className="relative rounded-xl overflow-hidden bg-black border border-amber-500/40 shadow-lg">
-                          <video
-                            controls
-                            playsInline
-                            preload="metadata"
-                            poster={creativeVideo.thumbnailUrl}
-                            src={creativeVideo.videoUrl}
-                            className="w-full max-h-[180px] object-cover bg-black"
-                          >
-                            Browser Anda tidak mendukung video HTML5.
-                          </video>
-                        </div>
-
-                        {/* Judul & Caption */}
-                        <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                          <p className="text-xs font-semibold text-white line-clamp-1">{creativeVideo.title}</p>
-                          <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">{creativeVideo.caption}</p>
-                        </div>
-
-                        {/* Action: Unduh & Rilis ke Instagram */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <a
-                            href={creativeVideo.videoUrl}
-                            download="kompreskilat-reels.mp4"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-bold transition flex items-center justify-center gap-1"
-                          >
-                            <Download className="w-3 h-3 text-slate-400" />
-                            <span>Unduh</span>
-                          </a>
-
-                          <button
-                            onClick={() => handlePublishToInstagram(creativeVideo.caption, creativeVideo.videoUrl, creativeVideo.title)}
-                            disabled={instagramNotice?.status === 'publishing'}
-                            className="py-1.5 px-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-md shadow-pink-600/30 cursor-pointer disabled:opacity-50"
-                          >
-                            {instagramNotice?.status === 'publishing' ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Rilis...</span>
-                              </>
-                            ) : (
-                              <>
-                                <InstagramIcon className="w-3 h-3" />
-                                <span>Rilis ke IG</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1080,6 +1034,127 @@ export default function VirtualOfficePage() {
                   <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">{modalOutput.text}</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+        {/* ======================================================== */}
+        {/* MODAL PRATINJAU VIDEO & AKSI RILIS INSTAGRAM */}
+        {/* ======================================================== */}
+        {isVideoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-amber-500/30 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Header Modal */}
+              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <Film className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      Pratinjau Video Reels AI
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-mono">
+                        {creativeVideo.resolution || '1080x1920'}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400">Ruang 105 // Divisi Video & Kreatif</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsVideoModalOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
+                {/* Pemutar Video HTML5 Nyata */}
+                <div className="relative rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl group/video">
+                  <video
+                    controls
+                    playsInline
+                    autoPlay
+                    preload="metadata"
+                    poster={creativeVideo.thumbnailUrl}
+                    src={creativeVideo.videoUrl}
+                    className="w-full max-h-[300px] object-cover bg-black"
+                  >
+                    Browser Anda tidak mendukung pemutar video HTML5.
+                  </video>
+
+                  <div className="absolute top-3 right-3 pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30">
+                      ⏱️ {creativeVideo.duration || '0:15'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Info Model & Judul */}
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white text-sm line-clamp-1">{creativeVideo.title}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 shrink-0 ml-2">
+                      {creativeVideo.model || 'Google Video AI'}
+                    </span>
+                  </div>
+
+                  <div className="text-slate-300 text-xs leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 font-sans">
+                    {creativeVideo.caption}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex flex-wrap items-center justify-between gap-3">
+                <a
+                  href={creativeVideo.videoUrl}
+                  download="kompreskilat-video-reels.mp4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Unduh MP4</span>
+                </a>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsVideoModalOpen(false)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlePublishToInstagram(
+                        creativeVideo.caption,
+                        creativeVideo.videoUrl,
+                        creativeVideo.title
+                      )
+                    }
+                    disabled={instagramNotice?.status === 'publishing'}
+                    className="py-2 px-4 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-pink-600/30 cursor-pointer disabled:opacity-50"
+                  >
+                    {instagramNotice?.status === 'publishing' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Menerbitkan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <InstagramIcon className="w-3.5 h-3.5" />
+                        <span>Rilis ke Instagram</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

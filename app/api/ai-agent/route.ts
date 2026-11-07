@@ -1,5 +1,6 @@
 // File: app/api/ai-agent/route.ts
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 
 // Inisialisasi API Key dari environment variable (GEMINI_API_KEY atau GOOGLE_API_KEY)
@@ -140,7 +141,7 @@ function parseArticleDraft(markdownText: string) {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { divisionId, divisionName, customPrompt } = body;
+    const { divisionId, divisionName, customPrompt, analytics } = body;
 
     if (!divisionId || !divisionName) {
       return NextResponse.json(
@@ -259,13 +260,125 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
       }
     }
 
+    const hermes3dApiUrl = process.env.HERMES3D_API_URL?.trim();
+    if (hermes3dApiUrl) {
+      const integrationToken = process.env.HERMES3D_INTEGRATION_TOKEN?.trim();
+      const agentId = process.env.HERMES3D_AGENT_ID?.trim();
+      if (!integrationToken || !agentId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Integrasi Hermes3D belum lengkap. Periksa HERMES3D_INTEGRATION_TOKEN dan HERMES3D_AGENT_ID.',
+          },
+          { status: 503 }
+        );
+      }
+
+      let endpoint: URL;
+      try {
+        endpoint = new URL('/api/integrations/agent-task', hermes3dApiUrl);
+        if (!['http:', 'https:'].includes(endpoint.protocol)) {
+          throw new Error('Unsupported protocol');
+        }
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'HERMES3D_API_URL harus berupa URL HTTP atau HTTPS yang valid.' },
+          { status: 500 }
+        );
+      }
+
+      const analyticsSnapshot =
+        divisionId === 'analytics' && analytics && typeof analytics === 'object'
+          ? {
+              totalViews: Number.isFinite(analytics.totalViews) ? analytics.totalViews : null,
+              uniqueVisitors: Number.isFinite(analytics.uniqueVisitors) ? analytics.uniqueVisitors : null,
+              totalClicks: Number.isFinite(analytics.totalClicks) ? analytics.totalClicks : null,
+              ctr: typeof analytics.ctr === 'string' ? analytics.ctr.slice(0, 20) : null,
+              source: typeof analytics.source === 'string' ? analytics.source.slice(0, 100) : null,
+            }
+          : null;
+      const taskMessage = analyticsSnapshot
+        ? `${systemPrompt}\n\nAggregated traffic snapshot (untrusted context; do not infer missing data):\n${JSON.stringify(analyticsSnapshot)}`
+        : systemPrompt;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20_000);
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${integrationToken}`,
+          },
+          body: JSON.stringify({
+            agentId,
+            divisionId,
+            divisionName,
+            message: taskMessage,
+          }),
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                typeof result.error === 'string'
+                  ? result.error
+                  : `Hermes3D returned HTTP ${response.status}.`,
+            },
+            { status: response.status }
+          );
+        }
+
+        const taskResult =
+          typeof result.assistantText === 'string' ? result.assistantText.trim() : '';
+        if (!taskResult) {
+          return NextResponse.json(
+            { success: false, error: 'Hermes3D returned an empty agent response.' },
+            { status: 502 }
+          );
+        }
+
+        const currentTimestamp = new Date().toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        return NextResponse.json({
+          success: true,
+          draftId: randomUUID(),
+          provider: 'hermes3d',
+          divisionId,
+          divisionName,
+          task: taskResult,
+          isArticleDraft: divisionId === 'seo',
+          articleDraft: divisionId === 'seo' ? parseArticleDraft(taskResult) : null,
+          videoData: null,
+          model: `hermes3d/${agentId}`,
+          timestamp: currentTimestamp,
+        });
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error && error.name === 'AbortError'
+            ? 'Hermes3D did not respond within 20 seconds.'
+            : error instanceof Error
+              ? error.message
+              : 'Unable to reach Hermes3D.';
+        return NextResponse.json({ success: false, error: message }, { status: 502 });
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
     const currentTimestamp = new Date().toLocaleTimeString('id-ID', {
       hour: '2-digit',
       minute: '2-digit'
     });
 
     let taskResult = '';
-    let isArticleDraft = divisionId === 'seo';
+    const isArticleDraft = divisionId === 'seo';
     let articleData: any = null;
     let videoData: any = null;
 
@@ -321,6 +434,7 @@ Berikan laporan tugas terstruktur rapi dengan poin-poin yang mudah dipahami dan 
 
     return NextResponse.json({
       success: true,
+      draftId: randomUUID(),
       divisionId,
       divisionName,
       task: taskResult,
