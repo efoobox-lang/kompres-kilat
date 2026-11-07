@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server';
+import {
+  getFormattedAnalyticsMetrics,
+  recordPageView,
+  recordClick,
+} from '@/lib/telemetry';
 
 export interface AnalyticsMetricData {
   totalViews: number;
@@ -26,7 +31,7 @@ export interface AnalyticsMetricData {
 
 export async function GET() {
   try {
-    // 1. Cek integrasi Vercel Analytics API jika environment token tersedia
+    // 1. Integrasi Vercel Web Analytics API jika VERCEL_AUTH_TOKEN dan VERCEL_PROJECT_ID disediakan
     const vercelToken = process.env.VERCEL_AUTH_TOKEN;
     const vercelProjectId = process.env.VERCEL_PROJECT_ID;
 
@@ -47,43 +52,12 @@ export async function GET() {
           vercelLiveStats = await vercelRes.json();
         }
       } catch (err) {
-        console.warn('Vercel Analytics API call fallback:', err);
+        console.warn('Vercel Analytics API call fallback to telemetry engine:', err);
       }
     }
 
-    // 2. Data agregasi metrik riil platform kompreskilat.site dari Vercel Analytics
-    // Sesuai data riil terbaru: 7 Pengunjung Unik (Visitors) dan 91 Tayangan Halaman (Page Views)
-    const weeklyData = [
-      { day: 'Sen', date: '31 Okt', views: 10, clicks: 3, sales: 0 },
-      { day: 'Sel', date: '01 Nov', views: 12, clicks: 3, sales: 0 },
-      { day: 'Rab', date: '02 Nov', views: 11, clicks: 3, sales: 0 },
-      { day: 'Kam', date: '03 Nov', views: 18, clicks: 5, sales: 0 },
-      { day: 'Jum', date: '04 Nov', views: 15, clicks: 4, sales: 0 },
-      { day: 'Sab', date: '05 Nov', views: 11, clicks: 3, sales: 0 },
-      { day: 'Min', date: '06 Nov', views: 14, clicks: 4, sales: 0 },
-    ];
-
-    const sumViews = weeklyData.reduce((acc, curr) => acc + curr.views, 0);
-    const sumClicks = weeklyData.reduce((acc, curr) => acc + curr.clicks, 0);
-    const sumSales = weeklyData.reduce((acc, curr) => acc + curr.sales, 0);
-
-    const metrics: AnalyticsMetricData = {
-      totalViews: vercelLiveStats?.pageViews || 91,
-      totalClicks: vercelLiveStats?.interactions || sumClicks,
-      totalSales: sumSales,
-      uniqueVisitors: vercelLiveStats?.uniqueVisitors || 7,
-      viewsGrowth: '+100%',
-      clicksGrowth: '+100%',
-      salesGrowth: '0%',
-      avgDailyViews: Math.round(sumViews / weeklyData.length),
-      peakViews: Math.max(...weeklyData.map((d) => d.views)),
-      ctr: ((sumClicks / sumViews) * 100).toFixed(2) + '%',
-      latency: '24ms',
-      uptime: '99.98%',
-      weekly: weeklyData,
-      source: vercelLiveStats ? 'Vercel Analytics Live' : 'Vercel Analytics Riil (7 Visitors / 91 Views)',
-      syncedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB',
-    };
+    // 2. Data dinamis dari real-time telemetry engine
+    const metrics: AnalyticsMetricData = getFormattedAnalyticsMetrics(vercelLiveStats);
 
     return NextResponse.json(
       {
@@ -92,16 +66,46 @@ export async function GET() {
       },
       {
         headers: {
-          'Cache-Control': 'no-store, max-age=0',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         },
       }
     );
   } catch (error: any) {
-    console.error('Error in /api/analytics:', error);
+    console.error('Error in GET /api/analytics:', error);
     return NextResponse.json(
       {
         success: false,
         error: error.message || 'Gagal memuat analitik',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { action = 'pageview', visitorId } = body;
+
+    let updatedStore;
+    if (action === 'click') {
+      updatedStore = recordClick();
+    } else {
+      updatedStore = recordPageView(visitorId);
+    }
+
+    return NextResponse.json({
+      success: true,
+      totalViews: updatedStore.totalViews,
+      uniqueVisitors: updatedStore.uniqueVisitors.length,
+      totalClicks: updatedStore.totalClicks,
+    });
+  } catch (error: any) {
+    console.error('Error in POST /api/analytics:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || 'Gagal merekam telemetri',
       },
       { status: 500 }
     );

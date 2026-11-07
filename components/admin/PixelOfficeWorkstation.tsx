@@ -11,6 +11,8 @@ export interface PixelWorkstationProps {
   metricLabel: string;
   metricValue: string;
   outputCount: number;
+  liveViews?: number;
+  liveVisitors?: number;
 }
 
 export default function PixelOfficeWorkstation({
@@ -22,6 +24,8 @@ export default function PixelOfficeWorkstation({
   metricLabel,
   metricValue,
   outputCount,
+  liveViews,
+  liveVisitors,
 }: PixelWorkstationProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -52,7 +56,7 @@ export default function PixelOfficeWorkstation({
         case 'it':
           return ['0', '1', '⚡', '</>', '24ms', 'SYS'];
         case 'analytics':
-          return ['91', '7', '📈', '%', 'CTR', '+1'];
+          return [String(liveViews ?? 'Live'), String(liveVisitors ?? 'Users'), '📈', '%', 'CTR', '+1'];
         case 'marketing':
           return ['🚀', '🔥', 'ROI', '100%', 'BOOST'];
         case 'sosmed':
@@ -142,7 +146,7 @@ export default function PixelOfficeWorkstation({
           hair: '#475569',
           shirt: '#8b5cf6',
           roleBadge: 'Data Scientist',
-          statusText: '📊 Telemetri 7 Visitors / 91 Views',
+          statusText: liveViews !== undefined ? `📊 Telemetri ${liveVisitors || 0} Visitors / ${liveViews} Views` : '📊 Telemetri Real-Time Sync',
         };
       case 'marketing':
         return {
@@ -423,7 +427,9 @@ export default function PixelOfficeWorkstation({
                   <rect x="84" y="38" width="6" height="16" fill="#a855f7" className={isWorking ? 'animate-pulse' : ''} />
                   <rect x="93" y="42" width="6" height="12" fill="#38bdf8" />
                   <rect x="102" y="32" width="6" height="22" fill="#10b981" className={isWorking ? 'animate-[bounce_0.5s_infinite]' : ''} />
-                  <text x="74" y="32" fontSize="5" fill="#f8fafc" fontFamily="monospace">91 VIEWS</text>
+                  <text x="74" y="32" fontSize="5" fill="#f8fafc" fontFamily="monospace">
+                    {liveViews !== undefined ? `${liveViews} VIEWS` : 'LIVE DATA'}
+                  </text>
                 </g>
               )}
 

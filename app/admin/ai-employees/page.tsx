@@ -128,16 +128,6 @@ export interface SeoArticleDraft {
   createdAt: string;
 }
 
-const fallbackWeeklyData: DailyMetric[] = [
-  { day: 'Sen', date: '31 Okt', views: 10, clicks: 3, sales: 0 },
-  { day: 'Sel', date: '01 Nov', views: 12, clicks: 3, sales: 0 },
-  { day: 'Rab', date: '02 Nov', views: 11, clicks: 3, sales: 0 },
-  { day: 'Kam', date: '03 Nov', views: 18, clicks: 5, sales: 0 },
-  { day: 'Jum', date: '04 Nov', views: 15, clicks: 4, sales: 0 },
-  { day: 'Sab', date: '05 Nov', views: 11, clicks: 3, sales: 0 },
-  { day: 'Min', date: '06 Nov', views: 14, clicks: 4, sales: 0 },
-];
-
 const initialDivisions: Division[] = [
   {
     id: 'it',
@@ -387,14 +377,26 @@ export default function AIEmployeesDashboard() {
     }
   ]);
 
-  // Fungsi memuat data metrik riil dari API /api/analytics
+  // Fungsi asinkron memuat data metrik riil secara dinamis dan real-time dari API
   const fetchAnalytics = async () => {
-    setIsLoadingAnalytics(true);
     try {
       const res = await fetch('/api/analytics', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Status respon tidak valid');
       const json = await res.json();
       if (json.success && json.data) {
         setAnalyticsData(json.data);
+        // Sinkronkan juga info telemetri dinamis divisi Analytics
+        setDivisions((prev) =>
+          prev.map((div) => {
+            if (div.id === 'analytics') {
+              return {
+                ...div,
+                metricValue: `${json.data.totalViews} Views (${json.data.uniqueVisitors} Users)`,
+              };
+            }
+            return div;
+          })
+        );
       }
     } catch (err) {
       console.warn('Gagal memuat analitik dinamis:', err);
@@ -432,16 +434,30 @@ export default function AIEmployeesDashboard() {
     } catch (e) {}
   }, []);
 
-  // Sinkronisasi otomatis data analitik riil Vercel secara dinamis dan real-time
+  // Hook sinkronisasi otomatis analitik real-time (polling + event visibility change)
   useEffect(() => {
     if (!isAuthenticated) return;
+    setIsLoadingAnalytics(true);
     fetchAnalytics();
 
+    // Polling setiap 15 detik untuk update angka seketika jika ada kunjungan baru
     const intervalId = setInterval(() => {
       fetchAnalytics();
-    }, 20000); // Polling otomatis setiap 20 detik untuk memperbarui metrik riil
+    }, 15000);
 
-    return () => clearInterval(intervalId);
+    // Refresh seketika saat admin membuka/kembali ke tab ini
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAnalytics();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -685,6 +701,8 @@ export default function AIEmployeesDashboard() {
         metricLabel={division.metricLabel}
         metricValue={division.metricValue}
         outputCount={division.outputCount}
+        liveViews={analyticsData?.totalViews}
+        liveVisitors={analyticsData?.uniqueVisitors}
       />
     );
   };
@@ -920,15 +938,24 @@ export default function AIEmployeesDashboard() {
                 <Eye className="w-3.5 h-3.5 text-cyan-400" />
                 Total Views
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.viewsGrowth || '+18.4%'}
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live Telemetry
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalViews ?? 91).toLocaleString('id-ID')}
+              {analyticsData ? (
+                analyticsData.totalViews.toLocaleString('id-ID')
+              ) : (
+                <span className="text-slate-500 text-lg animate-pulse">Menghitung...</span>
+              )}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              Rata-rata: ~{(analyticsData?.avgDailyViews ?? 13).toLocaleString('id-ID')}/hari (Puncak: {analyticsData?.peakViews || 18})
+              {analyticsData ? (
+                `Rata-rata: ~${analyticsData.avgDailyViews.toLocaleString('id-ID')}/hari (Puncak: ${analyticsData.peakViews.toLocaleString('id-ID')})`
+              ) : (
+                'Sinkronisasi tayangan halaman...'
+              )}
             </div>
           </div>
 
@@ -940,14 +967,18 @@ export default function AIEmployeesDashboard() {
                 Total Clicks
               </span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono">
-                {analyticsData?.clicksGrowth || '+100%'}
+                {analyticsData?.clicksGrowth || 'Live'}
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.totalClicks ?? 25).toLocaleString('id-ID')}
+              {analyticsData ? (
+                analyticsData.totalClicks.toLocaleString('id-ID')
+              ) : (
+                <span className="text-slate-500 text-lg animate-pulse">Menghitung...</span>
+              )}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              CTR Interaksi: {analyticsData?.ctr || '27.47%'}
+              {analyticsData ? `CTR Interaksi: ${analyticsData.ctr}` : 'Menghitung interaksi...'}
             </div>
           </div>
 
@@ -958,15 +989,24 @@ export default function AIEmployeesDashboard() {
                 <Users className="w-3.5 h-3.5 text-indigo-400" />
                 Unique Visitors
               </span>
-              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full font-mono">
-                Live
+              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                Real-Time
               </span>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
-              {(analyticsData?.uniqueVisitors ?? 7).toLocaleString('id-ID')}
+              {analyticsData ? (
+                analyticsData.uniqueVisitors.toLocaleString('id-ID')
+              ) : (
+                <span className="text-slate-500 text-lg animate-pulse">Menghitung...</span>
+              )}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
-              7 pengunjung terverifikasi (Vercel)
+              {analyticsData ? (
+                `${analyticsData.uniqueVisitors.toLocaleString('id-ID')} pengunjung unik terdata`
+              ) : (
+                'Menghubungkan live telemetry...'
+              )}
             </div>
           </div>
 
@@ -982,7 +1022,7 @@ export default function AIEmployeesDashboard() {
               </span>
             </div>
             <div className="mt-2 text-xl sm:text-2xl font-extrabold text-white font-mono">
-              {formatIDR(analyticsData?.totalSales ?? 0)}
+              {analyticsData ? formatIDR(analyticsData.totalSales) : formatIDR(0)}
             </div>
             <div className="text-[10px] text-slate-500 mt-1 font-mono">
               Tahap awal rilis platform
