@@ -30,7 +30,12 @@ export function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   if (!origin) return true;
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    const originUrl = new URL(origin);
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    if (host && (originUrl.host === host || originUrl.host.toLowerCase() === host.toLowerCase())) {
+      return true;
+    }
+    return originUrl.origin === new URL(request.url).origin;
   } catch {
     return false;
   }

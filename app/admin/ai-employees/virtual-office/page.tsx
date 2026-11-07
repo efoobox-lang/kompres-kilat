@@ -446,31 +446,36 @@ export default function VirtualOfficePage() {
         if (!session.authenticated) return;
         setIsAuthenticated(true);
 
-        const historyResponse = await fetch('/api/ai-agent/history', { cache: 'no-store' });
-        const history = await historyResponse.json();
-        if (!historyResponse.ok) throw new Error(history.error || 'Gagal memuat riwayat tugas.');
-        if (active) {
-          setAgentBatches(history.data.map((row: Record<string, unknown>) => ({
-            id: String(row.id),
-            divisionId: String(row.division_id),
-            divisionName: String(row.division_name),
-            userPrompt: String(row.prompt),
-            outputContent: String(row.output),
-            model: String(row.model),
-            timestamp: typeof row.created_at === 'string' ? new Date(row.created_at).toLocaleString('id-ID') : '',
-            status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
-            socialPermalink: typeof row.data === 'object' &&
-              row.data !== null &&
-              typeof (row.data as Record<string, unknown>).socialPublication === 'object' &&
-              (row.data as Record<string, unknown>).socialPublication !== null &&
-              typeof ((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink === 'string'
-              ? String(((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink)
-              : undefined,
-          })));
-          setDivisions((current) => current.map((division) => ({
-            ...division,
-            outputCount: history.data.filter((row: Record<string, unknown>) => row.division_id === division.id).length,
-          })));
+        try {
+          const historyResponse = await fetch('/api/ai-agent/history', { cache: 'no-store' });
+          if (historyResponse.ok) {
+            const history = await historyResponse.json();
+            if (active && Array.isArray(history.data)) {
+              setAgentBatches(history.data.map((row: Record<string, unknown>) => ({
+                id: String(row.id),
+                divisionId: String(row.division_id),
+                divisionName: String(row.division_name),
+                userPrompt: String(row.prompt),
+                outputContent: String(row.output),
+                model: String(row.model),
+                timestamp: typeof row.created_at === 'string' ? new Date(row.created_at).toLocaleString('id-ID') : '',
+                status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
+                socialPermalink: typeof row.data === 'object' &&
+                  row.data !== null &&
+                  typeof (row.data as Record<string, unknown>).socialPublication === 'object' &&
+                  (row.data as Record<string, unknown>).socialPublication !== null &&
+                  typeof ((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink === 'string'
+                  ? String(((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink)
+                  : undefined,
+              })));
+              setDivisions((current) => current.map((division) => ({
+                ...division,
+                outputCount: history.data.filter((row: Record<string, unknown>) => row.division_id === division.id).length,
+              })));
+            }
+          }
+        } catch (histErr) {
+          console.warn('Gagal memuat riwayat tugas:', histErr);
         }
       } catch (error) {
         if (active) setAuthError(error instanceof Error ? error.message : 'Gagal memuat data produksi.');
