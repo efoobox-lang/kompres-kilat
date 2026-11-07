@@ -10,6 +10,8 @@ export interface InstagramPublishRequest {
   title?: string;
 }
 
+const GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION?.trim() || 'v26.0';
+
 export async function POST(request: Request) {
   try {
     if (!isSameOrigin(request)) {
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
         const isReel = mediaType === 'REELS' || mediaType === 'VIDEO';
 
         // LANGKAH 1: Buat Media Container di Instagram Graph API
-        const containerUrl = new URL(`https://graph.facebook.com/v21.0/${igUserId}/media`);
+        const containerUrl = new URL(`https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(igUserId)}/media`);
         containerUrl.searchParams.set('access_token', accessToken);
         containerUrl.searchParams.set('caption', caption);
 
@@ -120,7 +122,7 @@ export async function POST(request: Request) {
             attempts++;
 
             const statusRes = await fetch(
-              `https://graph.facebook.com/v21.0/${creationId}?fields=status_code,status&access_token=${accessToken}`
+              `https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(creationId)}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`
             );
             const statusData = await statusRes.json();
 
@@ -137,7 +139,7 @@ export async function POST(request: Request) {
         }
 
         // LANGKAH 3: Publikasikan Container Media ke Akun Instagram
-        const publishUrl = new URL(`https://graph.facebook.com/v21.0/${igUserId}/media_publish`);
+        const publishUrl = new URL(`https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(igUserId)}/media_publish`);
         publishUrl.searchParams.set('access_token', accessToken);
         publishUrl.searchParams.set('creation_id', creationId);
 
@@ -160,7 +162,7 @@ export async function POST(request: Request) {
 
         try {
           const detailRes = await fetch(
-            `https://graph.facebook.com/v21.0/${publishedPostId}?fields=permalink&access_token=${accessToken}`
+            `https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(publishedPostId)}?fields=permalink&access_token=${encodeURIComponent(accessToken)}`
           );
           const detailData = await detailRes.json();
           if (detailData.permalink) {
@@ -175,7 +177,8 @@ export async function POST(request: Request) {
         const facebookPageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim();
         if (facebookPageId && facebookPageToken) {
           try {
-          const fbFeedUrl = `https://graph.facebook.com/v21.0/${encodeURIComponent(facebookPageId)}/feed`;
+          const graphVersion = process.env.META_GRAPH_API_VERSION?.trim() || 'v26.0';
+          const fbFeedUrl = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(facebookPageId)}/feed`;
           const fbRes = await fetch(fbFeedUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

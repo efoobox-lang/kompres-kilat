@@ -25,6 +25,7 @@ import {
   Terminal,
   Zap,
   ArrowLeftRight,
+  RefreshCw,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 
@@ -60,6 +61,15 @@ export interface KanbanItem {
   priority?: 'low' | 'medium' | 'high';
   stage: 'backlog' | 'in_progress' | 'review' | 'done';
   createdAt: string;
+}
+
+type IntegrationStatus = 'connected' | 'missing' | 'error' | 'unverified';
+
+interface IntegrationCheck {
+  id: string;
+  name: string;
+  status: IntegrationStatus;
+  message: string;
 }
 
 const initialMonitoredAgents: MonitoredAgent[] = [
@@ -222,6 +232,9 @@ export default function MonitoringCenterPage() {
   // Live Telemetry Vercel
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+  const [integrations, setIntegrations] = useState<IntegrationCheck[]>([]);
+  const [isCheckingIntegrations, setIsCheckingIntegrations] = useState<boolean>(false);
+  const [integrationCheckError, setIntegrationCheckError] = useState<string | null>(null);
   const [sfxEnabled, setSfxEnabled] = useState<boolean>(true);
 
   // Quick New Task Modal / Input
@@ -238,6 +251,23 @@ export default function MonitoringCenterPage() {
       console.warn('Gagal memuat analitik:', e);
     } finally {
       setIsLoadingAnalytics(false);
+    }
+  };
+
+  const fetchIntegrations = async () => {
+    setIsCheckingIntegrations(true);
+    setIntegrationCheckError(null);
+    try {
+      const response = await fetch('/api/admin/integrations', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || !Array.isArray(result.integrations)) {
+        throw new Error(result.error || 'Gagal memeriksa koneksi layanan.');
+      }
+      setIntegrations(result.integrations);
+    } catch (error) {
+      setIntegrationCheckError(error instanceof Error ? error.message : 'Gagal memeriksa koneksi layanan.');
+    } finally {
+      setIsCheckingIntegrations(false);
     }
   };
 
@@ -304,6 +334,7 @@ export default function MonitoringCenterPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchAnalytics();
+    fetchIntegrations();
     const interval = setInterval(fetchAnalytics, 15000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
@@ -409,6 +440,68 @@ export default function MonitoringCenterPage() {
           onToggleSfx={() => setSfxEnabled(!sfxEnabled)}
           onLogout={handleLogout}
         />
+
+        <section className="rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-slate-800 bg-slate-950/70 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-base font-bold text-white">
+                <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                Pemeriksaan koneksi layanan
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Memvalidasi koneksi server-side. Cek token tidak menjamin izin publikasi; validasi aksi aktual tetap perlu dilakukan.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={fetchIntegrations}
+              disabled={isCheckingIntegrations}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isCheckingIntegrations ? 'animate-spin' : ''}`} />
+              {isCheckingIntegrations ? 'Memeriksa...' : 'Periksa koneksi'}
+            </button>
+          </div>
+          {integrationCheckError && (
+            <p role="alert" className="m-4 rounded-lg border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-200">
+              {integrationCheckError}
+            </p>
+          )}
+          {integrations.length > 0 ? (
+            <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {integrations.map((integration) => {
+                const connected = integration.status === 'connected';
+                const statusLabel = {
+                  connected: 'Terhubung',
+                  missing: 'Belum dikonfigurasi',
+                  error: 'Pemeriksaan gagal',
+                  unverified: 'Belum diverifikasi',
+                }[integration.status];
+                return (
+                  <div key={integration.id} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-white">{integration.name}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        connected
+                          ? 'bg-emerald-500/10 text-emerald-300'
+                          : integration.status === 'unverified'
+                            ? 'bg-amber-500/10 text-amber-300'
+                            : 'bg-rose-500/10 text-rose-300'
+                      }`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-400">{integration.message}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : !integrationCheckError && (
+            <p className="p-5 text-xs text-slate-500">
+              {isCheckingIntegrations ? 'Memeriksa konfigurasi dan koneksi...' : 'Belum ada hasil pemeriksaan.'}
+            </p>
+          )}
+        </section>
 
         {/* ======================================================== */}
         {/* PANEL METRIK REAL-TIME VERCEL & TELEMETRI */}

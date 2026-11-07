@@ -30,7 +30,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(pageId)}/feed`, {
+    const graphVersion = process.env.META_GRAPH_API_VERSION?.trim() || 'v26.0';
+    const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, access_token: pageToken }),
