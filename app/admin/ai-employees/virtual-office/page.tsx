@@ -11,6 +11,9 @@ import {
   Play,
   RotateCcw,
   CheckCircle2,
+  Clock,
+  Check,
+  Edit3,
   Lock,
   KeyRound,
   Eye,
@@ -72,8 +75,10 @@ export interface AgentTaskBatch {
   extractedQuote?: string;
   model: string;
   timestamp: string;
-  status: 'completed' | 'published_to_social';
+  status: 'pending_approval' | 'approved' | 'revision' | 'rejected' | 'completed' | 'published_to_social';
   socialPermalink?: string;
+  supervisorNotes?: string;
+  reviewedAt?: string;
 }
 
 const initialVirtualDivisions: OfficeDivision[] = [
@@ -265,6 +270,46 @@ export default function VirtualOfficePage() {
   const [agentBatches, setAgentBatches] = useState<AgentTaskBatch[]>([]);
   const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [batchFilter, setBatchFilter] = useState<'all' | 'pending' | 'approved' | 'published'>('all');
+  const [isAutoSolvingAll, setIsAutoSolvingAll] = useState(false);
+  const [autoSolveProgress, setAutoSolveProgress] = useState<string | null>(null);
+
+  const handleSupervisorReview = async (
+    batchId: string,
+    newStatus: 'approved' | 'revision' | 'rejected' | 'pending_approval',
+    notes?: string
+  ) => {
+    setHistoryError(null);
+    try {
+      const response = await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batchId,
+          status: newStatus,
+          supervisorNotes: notes || '',
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal memperbarui status supervisor.');
+
+      play8BitSound(newStatus === 'approved' ? 'level' : 'sweep');
+      setAgentBatches((prev) =>
+        prev.map((item) =>
+          item.id === batchId
+            ? {
+                ...item,
+                status: newStatus,
+                supervisorNotes: notes !== undefined ? notes : item.supervisorNotes,
+                reviewedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+              }
+            : item
+        )
+      );
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : 'Gagal memperbarui keputusan supervisor.');
+    }
+  };
 
   const handleDeleteBatch = async (batchId: string) => {
     setHistoryError(null);
@@ -502,7 +547,17 @@ export default function VirtualOfficePage() {
                 outputContent: String(row.output),
                 model: String(row.model),
                 timestamp: typeof row.created_at === 'string' ? new Date(row.created_at).toLocaleString('id-ID') : '',
-                status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
+                status: row.status === 'published_to_social'
+                  ? 'published_to_social'
+                  : ['approved', 'revision', 'rejected', 'pending_approval'].includes(String(row.status))
+                    ? (row.status as any)
+                    : 'pending_approval',
+                supervisorNotes: typeof row.data === 'object' && row.data !== null && typeof (row.data as Record<string, unknown>).supervisorNotes === 'string'
+                  ? String((row.data as Record<string, unknown>).supervisorNotes)
+                  : undefined,
+                reviewedAt: typeof row.data === 'object' && row.data !== null && typeof (row.data as Record<string, unknown>).reviewedAt === 'string'
+                  ? String((row.data as Record<string, unknown>).reviewedAt)
+                  : undefined,
                 socialPermalink: typeof row.data === 'object' &&
                   row.data !== null &&
                   typeof (row.data as Record<string, unknown>).socialPublication === 'object' &&
@@ -641,7 +696,7 @@ export default function VirtualOfficePage() {
           extractedQuote: data.extractedQuote || '',
           model: data.model || 'gemini-3.1-flash-lite',
           timestamp: `${timeStr} WIB`,
-          status: 'completed'
+          status: 'pending_approval'
         };
 
         setAgentBatches((prev) => [newBatchItem, ...prev.filter((batch) => batch.id !== newBatchItem.id).slice(0, 99)]);
@@ -666,6 +721,29 @@ export default function VirtualOfficePage() {
       setIsProcessing(false);
       setCustomPrompt('');
     }
+  };
+
+  // Jalankan problem-solving otomatis berurutan untuk 6 divisi
+  const handleRunAutoProblemSolvingAll = async () => {
+    if (isAutoSolvingAll || isProcessing) return;
+    setIsAutoSolvingAll(true);
+    play8BitSound('start');
+
+    const divisionList = ['it', 'analytics', 'marketing', 'sosmed', 'creative', 'seo'];
+    for (const divId of divisionList) {
+      const divMeta = divisions.find((d) => d.id === divId);
+      const name = divMeta?.name || divId;
+      setAutoSolveProgress(`Menganalisis & merumuskan problem-solving untuk ${name}...`);
+      try {
+        await triggerTask(divId);
+      } catch (err) {
+        console.warn(`Problem solving divisi ${divId} error:`, err);
+      }
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    setAutoSolveProgress(null);
+    setIsAutoSolvingAll(false);
+    play8BitSound('level');
   };
 
   // Special Zone: Janitor Cache & Context Cleaning
@@ -1093,25 +1171,53 @@ export default function VirtualOfficePage() {
         <section className="rounded-3xl border-2 border-indigo-500/30 bg-slate-900/90 shadow-2xl overflow-hidden backdrop-blur-md">
           {/* Header Panel */}
           <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 font-mono">
-                  WORKSTATION BATCH LOG // PERINTAH & HASIL TERPADU
+                  WORKSTATION BATCH LOG // KONTROL SUPERVISOR & PROBLEM SOLVING
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                Batch Riwayat Perintah & Hasil Output Agen AI
+                Pusat Persetujuan Supervisor & Riwayat Agen AI
                 <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono font-semibold">
-                  {agentBatches.length} Batch Tercatat
+                  {agentBatches.length} Proposal
                 </span>
               </h2>
-              <p className="text-xs text-slate-400 max-w-2xl">
-                Riwayat tugas tersimpan terpadu. Dukung 1-klik rilis langsung ke Halaman Facebook & Instagram Feed (@kompreskilat).
+              <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                Peran Anda sebagai <strong>Supervisor</strong>: Tinjau dan setujui proposal problem solving AI. Segala publikasi media sosial (Instagram @kompreskilat & Facebook Page) atau rilis sistem hanya dijalankan setelah persetujuan Anda.
               </p>
+
+              {/* Progress Bar Problem Solving Otomatis */}
+              {isAutoSolvingAll && autoSolveProgress && (
+                <div className="p-2.5 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-xs text-indigo-200 flex items-center gap-2 animate-pulse mt-2">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                  <span>{autoSolveProgress}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+              {/* Tombol Jalankan Problem Solving Otomatis Seluruh Divisi */}
+              <button
+                type="button"
+                onClick={handleRunAutoProblemSolvingAll}
+                disabled={isAutoSolvingAll || isProcessing}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 hover:opacity-95 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 cursor-pointer disabled:opacity-50"
+              >
+                {isAutoSolvingAll ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menganalisis 6 Divisi...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                    <span>⚡ Analisis Otomatis 6 Divisi</span>
+                  </>
+                )}
+              </button>
+
               <button
                 onClick={() => {
                   const sosmedDiv = divisions.find((d) => d.id === 'sosmed') || divisions[0];
@@ -1119,10 +1225,60 @@ export default function VirtualOfficePage() {
                   setCustomPrompt('tolong buatkan quote posting otomatis ke facebook dan instagram');
                   setModalOutput(null);
                 }}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-pink-600/25 cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 active:scale-95 text-pink-300 hover:text-white text-xs font-bold transition cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>+ Buat Quote Posting</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Status Persetujuan */}
+          <div className="px-5 py-3 border-b border-slate-800/80 bg-slate-950/40 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setBatchFilter('all')}
+                className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${
+                  batchFilter === 'all'
+                    ? 'bg-indigo-600 text-white font-bold shadow'
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                Semua ({agentBatches.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setBatchFilter('pending')}
+                className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${
+                  batchFilter === 'pending'
+                    ? 'bg-amber-600 text-white font-bold shadow'
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                ⏳ Menunggu Persetujuan ({agentBatches.filter((b) => b.status === 'pending_approval' || b.status === 'revision').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setBatchFilter('approved')}
+                className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${
+                  batchFilter === 'approved'
+                    ? 'bg-emerald-600 text-white font-bold shadow'
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                ✓ Disetujui ({agentBatches.filter((b) => b.status === 'approved').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setBatchFilter('published')}
+                className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${
+                  batchFilter === 'published'
+                    ? 'bg-cyan-600 text-white font-bold shadow'
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                🚀 Terbit ke Sosmed ({agentBatches.filter((b) => b.status === 'published_to_social').length})
               </button>
             </div>
           </div>
@@ -1137,20 +1293,39 @@ export default function VirtualOfficePage() {
             {agentBatches.length === 0 ? (
               <div className="py-12 text-center text-slate-500 space-y-2">
                 <Layers className="w-10 h-10 mx-auto text-slate-600" />
-                <p className="text-xs font-medium">Belum ada batch perintah yang tersimpan.</p>
+                <p className="text-xs font-medium">Belum ada proposal perintah atau problem solving.</p>
                 <p className="text-[11px] text-slate-600">
-                  Gunakan tombol &quot;Instruksi Kustom&quot; atau &quot;Perintah AI&quot; pada salah satu divisi di atas.
+                  Klik tombol &quot;⚡ Analisis Otomatis 6 Divisi&quot; di atas untuk memulai analisis cerdas mandiri.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {agentBatches.map((batch) => {
+                {agentBatches
+                  .filter((batch) => {
+                    if (batchFilter === 'pending') return batch.status === 'pending_approval' || batch.status === 'revision';
+                    if (batchFilter === 'approved') return batch.status === 'approved';
+                    if (batchFilter === 'published') return batch.status === 'published_to_social';
+                    return true;
+                  })
+                  .map((batch) => {
                   const isPublished = batch.status === 'published_to_social';
+                  const isApproved = batch.status === 'approved';
+                  const isPending = batch.status === 'pending_approval';
+                  const isRevision = batch.status === 'revision';
+                  const isRejected = batch.status === 'rejected';
 
                   return (
                     <div
                       key={batch.id}
-                      className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-indigo-500/40 transition-all duration-200 space-y-3.5 shadow-lg"
+                      className={`p-4 sm:p-5 rounded-2xl bg-slate-950/90 border transition-all duration-200 space-y-3.5 shadow-lg ${
+                        isPending
+                          ? 'border-amber-500/40 hover:border-amber-400/60'
+                          : isApproved
+                            ? 'border-emerald-500/40 hover:border-emerald-400/60'
+                            : isPublished
+                              ? 'border-cyan-500/40 hover:border-cyan-400/60'
+                              : 'border-slate-800'
+                      }`}
                     >
                       {/* Batch Header Bar */}
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
@@ -1169,15 +1344,32 @@ export default function VirtualOfficePage() {
                           </span>
                         </div>
 
+                        {/* Status Badge Supervisor */}
                         <div className="flex items-center gap-2">
                           {isPublished ? (
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                              ✓ Terbit ke Facebook
+                            <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                              🚀 Terbit ke Media Sosial
+                            </span>
+                          ) : isApproved ? (
+                            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                              ✓ Disetujui Supervisor
+                            </span>
+                          ) : isRevision ? (
+                            <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                              <AlertCircle className="w-3.5 h-3.5 text-orange-400" />
+                              ⚠ Perlu Revisi
+                            </span>
+                          ) : isRejected ? (
+                            <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                              <X className="w-3.5 h-3.5 text-rose-400" />
+                              ✕ Ditolak
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
-                              ● Siap Eksekusi
+                            <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                              <Clock className="w-3.5 h-3.5 text-amber-400" />
+                              ⏳ Menunggu Persetujuan Supervisor
                             </span>
                           )}
                         </div>
@@ -1188,9 +1380,9 @@ export default function VirtualOfficePage() {
                         <div className="flex items-center justify-between text-[11px] font-mono font-bold text-indigo-400">
                           <span className="flex items-center gap-1.5">
                             <MessageSquare className="w-3.5 h-3.5" />
-                            PERINTAH / INPUT AGEN:
+                            ANALISIS / INPUT TUGAS AGEN:
                           </span>
-                          <span className="text-[10px] text-indigo-300/70">Instruksi Pengguna</span>
+                          <span className="text-[10px] text-indigo-300/70">Instruksi & Analisis</span>
                         </div>
                         <p className="text-xs font-semibold text-white leading-relaxed">
                           &ldquo;{batch.userPrompt}&rdquo;
@@ -1202,7 +1394,7 @@ export default function VirtualOfficePage() {
                         <div className="flex items-center justify-between text-[11px] font-mono font-bold text-emerald-400">
                           <span className="flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" />
-                            HASIL OUTPUT AI (DETAIL & TERCATAT):
+                            PROPOSAL & HASIL PROBLEM-SOLVING AI:
                           </span>
                           <button
                             onClick={() => {
@@ -1226,54 +1418,124 @@ export default function VirtualOfficePage() {
                         <div className="text-xs text-slate-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
                           {batch.outputContent}
                         </div>
+
+                        {batch.supervisorNotes && (
+                          <div className="p-2 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs">
+                            📝 <strong>Catatan Supervisor:</strong> {batch.supervisorNotes}
+                          </div>
+                        )}
                       </div>
 
-                      {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+                      {/* BLOK 3: KONTROL PERSETUJUAN SUPERVISOR & EKSEKUSI */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80">
                         <div className="flex flex-wrap items-center gap-2">
-                          {/* Tombol Publikasi ke Facebook */}
-                          <button
-                            type="button"
-                            onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
-                            disabled={instagramNotice?.status === 'publishing'}
-                            className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
-                          >
-                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            <span>Publikasikan ke Facebook</span>
-                          </button>
+                          {/* JIKA STATUS MENUNGGU PERSETUJUAN ATAU PERLU REVISI */}
+                          {(isPending || isRevision) && (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSupervisorReview(batch.id, 'approved')}
+                                className="py-1.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/25 cursor-pointer"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>✓ Setujui Proposal</span>
+                              </button>
 
-                          {/* Tombol Publikasi ke Instagram */}
-                          <button
-                            type="button"
-                            onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
-                            disabled={instagramNotice?.status === 'publishing'}
-                            className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
-                          >
-                            <InstagramIcon className="w-3.5 h-3.5" />
-                            <span>Publikasikan ke Instagram</span>
-                          </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const notes = prompt('Masukkan catatan revisi untuk agen AI:');
+                                  if (notes !== null) {
+                                    handleSupervisorReview(batch.id, 'revision', notes);
+                                  }
+                                }}
+                                className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Minta Revisi</span>
+                              </button>
 
-                          {batch.socialPermalink && (
+                              <button
+                                type="button"
+                                onClick={() => handleSupervisorReview(batch.id, 'rejected')}
+                                className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-rose-950/50 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Tolak</span>
+                              </button>
+
+                              <span className="text-[11px] text-slate-500 italic ml-1">
+                                🔒 Eksekusi publikasi terkunci hingga disetujui
+                              </span>
+                            </div>
+                          )}
+
+                          {/* JIKA PROPOSAL SUDAH DISETUJUI SUPERVISOR */}
+                          {isApproved && (
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* Untuk Divisi Media Sosial / Kreatif: Tombol Publikasi Terbuka */}
+                              {(batch.divisionId === 'sosmed' || batch.divisionId === 'creative') ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
+                                    disabled={instagramNotice?.status === 'publishing'}
+                                    className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                                  >
+                                    <InstagramIcon className="w-3.5 h-3.5" />
+                                    <span>Publikasikan ke Instagram</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
+                                    disabled={instagramNotice?.status === 'publishing'}
+                                    className="py-1.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
+                                  >
+                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                    <span>Publikasikan ke Facebook</span>
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="py-1 px-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-medium flex items-center gap-1.5">
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  ✓ Proposal disetujui & diterapkan ke roadmap kompreskilat.site
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => handleSupervisorReview(batch.id, 'pending_approval')}
+                                className="py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-[11px] transition cursor-pointer"
+                              >
+                                Batalkan Persetujuan
+                              </button>
+                            </div>
+                          )}
+
+                          {/* JIKA TELAH DIPUBLIKASIKAN KE SOSIAL */}
+                          {isPublished && batch.socialPermalink && (
                             <a
                               href={batch.socialPermalink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
+                              className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 text-cyan-300 hover:text-white text-xs font-semibold transition flex items-center gap-1.5"
                             >
-                              <ExternalLink className="w-3 h-3" />
-                              <span>Lihat Hasil Post</span>
+                              <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>Lihat Hasil Post di Sosmed</span>
                             </a>
                           )}
                         </div>
 
+                        {/* Hapus Batch */}
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleDeleteBatch(batch.id)}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
-                            title="Hapus batch ini"
+                            title="Hapus proposal ini"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

@@ -168,8 +168,10 @@ export interface AgentTaskBatch {
   extractedQuote?: string;
   model: string;
   timestamp: string;
-  status: 'completed' | 'published_to_social';
+  status: 'pending_approval' | 'approved' | 'revision' | 'rejected' | 'completed' | 'published_to_social';
   socialPermalink?: string;
+  supervisorNotes?: string;
+  reviewedAt?: string;
 }
 
 function isSeoArticleDraft(value: unknown): value is SeoArticleDraft {
@@ -495,43 +497,80 @@ export default function AIEmployeesDashboard() {
     setActivityLogs((prev) => prev.filter((log) => log.id !== batchId));
   };
 
-  const handlePublishBatchToSocial = async (batch: AgentTaskBatch) => {
-    if (batch.divisionId !== 'sosmed') {
+  const handlePublishBatchToSocial = async (
+    batch: AgentTaskBatch,
+    platform: 'facebook' | 'instagram' = 'facebook'
+  ) => {
+    if (batch.divisionId !== 'sosmed' && batch.divisionId !== 'creative') {
       setInstagramNotice({
         status: 'error',
         targetId: batch.id,
-        message: 'Hanya draf dari Divisi Admin & Sosmed yang dapat dipublikasikan ke Facebook.',
+        message: 'Hanya draf dari Divisi Admin & Sosmed atau Kreatif yang dapat dipublikasikan ke media sosial.',
       });
       return;
     }
-    setInstagramNotice({ status: 'publishing', targetId: batch.id, message: 'Mengirim posting teks ke Facebook...' });
+    setInstagramNotice({
+      status: 'publishing',
+      targetId: batch.id,
+      message: platform === 'facebook'
+        ? 'Mengirim posting teks ke Facebook...'
+        : 'Mengunggah konten ke Instagram @kompreskilat...',
+    });
     try {
-      const response = await fetch('/api/facebook/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: batch.outputContent }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Gagal mempublikasikan ke Facebook.');
-      const savedResponse = await fetch('/api/ai-agent/history', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
-      });
-      if (!savedResponse.ok) {
-        throw new Error('Facebook berhasil memublikasikan, tetapi status publikasi gagal disimpan.');
+      if (platform === 'facebook') {
+        const response = await fetch('/api/facebook/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: batch.outputContent }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Gagal mempublikasikan ke Facebook.');
+        await fetch('/api/ai-agent/history', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt, platform: 'facebook' }),
+        }).catch(() => {});
+        setInstagramNotice({ status: 'success', targetId: batch.id, message: 'Posting berhasil dikirim ke Facebook.', permalink: result.permalink });
+        setAgentBatches((previous) => previous.map((item) =>
+          item.id === batch.id
+            ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+            : item
+        ));
+      } else {
+        const quoteImageUrl = 'https://kompreskilat.site/images/kompreskilat-quote.jpg';
+        const response = await fetch('/api/instagram/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            caption: batch.outputContent,
+            imageUrl: quoteImageUrl,
+            mediaType: 'IMAGE',
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Instagram gagal.');
+        await fetch('/api/ai-agent/history', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt, platform: 'instagram' }),
+        }).catch(() => {});
+        setInstagramNotice({
+          status: 'success',
+          targetId: batch.id,
+          message: 'Berhasil dirilis ke Instagram @kompreskilat!',
+          permalink: result.permalink,
+        });
+        setAgentBatches((previous) => previous.map((item) =>
+          item.id === batch.id
+            ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+            : item
+        ));
       }
-      setInstagramNotice({ status: 'success', targetId: batch.id, message: 'Posting berhasil dikirim ke Facebook.', permalink: result.permalink });
-      setAgentBatches((previous) => previous.map((item) =>
-        item.id === batch.id
-          ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
-          : item
-      ));
     } catch (error) {
       setInstagramNotice({
         status: 'error',
         targetId: batch.id,
-        message: error instanceof Error ? error.message : 'Publikasi Facebook gagal.',
+        message: error instanceof Error ? error.message : `Publikasi ${platform} gagal.`,
       });
     }
   };
@@ -715,7 +754,11 @@ export default function AIEmployeesDashboard() {
             extractedQuote: typeof data.extractedQuote === 'string' ? data.extractedQuote : '',
             model: String(row.model),
             timestamp: createdAt.toLocaleString('id-ID'),
-            status: row.status === 'published_to_social' ? 'published_to_social' : 'completed',
+            status: row.status === 'published_to_social'
+              ? 'published_to_social'
+              : ['approved', 'revision', 'rejected', 'pending_approval'].includes(String(row.status))
+                ? (row.status as any)
+                : 'pending_approval',
             socialPermalink: typeof data.socialPublication === 'object' &&
               data.socialPublication !== null &&
               typeof (data.socialPublication as Record<string, unknown>).permalink === 'string'
@@ -928,7 +971,7 @@ export default function AIEmployeesDashboard() {
           extractedQuote: data.extractedQuote || '',
           model: sourceModel,
           timestamp: `${timeStr} WIB`,
-          status: 'completed'
+          status: 'pending_approval'
         };
 
         setAgentBatches((prev) => [newBatchItem, ...prev.slice(0, 99)]);

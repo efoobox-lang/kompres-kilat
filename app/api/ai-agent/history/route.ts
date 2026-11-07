@@ -59,41 +59,94 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Sesi administrator tidak valid.' }, { status: 401 });
   }
   if (!isAIEmployeeStoreConfigured()) {
-    return NextResponse.json({ error: 'Supabase belum dikonfigurasi.' }, { status: 503 });
+    return NextResponse.json({ error: 'Penyimpanan data belum siap.' }, { status: 503 });
   }
 
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === 'string' ? body.id : '';
-  const permalink = typeof body?.permalink === 'string' ? body.permalink : '';
-  const publishedAt = typeof body?.publishedAt === 'string' ? body.publishedAt : '';
-  if (!/^[0-9a-f-]{36}$/i.test(id) || !permalink.startsWith('https://www.facebook.com/') || !publishedAt) {
-    return NextResponse.json({ error: 'Metadata publikasi tidak valid.' }, { status: 400 });
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    return NextResponse.json({ error: 'ID tugas tidak valid.' }, { status: 400 });
   }
 
-  try {
-    const records = await aiEmployeeStoreRequest<Array<{ data?: unknown }>>(
-      `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data&limit=1`
-    );
-    if (!records[0]) {
-      return NextResponse.json({ error: 'Riwayat tugas tidak ditemukan.' }, { status: 404 });
+  const status = typeof body?.status === 'string' ? body.status : '';
+  const permalink = typeof body?.permalink === 'string' ? body.permalink : '';
+  const platform = typeof body?.platform === 'string' ? body.platform : 'facebook';
+  const publishedAt = typeof body?.publishedAt === 'string' ? body.publishedAt : new Date().toISOString();
+  const supervisorNotes = typeof body?.supervisorNotes === 'string' ? body.supervisorNotes : '';
+
+  // 1. Publikasi Media Sosial (Facebook atau Instagram)
+  if (status === 'published_to_social' || permalink) {
+    const isValidSocialPermalink =
+      permalink.startsWith('https://www.facebook.com/') ||
+      permalink.startsWith('https://facebook.com/') ||
+      permalink.startsWith('https://www.instagram.com/') ||
+      permalink.startsWith('https://instagram.com/');
+
+    if (!isValidSocialPermalink) {
+      return NextResponse.json({ error: 'Tautan permalink media sosial tidak valid.' }, { status: 400 });
     }
-    const existingData = records[0].data && typeof records[0].data === 'object'
-      ? records[0].data as Record<string, unknown>
-      : {};
-    await aiEmployeeStoreRequest(`?record_type=eq.task&id=eq.${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        status: 'published_to_social',
-        data: {
-          ...existingData,
-          socialPublication: { platform: 'facebook', permalink, publishedAt },
-        },
-      }),
-    });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Gagal menyimpan status publikasi.';
-    return NextResponse.json({ error: message }, { status: 502 });
+
+    try {
+      const records = await aiEmployeeStoreRequest<Array<{ data?: unknown }>>(
+        `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data&limit=1`
+      );
+      const existingData = records[0]?.data && typeof records[0].data === 'object'
+        ? (records[0].data as Record<string, unknown>)
+        : {};
+
+      await aiEmployeeStoreRequest(`?record_type=eq.task&id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status: 'published_to_social',
+          data: {
+            ...existingData,
+            socialPublication: { platform, permalink, publishedAt },
+            supervisorApproval: {
+              status: 'approved',
+              approvedAt: publishedAt,
+              executedPlatform: platform
+            }
+          },
+        }),
+      });
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal menyimpan status publikasi.';
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
   }
+
+  // 2. Persetujuan / Review Supervisor (Approval Workflow)
+  const validApprovalStatuses = ['approved', 'revision', 'rejected', 'pending_approval', 'completed'];
+  if (validApprovalStatuses.includes(status)) {
+    try {
+      const records = await aiEmployeeStoreRequest<Array<{ data?: unknown }>>(
+        `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data&limit=1`
+      );
+      const existingData = records[0]?.data && typeof records[0].data === 'object'
+        ? (records[0].data as Record<string, unknown>)
+        : {};
+
+      await aiEmployeeStoreRequest(`?record_type=eq.task&id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status,
+          data: {
+            ...existingData,
+            supervisorStatus: status,
+            supervisorNotes,
+            reviewedAt: new Date().toISOString()
+          },
+        }),
+      });
+      return NextResponse.json({ success: true, status });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal memperbarui status persetujuan supervisor.';
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+  }
+
+  return NextResponse.json({ error: 'Aksi atau status tidak dikenali.' }, { status: 400 });
 }

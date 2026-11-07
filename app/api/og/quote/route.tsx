@@ -2,8 +2,6 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const text = searchParams.get('text') || 'Kompres berkas foto, PDF, dan cetak nota thermal kilat & gratis.';
