@@ -18,9 +18,13 @@ const getSocialStore = (): GlobalSocialStore => {
   if (!globalRef.__SOCIAL_CREDENTIALS_STORE__) {
     globalRef.__SOCIAL_CREDENTIALS_STORE__ = {
       creds: {
-        facebookPageId: process.env.FACEBOOK_PAGE_ID?.trim() || '122094750927548983',
-        facebookToken: process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim() || '',
-        instagramToken: process.env.INSTAGRAM_ACCESS_TOKEN?.trim() || '',
+        facebookPageId: process.env.FACEBOOK_PAGE_ID?.trim() || '122099691567541521',
+        facebookToken:
+          process.env.FACEBOOK_PAGE_ACCESS_TOKEN?.trim() ||
+          'EAAiJbMxIXrwBS0bEWSAMepuPXFUDkM19pGrWpmwNTQXDe17J7qrPFrQQdKs0FPQAH20LODbnNOQv5BvNAkTLKk1s3AzsAfyKnc8y4KBd6fcCSPXhw0HgZBQkBzpQPdIAlIwd5dmQBPGC4l3TVisZAFUM4d4q5tN32tMLOcZAPLZCyJIQ5kE527ZCqZAgGMH4VUBoPsBEG993P5h8Q2ZCj9jZB81MTcFQV8XI20n6Lt1u3JUFDhakPwC94l6XVauBMDPezMkZCxiISrRWmUawdEcXwIAdB',
+        instagramToken:
+          process.env.INSTAGRAM_ACCESS_TOKEN?.trim() ||
+          'EAAiJbMxIXrwBS0bEWSAMepuPXFUDkM19pGrWpmwNTQXDe17J7qrPFrQQdKs0FPQAH20LODbnNOQv5BvNAkTLKk1s3AzsAfyKnc8y4KBd6fcCSPXhw0HgZBQkBzpQPdIAlIwd5dmQBPGC4l3TVisZAFUM4d4q5tN32tMLOcZAPLZCyJIQ5kE527ZCqZAgGMH4VUBoPsBEG993P5h8Q2ZCj9jZB81MTcFQV8XI20n6Lt1u3JUFDhakPwC94l6XVauBMDPezMkZCxiISrRWmUawdEcXwIAdB',
         instagramUserId: process.env.INSTAGRAM_USER_ID?.trim() || '17841420772273253',
       },
     };
