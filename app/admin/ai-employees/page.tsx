@@ -166,6 +166,8 @@ export interface AgentTaskBatch {
   userPrompt: string;
   outputContent: string;
   imageUrl?: string;
+  videoUrl?: string;
+  mediaType?: 'IMAGE' | 'VIDEO' | 'REELS';
   extractedQuote?: string;
   model: string;
   timestamp: string;
@@ -490,6 +492,7 @@ export default function AIEmployeesDashboard() {
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<string>('');
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+  const [uploadingBatchId, setUploadingBatchId] = useState<string | null>(null);
 
   const startEditingBatch = (batch: AgentTaskBatch) => {
     setEditingBatchId(batch.id);
@@ -499,6 +502,52 @@ export default function AIEmployeesDashboard() {
   const cancelEditingBatch = () => {
     setEditingBatchId(null);
     setEditingContent('');
+  };
+
+  const handleUploadMediaForBatch = async (batchId: string, file: File) => {
+    setUploadingBatchId(batchId);
+    setStorageError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/admin/media-upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Gagal mengunggah media.');
+      }
+
+      const isVideo = data.mediaType === 'VIDEO';
+      await fetch('/api/ai-agent/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: batchId,
+          imageUrl: isVideo ? undefined : data.url,
+          videoUrl: isVideo ? data.url : undefined,
+          mediaType: data.mediaType,
+        }),
+      }).catch(() => {});
+
+      setAgentBatches((prev) =>
+        prev.map((b) =>
+          b.id === batchId
+            ? {
+                ...b,
+                mediaType: data.mediaType,
+                imageUrl: isVideo ? undefined : data.url,
+                videoUrl: isVideo ? data.url : undefined,
+              }
+            : b
+        )
+      );
+    } catch (err) {
+      setStorageError(err instanceof Error ? err.message : 'Gagal mengunggah file media.');
+    } finally {
+      setUploadingBatchId(null);
+    }
   };
 
   const handleSaveBatchEdit = async (batchId: string) => {
@@ -547,68 +596,95 @@ export default function AIEmployeesDashboard() {
 
   const handlePublishBatchToSocial = async (
     batch: AgentTaskBatch,
-    platform: 'facebook' | 'instagram' = 'facebook'
+    platform: 'facebook' | 'instagram' = 'facebook',
+    contentOverride?: string
   ) => {
-    if (batch.divisionId !== 'sosmed' && batch.divisionId !== 'creative') {
-      setInstagramNotice({
-        status: 'error',
-        targetId: batch.id,
-        message: 'Hanya draf dari Divisi Admin & Sosmed atau Kreatif yang dapat dipublikasikan ke media sosial.',
-      });
+    const textToPublish = (contentOverride !== undefined ? contentOverride : batch.outputContent || '').trim();
+    if (!textToPublish) {
+      setStorageError('Teks deskripsi konten tidak boleh kosong.');
       return;
     }
+
+    const isVideo = batch.mediaType === 'VIDEO' || Boolean(batch.videoUrl);
     setInstagramNotice({
       status: 'publishing',
       targetId: batch.id,
-      message: platform === 'facebook'
-        ? 'Mengirim posting teks ke Facebook...'
-        : 'Mengunggah konten ke Instagram @kompreskilat...',
+      message:
+        platform === 'facebook'
+          ? 'Mengirim posting ke Halaman Facebook...'
+          : isVideo
+            ? 'Mengunggah video Reels ke Instagram @kompreskilat...'
+            : 'Mengunggah foto ke Instagram @kompreskilat...',
     });
+
     try {
       if (platform === 'facebook') {
+        const fbBody: Record<string, unknown> = { message: textToPublish };
+        if (batch.videoUrl) {
+          fbBody.videoUrl = batch.videoUrl;
+        } else if (batch.imageUrl) {
+          fbBody.imageUrl = batch.imageUrl;
+        }
+
         const response = await fetch('/api/facebook/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: batch.outputContent }),
+          body: JSON.stringify(fbBody),
         });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Gagal mempublikasikan ke Facebook.');
+
         await fetch('/api/ai-agent/history', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt, platform: 'facebook' }),
+          body: JSON.stringify({
+            id: batch.id,
+            output: textToPublish,
+            permalink: result.permalink,
+            publishedAt: result.publishedAt,
+            platform: 'facebook',
+          }),
         }).catch(() => {});
+
         setInstagramNotice({ status: 'success', targetId: batch.id, message: 'Posting berhasil dikirim ke Facebook.', permalink: result.permalink });
         setAgentBatches((previous) => previous.map((item) =>
           item.id === batch.id
-            ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+            ? { ...item, outputContent: textToPublish, status: 'published_to_social', socialPermalink: result.permalink }
             : item
         ));
       } else {
-        // Prioritaskan gambar hasil generasi AI (batch.imageUrl), atau kartu kutipan AI dinamis (/api/og/quote)
-        let targetImageUrl = (batch.imageUrl && batch.imageUrl.startsWith('https://')) ? batch.imageUrl : '';
-        if (!targetImageUrl) {
-          const cleanSnippet = batch.outputContent
-            ? encodeURIComponent(batch.outputContent.slice(0, 140).replace(/[*#\n]/g, ' ').trim())
-            : 'Solusi+Kompres+Foto+KTP+Kilat';
-          targetImageUrl = `https://www.kompreskilat.site/api/og/quote?text=${cleanSnippet}&author=kompreskilat.site`;
+        let targetImageUrl = batch.imageUrl || 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg';
+        const igBody: Record<string, unknown> = {
+          caption: textToPublish,
+        };
+        if (isVideo && batch.videoUrl) {
+          igBody.videoUrl = batch.videoUrl;
+          igBody.mediaType = 'REELS';
+        } else {
+          igBody.imageUrl = targetImageUrl.replace('https://kompreskilat.site/', 'https://www.kompreskilat.site/');
+          igBody.mediaType = 'IMAGE';
         }
+
         const response = await fetch('/api/instagram/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            caption: batch.outputContent,
-            imageUrl: targetImageUrl,
-            mediaType: 'IMAGE',
-          }),
+          body: JSON.stringify(igBody),
         });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Instagram gagal.');
+
         await fetch('/api/ai-agent/history', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt, platform: 'instagram' }),
+          body: JSON.stringify({
+            id: batch.id,
+            output: textToPublish,
+            permalink: result.permalink,
+            publishedAt: result.publishedAt,
+            platform: 'instagram',
+          }),
         }).catch(() => {});
+
         setInstagramNotice({
           status: 'success',
           targetId: batch.id,
@@ -617,15 +693,20 @@ export default function AIEmployeesDashboard() {
         });
         setAgentBatches((previous) => previous.map((item) =>
           item.id === batch.id
-            ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+            ? { ...item, outputContent: textToPublish, status: 'published_to_social', socialPermalink: result.permalink }
             : item
         ));
+      }
+
+      if (editingBatchId === batch.id) {
+        setEditingBatchId(null);
+        setEditingContent('');
       }
     } catch (error) {
       setInstagramNotice({
         status: 'error',
         targetId: batch.id,
-        message: error instanceof Error ? error.message : `Publikasi ${platform} gagal.`,
+        message: error instanceof Error ? error.message : `Gagal mempublikasikan ke ${platform}.`,
       });
     }
   };
@@ -819,6 +900,9 @@ export default function AIEmployeesDashboard() {
             divisionName: String(row.division_name),
             userPrompt: String(row.prompt),
             outputContent: String(row.output),
+            imageUrl: typeof data.imageUrl === 'string' ? data.imageUrl : undefined,
+            videoUrl: typeof data.videoUrl === 'string' ? data.videoUrl : undefined,
+            mediaType: typeof data.mediaType === 'string' ? (data.mediaType as 'IMAGE' | 'VIDEO' | 'REELS') : undefined,
             extractedQuote: typeof data.extractedQuote === 'string' ? data.extractedQuote : '',
             model: String(row.model),
             timestamp: createdAt.toLocaleString('id-ID'),
@@ -1879,6 +1963,52 @@ export default function AIEmployeesDashboard() {
                           </div>
                         </div>
 
+                        {/* ATTACHED MEDIA (FOTO / VIDEO) ATAU DEFAULT POSTER */}
+                        {editingBatchId !== batch.id && (
+                          <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-lg bg-slate-950/70 border border-slate-800 text-xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {batch.videoUrl ? (
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-black flex items-center justify-center border border-purple-500/40 shrink-0">
+                                  <video src={batch.videoUrl} className="w-full h-full object-cover" />
+                                  <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-purple-600 text-white px-1 rounded">VIDEO</span>
+                                </div>
+                              ) : (
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-900 border border-pink-500/40 shrink-0">
+                                  <img
+                                    src={batch.imageUrl || '/images/kompreskilat-quote.jpg'}
+                                    alt="Pratinjau Media"
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-pink-600 text-white px-1 rounded">FOTO</span>
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <span className="font-semibold text-slate-200 text-xs block truncate">
+                                  {batch.videoUrl ? '🎬 Video Reels' : batch.imageUrl ? '📷 Foto Kustom' : '🖼️ Poster Resmi'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 truncate block">
+                                  {batch.videoUrl || batch.imageUrl || 'Default Official 1080x1080'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <label className="inline-flex items-center gap-1 py-1 px-2.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-300 hover:text-white text-[11px] font-medium transition cursor-pointer shrink-0">
+                              <UploadCloud className="w-3 h-3" />
+                              <span>{uploadingBatchId === batch.id ? 'Mengunggah...' : 'Unggah Foto/Video'}</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                                className="hidden"
+                                disabled={uploadingBatchId === batch.id}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUploadMediaForBatch(batch.id, file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )}
+
                         {batch.extractedQuote && (
                           <div className="p-2.5 rounded-lg bg-pink-950/30 border border-pink-500/30 text-pink-200 text-xs italic font-medium">
                             💡 Kutipan Terdeteksi: &ldquo;{batch.extractedQuote}&rdquo;
@@ -1908,12 +2038,34 @@ export default function AIEmployeesDashboard() {
                             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800">
                               <button
                                 type="button"
+                                disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
+                                onClick={() => handlePublishBatchToSocial(batch, 'instagram', editingContent)}
+                                className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-pink-600/20"
+                              >
+                                <InstagramIcon className="w-3.5 h-3.5" />
+                                <span>Simpan & Publish IG</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isSavingEdit || instagramNotice?.status === 'publishing'}
+                                onClick={() => handlePublishBatchToSocial(batch, 'facebook', editingContent)}
+                                className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-600/20"
+                              >
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                </svg>
+                                <span>Simpan & Publish FB</span>
+                              </button>
+
+                              <button
+                                type="button"
                                 disabled={isSavingEdit}
                                 onClick={() => handleSaveBatchEdit(batch.id)}
                                 className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-600/20"
                               >
                                 {isSavingEdit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                <span>Simpan Perubahan Redaksi</span>
+                                <span>Simpan Redaksi Saja</span>
                               </button>
 
                               <button
@@ -1935,25 +2087,29 @@ export default function AIEmployeesDashboard() {
 
                       {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => handlePublishBatchToSocial(batch)}
-                            disabled={instagramNotice?.status === 'publishing' || batch.divisionId !== 'sosmed'}
-                            title={batch.divisionId !== 'sosmed' ? 'Publikasi Facebook hanya tersedia untuk draf Divisi Admin & Sosmed.' : 'Publikasikan teks ini ke Facebook'}
-                            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                            onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            title="Publikasikan langsung usulan ini ke Instagram @kompreskilat"
+                            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
                           >
-                            {instagramNotice?.status === 'publishing' && instagramNotice.targetId === batch.id ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Menerbitkan ke Facebook...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Share2 className="w-3.5 h-3.5" />
-                                <span>Publikasikan ke Facebook</span>
-                              </>
-                            )}
+                            <InstagramIcon className="w-3.5 h-3.5" />
+                            <span>Publikasikan ke Instagram</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            title="Publikasikan langsung usulan ini ke Facebook Kompres Kilat"
+                            className="py-1.5 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
+                          >
+                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Publikasikan ke Facebook</span>
                           </button>
 
                           {batch.socialPermalink && (
@@ -1964,7 +2120,7 @@ export default function AIEmployeesDashboard() {
                               className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              <span>Lihat di Facebook</span>
+                              <span>Lihat di Medsos</span>
                             </a>
                           )}
                         </div>

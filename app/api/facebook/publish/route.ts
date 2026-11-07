@@ -27,6 +27,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Format permintaan tidak valid.' }, { status: 400 });
   }
   const message = typeof body.message === 'string' ? body.message.trim() : '';
+  const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
+  const videoUrl = typeof body.videoUrl === 'string' ? body.videoUrl.trim() : '';
+
   if (!message || message.length > 63_000) {
     return NextResponse.json({ success: false, error: 'Teks posting Facebook harus berisi 1-63.000 karakter.' }, { status: 400 });
   }
@@ -51,10 +54,21 @@ export async function POST(request: Request) {
       // Gunakan token asli jika pengecekan otomatis gagal
     }
 
-    const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/feed`, {
+    let endpoint = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/feed`;
+    let postBody: Record<string, unknown> = { message, access_token: activeToken };
+
+    if (videoUrl && (videoUrl.startsWith('http://') || videoUrl.startsWith('https://'))) {
+      endpoint = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/videos`;
+      postBody = { description: message, file_url: videoUrl, access_token: activeToken };
+    } else if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+      endpoint = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/photos`;
+      postBody = { caption: message, url: imageUrl, access_token: activeToken };
+    }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, access_token: activeToken }),
+      body: JSON.stringify(postBody),
       cache: 'no-store',
     });
     const result = await response.json();
@@ -73,10 +87,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const postId = typeof result.post_id === 'string' ? result.post_id : result.id;
     return NextResponse.json({
       success: true,
       postId: result.id,
-      permalink: `https://www.facebook.com/${result.id}`,
+      permalink: `https://www.facebook.com/${postId}`,
       publishedAt: new Date().toISOString(),
     });
   } catch (error) {

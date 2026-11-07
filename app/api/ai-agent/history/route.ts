@@ -74,6 +74,9 @@ export async function PATCH(request: Request) {
   const publishedAt = typeof body?.publishedAt === 'string' ? body.publishedAt : new Date().toISOString();
   const supervisorNotes = typeof body?.supervisorNotes === 'string' ? body.supervisorNotes : '';
   const output = typeof body?.output === 'string' ? body.output : undefined;
+  const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl : undefined;
+  const videoUrl = typeof body?.videoUrl === 'string' ? body.videoUrl : undefined;
+  const mediaType = typeof body?.mediaType === 'string' ? body.mediaType : undefined;
 
   // 1. Publikasi Media Sosial (Facebook atau Instagram)
   if (status === 'published_to_social' || permalink) {
@@ -118,9 +121,9 @@ export async function PATCH(request: Request) {
     }
   }
 
-  // 2. Persetujuan / Review Supervisor (Approval Workflow) & Edit Redaksi Manual
+  // 2. Persetujuan / Review Supervisor (Approval Workflow) & Edit Redaksi Manual / Media
   const validApprovalStatuses = ['approved', 'revision', 'rejected', 'pending_approval', 'completed'];
-  if (validApprovalStatuses.includes(status) || output !== undefined) {
+  if (validApprovalStatuses.includes(status) || output !== undefined || imageUrl !== undefined || videoUrl !== undefined) {
     try {
       const records = await aiEmployeeStoreRequest<Array<{ data?: unknown; output?: string }>>(
         `?record_type=eq.task&id=eq.${encodeURIComponent(id)}&select=data,output&limit=1`
@@ -135,6 +138,9 @@ export async function PATCH(request: Request) {
           ...(status ? { supervisorStatus: status } : {}),
           ...(supervisorNotes ? { supervisorNotes } : {}),
           ...(output !== undefined ? { lastEditedAt: new Date().toISOString(), manuallyEdited: true } : {}),
+          ...(imageUrl !== undefined ? { imageUrl } : {}),
+          ...(videoUrl !== undefined ? { videoUrl } : {}),
+          ...(mediaType !== undefined ? { mediaType } : {}),
           reviewedAt: new Date().toISOString()
         },
       };
