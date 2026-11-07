@@ -22,9 +22,22 @@ import {
   ChevronRight,
   Copy,
   Terminal,
+  Film,
+  Download,
+  RefreshCw,
+  AlertCircle,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
+
+// Ikon Instagram SVG
+const InstagramIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
 
 export type AgentMovementState = 'working' | 'walking' | 'huddle' | 'lounge' | 'gym';
 
@@ -220,6 +233,61 @@ export default function VirtualOfficePage() {
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
   const [sfxEnabled, setSfxEnabled] = useState<boolean>(true);
 
+  // Video Generator & Instagram Release States
+  const [creativeVideo, setCreativeVideo] = useState({
+    title: 'Teaser Video Reels: Solusi Berkas & Cetak Nota KompresKilat',
+    caption: `🔥 Cetak nota kasir thermal langsung dari browser tanpa bayar aplikasi kasir mahal!\n\nDukung ukuran 58mm & 80mm, ada stempel lunas otomatis, dan privasi 100% aman di browsermu.\n\n👉 Coba sekarang di https://kompreskilat.site/tools/invoice-generator\n\n#KompresKilat #NotaThermal #KasirUMKM #SolusiBisnis`,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1080&q=80',
+    duration: '0:15',
+    resolution: '1080x1920 (9:16)',
+    model: 'Google Video AI / Veo 2 Turbo'
+  });
+
+  const [instagramNotice, setInstagramNotice] = useState<{
+    status: 'idle' | 'publishing' | 'success' | 'error';
+    message?: string;
+    permalink?: string;
+  } | null>(null);
+
+  const handlePublishToInstagram = async (caption: string, videoUrl: string, title?: string) => {
+    setInstagramNotice({
+      status: 'publishing',
+      message: 'Mengunggah video reels & caption ke Instagram Graph API...'
+    });
+    play8BitSound('start');
+
+    try {
+      const res = await fetch('/api/instagram/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caption,
+          videoUrl,
+          title: title || 'Teaser Video KompresKilat',
+          mediaType: 'REELS'
+        }),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        play8BitSound('success');
+        setInstagramNotice({
+          status: 'success',
+          message: result.message || 'Konten berhasil dirilis ke Instagram!',
+          permalink: result.permalink
+        });
+      } else {
+        throw new Error(result.error || 'Gagal merilis ke Instagram.');
+      }
+    } catch (err: any) {
+      setInstagramNotice({
+        status: 'error',
+        message: err.message || 'Terjadi gangguan saat mempublikasikan ke Instagram.'
+      });
+    }
+  };
+
   // 8-bit Audio Synthesizer
   const play8BitSound = (type: 'start' | 'success' | 'sweep' | 'level') => {
     if (!sfxEnabled || typeof window === 'undefined') return;
@@ -385,6 +453,10 @@ export default function VirtualOfficePage() {
           })
         );
 
+        if (id === 'creative' && data.videoData) {
+          setCreativeVideo(data.videoData);
+        }
+
         if (activeDivision?.id === id) {
           setModalOutput({
             text: data.task,
@@ -543,6 +615,73 @@ export default function VirtualOfficePage() {
           onToggleSfx={() => setSfxEnabled(!sfxEnabled)}
           onLogout={handleLogout}
         />
+
+        {/* NOTIFIKASI RILIS INSTAGRAM GRAPH API */}
+        {instagramNotice && (
+          <div
+            className={`p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 shadow-xl ${
+              instagramNotice.status === 'publishing'
+                ? 'bg-indigo-950/80 border-indigo-500/40 text-indigo-300'
+                : instagramNotice.status === 'success'
+                ? 'bg-gradient-to-r from-emerald-950/90 via-slate-900 to-pink-950/80 border-emerald-500/50 text-emerald-200'
+                : 'bg-rose-950/90 border-rose-500/50 text-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  instagramNotice.status === 'publishing'
+                    ? 'bg-indigo-500/20 text-indigo-400'
+                    : instagramNotice.status === 'success'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-rose-500/20 text-rose-400'
+                }`}
+              >
+                {instagramNotice.status === 'publishing' ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : instagramNotice.status === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-rose-400" />
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-1.5">
+                    <InstagramIcon className="w-3.5 h-3.5 text-pink-400" />
+                    Instagram Graph API
+                  </span>
+                  {instagramNotice.status === 'success' && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-mono text-emerald-300 font-bold">
+                      ✓ Rilis Berhasil
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-200">{instagramNotice.message}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {instagramNotice.permalink && (
+                <a
+                  href={instagramNotice.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white text-xs font-bold font-mono transition flex items-center gap-1 shadow-md shadow-pink-600/30"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Buka di Instagram</span>
+                </a>
+              )}
+              <button
+                onClick={() => setInstagramNotice(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ======================================================== */}
         {/* SPECIAL ZONES: RUANG RAPAT, AREA SANTAI, GYM & JANITOR */}
@@ -787,6 +926,73 @@ export default function VirtualOfficePage() {
                         <SlidersHorizontal className="w-3.5 h-3.5" />
                       </button>
                     </div>
+
+                    {/* PRATINJAU VIDEO PLAYER REAL-TIME DIVISI VIDEO & KREATIF */}
+                    {division.id === 'creative' && (
+                      <div className="mt-3 pt-3 border-t border-amber-500/30 space-y-2.5 animate-in fade-in duration-300">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold font-mono text-amber-400 flex items-center gap-1.5">
+                            <Film className="w-3.5 h-3.5" />
+                            Pratinjau Video (Generator AI)
+                          </span>
+                          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                            {creativeVideo.resolution || '1080x1920'}
+                          </span>
+                        </div>
+
+                        {/* Player Video HTML5 */}
+                        <div className="relative rounded-xl overflow-hidden bg-black border border-amber-500/40 shadow-lg">
+                          <video
+                            controls
+                            playsInline
+                            preload="metadata"
+                            poster={creativeVideo.thumbnailUrl}
+                            src={creativeVideo.videoUrl}
+                            className="w-full max-h-[180px] object-cover bg-black"
+                          >
+                            Browser Anda tidak mendukung video HTML5.
+                          </video>
+                        </div>
+
+                        {/* Judul & Caption */}
+                        <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                          <p className="text-xs font-semibold text-white line-clamp-1">{creativeVideo.title}</p>
+                          <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">{creativeVideo.caption}</p>
+                        </div>
+
+                        {/* Action: Unduh & Rilis ke Instagram */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <a
+                            href={creativeVideo.videoUrl}
+                            download="kompreskilat-reels.mp4"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-bold transition flex items-center justify-center gap-1"
+                          >
+                            <Download className="w-3 h-3 text-slate-400" />
+                            <span>Unduh</span>
+                          </a>
+
+                          <button
+                            onClick={() => handlePublishToInstagram(creativeVideo.caption, creativeVideo.videoUrl, creativeVideo.title)}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            className="py-1.5 px-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-md shadow-pink-600/30 cursor-pointer disabled:opacity-50"
+                          >
+                            {instagramNotice?.status === 'publishing' ? (
+                              <>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                <span>Rilis...</span>
+                              </>
+                            ) : (
+                              <>
+                                <InstagramIcon className="w-3 h-3" />
+                                <span>Rilis ke IG</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
