@@ -33,17 +33,42 @@ export async function POST(request: Request) {
 
   try {
     const graphVersion = process.env.META_GRAPH_API_VERSION?.trim() || 'v26.0';
+
+    // Cek apakah token yang tersimpan adalah User Token atau Page Token.
+    // Jika User Token dengan izin pages_show_list / pages_manage_posts,
+    // ambil Page Access Token resmi secara otomatis dari endpoint halaman.
+    let activeToken = pageToken;
+    try {
+      const pageInfoRes = await fetch(
+        `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}?fields=access_token&access_token=${encodeURIComponent(pageToken)}`,
+        { cache: 'no-store' }
+      );
+      const pageInfo = await pageInfoRes.json();
+      if (pageInfo && typeof pageInfo.access_token === 'string' && pageInfo.access_token.length > 10) {
+        activeToken = pageInfo.access_token;
+      }
+    } catch {
+      // Gunakan token asli jika pengecekan otomatis gagal
+    }
+
     const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, access_token: pageToken }),
+      body: JSON.stringify({ message, access_token: activeToken }),
       cache: 'no-store',
     });
     const result = await response.json();
     if (!response.ok || typeof result.id !== 'string') {
       console.error('Facebook Graph API publication failed:', result.error || response.status);
+      const rawError = result.error?.message || '';
+      let friendlyError = rawError || `Facebook menolak publikasi (HTTP ${response.status}).`;
+
+      if (rawError.includes('pages_manage_posts') || rawError.includes('(#200)')) {
+        friendlyError = 'Izin publikasi Facebook belum lengkap (#200). Di Meta Graph API Explorer: (1) Tambahkan izin "pages_manage_posts", (2) Pada dropdown "Pengguna atau Halaman", pilih Halaman Facebook Anda (bukan Token Pengguna), lalu salin token tersebut.';
+      }
+
       return NextResponse.json(
-        { success: false, error: result.error?.message || `Facebook menolak publikasi (HTTP ${response.status}).` },
+        { success: false, error: friendlyError, rawError },
         { status: 502 }
       );
     }

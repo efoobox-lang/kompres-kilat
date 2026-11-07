@@ -538,7 +538,7 @@ export default function AIEmployeesDashboard() {
             : item
         ));
       } else {
-        const quoteImageUrl = 'https://kompreskilat.site/images/kompreskilat-quote.jpg';
+        const quoteImageUrl = 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg';
         const response = await fetch('/api/instagram/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -82,6 +82,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Pastikan URL media diarahkan ke domain kanonikal www.kompreskilat.site agar tidak terkena 308 redirect yang ditolak bot Meta
+    let cleanMediaUrl = targetMediaUrl;
+    if (cleanMediaUrl.startsWith('https://kompreskilat.site/')) {
+      cleanMediaUrl = cleanMediaUrl.replace('https://kompreskilat.site/', 'https://www.kompreskilat.site/');
+    }
+
     // 1. JIKA KREDENSIAL LENGKAP: EKSEKUSI LANGSUNG KE INSTAGRAM GRAPH API
     if (accessToken && igUserId) {
       try {
@@ -94,10 +100,10 @@ export async function POST(request: Request) {
 
         if (isReel) {
           containerUrl.searchParams.set('media_type', 'REELS');
-          containerUrl.searchParams.set('video_url', targetMediaUrl);
+          containerUrl.searchParams.set('video_url', cleanMediaUrl);
           containerUrl.searchParams.set('share_to_feed', 'true');
         } else {
-          containerUrl.searchParams.set('image_url', targetMediaUrl);
+          containerUrl.searchParams.set('image_url', cleanMediaUrl);
         }
 
         const createRes = await fetch(containerUrl.toString(), {
@@ -116,30 +122,43 @@ export async function POST(request: Request) {
 
         const creationId = createData.id;
 
-        // LANGKAH 2: Untuk Video/Reels, periksa status container sampai selesai diproses
-        if (isReel) {
-          let attempts = 0;
-          let isFinished = false;
+        // LANGKAH 2: Periksa status container sampai selesai diunduh & diproses oleh Meta
+        let attempts = 0;
+        let isFinished = false;
+        const maxAttempts = isReel ? 20 : 8;
 
-          while (attempts < 20 && !isFinished) {
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-            attempts++;
+        while (attempts < maxAttempts && !isFinished) {
+          // Jeda antar polling (2.5 detik untuk video, 1.5 detik untuk gambar)
+          await new Promise((resolve) => setTimeout(resolve, isReel ? 2500 : 1500));
+          attempts++;
 
+          try {
             const statusRes = await fetch(
-              `https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(creationId)}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`
+              `https://graph.facebook.com/${GRAPH_API_VERSION}/${encodeURIComponent(creationId)}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`,
+              { cache: 'no-store' }
             );
             const statusData = await statusRes.json();
 
             if (statusData.status_code === 'FINISHED') {
               isFinished = true;
             } else if (statusData.status_code === 'ERROR') {
-              throw new Error(statusData.status || 'Instagram Graph API gagal memproses file video.');
+              throw new Error(
+                statusData.status ||
+                  'Instagram gagal memproses/mengunduh media dari URL. Pastikan format JPG/PNG/MP4 valid.'
+              );
+            } else if (!statusData.status_code && !isReel) {
+              // Untuk gambar pada sebagian versi API, status_code tidak dikembalikan jika langsung siap
+              isFinished = true;
+            }
+          } catch (statusErr: any) {
+            if (statusErr.message && !statusErr.message.includes('status_code')) {
+              throw statusErr;
             }
           }
+        }
 
-          if (!isFinished) {
-            throw new Error('Video sedang diproses di antrean Instagram. Silakan tekan tombol Rilis sekali lagi dalam beberapa detik.');
-          }
+        if (!isFinished && isReel) {
+          throw new Error('Video sedang diproses di antrean Instagram. Silakan tekan tombol Rilis sekali lagi dalam beberapa detik.');
         }
 
         // LANGKAH 3: Publikasikan Container Media ke Akun Instagram
@@ -155,10 +174,12 @@ export async function POST(request: Request) {
         const publishData = await publishRes.json();
 
         if (!publishRes.ok || !publishData.id) {
-          throw new Error(
-            publishData.error?.message ||
-              'Gagal mempublikasikan media ke Instagram feed/reels.'
-          );
+          const rawError = publishData.error?.message || '';
+          let friendlyError = rawError || 'Gagal mempublikasikan media ke Instagram feed/reels.';
+          if (rawError.includes('Media ID is not available')) {
+            friendlyError = 'Instagram belum selesai memproses container media. Silakan klik "Publikasikan ke Instagram" sekali lagi dalam beberapa detik.';
+          }
+          throw new Error(friendlyError);
         }
 
         const publishedPostId = publishData.id;
