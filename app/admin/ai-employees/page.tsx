@@ -165,6 +165,7 @@ export interface AgentTaskBatch {
   divisionName: string;
   userPrompt: string;
   outputContent: string;
+  imageUrl?: string;
   extractedQuote?: string;
   model: string;
   timestamp: string;
@@ -538,13 +539,20 @@ export default function AIEmployeesDashboard() {
             : item
         ));
       } else {
-        const quoteImageUrl = 'https://www.kompreskilat.site/images/kompreskilat-quote.jpg';
+        // Prioritaskan gambar hasil generasi AI (batch.imageUrl), atau kartu kutipan AI dinamis (/api/og/quote)
+        let targetImageUrl = (batch.imageUrl && batch.imageUrl.startsWith('https://')) ? batch.imageUrl : '';
+        if (!targetImageUrl) {
+          const cleanSnippet = batch.outputContent
+            ? encodeURIComponent(batch.outputContent.slice(0, 140).replace(/[*#\n]/g, ' ').trim())
+            : 'Solusi+Kompres+Foto+KTP+Kilat';
+          targetImageUrl = `https://www.kompreskilat.site/api/og/quote?text=${cleanSnippet}&author=kompreskilat.site`;
+        }
         const response = await fetch('/api/instagram/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             caption: batch.outputContent,
-            imageUrl: quoteImageUrl,
+            imageUrl: targetImageUrl,
             mediaType: 'IMAGE',
           }),
         });

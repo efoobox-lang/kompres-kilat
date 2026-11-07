@@ -244,7 +244,7 @@ export default function MonitoringCenterPage() {
 
   // Modal Pengaturan Kredensial Medsos
   const [isSocialModalOpen, setIsSocialModalOpen] = useState<boolean>(false);
-  const [fbPageId, setFbPageId] = useState<string>('122099691567541521');
+  const [fbPageId, setFbPageId] = useState<string>('1411463522052642');
   const [fbToken, setFbToken] = useState<string>('');
   const [igUserId, setIgUserId] = useState<string>('17841420772273253');
   const [igToken, setIgToken] = useState<string>('');
