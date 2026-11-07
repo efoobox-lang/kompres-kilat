@@ -224,18 +224,7 @@ export default function VirtualOfficePage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const [divisions, setDivisions] = useState<OfficeDivision[]>(() => initialVirtualDivisions.map((division) => ({
-    ...division,
-    status: 'Idle',
-    currentTask: 'Belum ada tugas aktif.',
-    outputCount: 0,
-    lastUpdated: 'Belum ada aktivitas',
-    metricLabel: 'Status',
-    metricValue: 'Belum terukur',
-    movementState: 'lounge',
-    level: 1,
-    xp: 0,
-  })));
+  const [divisions, setDivisions] = useState<OfficeDivision[]>(() => initialVirtualDivisions);
   const [activeDivision, setActiveDivision] = useState<OfficeDivision | null>(null);
   const [loadingDivisionId, setLoadingDivisionId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -468,10 +457,13 @@ export default function VirtualOfficePage() {
                   ? String(((row.data as Record<string, unknown>).socialPublication as Record<string, unknown>).permalink)
                   : undefined,
               })));
-              setDivisions((current) => current.map((division) => ({
-                ...division,
-                outputCount: history.data.filter((row: Record<string, unknown>) => row.division_id === division.id).length,
-              })));
+              setDivisions((current) => current.map((division) => {
+                const historyCount = history.data.filter((row: Record<string, unknown>) => row.division_id === division.id).length;
+                return {
+                  ...division,
+                  outputCount: Math.max(division.outputCount, historyCount),
+                };
+              }));
             }
           }
         } catch (histErr) {
@@ -532,7 +524,7 @@ export default function VirtualOfficePage() {
             ...div,
             status: 'Working',
             movementState: 'working',
-            currentTask: 'Mengeksekusi instruksi cerdas via Gemini 2.5 Flash...',
+            currentTask: 'Mengeksekusi instruksi cerdas via Gemini 3.x Flash...',
             lastUpdated: 'Memproses...',
           };
         }
@@ -562,12 +554,16 @@ export default function VirtualOfficePage() {
         setDivisions((prev) =>
           prev.map((div) => {
             if (div.id === id) {
+              const newXp = (div.xp || 0) + 35;
+              const newLevel = Math.min(5, Math.floor(newXp / 100) + 1);
               return {
                 ...div,
-                status: 'Idle',
-                movementState: 'lounge',
+                status: 'Working',
+                movementState: 'working',
                 currentTask: data.task,
-                outputCount: div.outputCount + 1,
+                outputCount: (div.outputCount || 0) + 1,
+                xp: newXp,
+                level: newLevel,
                 lastUpdated: 'Baru saja',
               };
             }
@@ -589,7 +585,7 @@ export default function VirtualOfficePage() {
           userPrompt: promptGiven,
           outputContent: data.task,
           extractedQuote: data.extractedQuote || '',
-          model: data.model || 'gemini-2.5-flash',
+          model: data.model || 'gemini-3.1-flash-lite',
           timestamp: `${timeStr} WIB`,
           status: 'completed'
         };

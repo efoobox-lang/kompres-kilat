@@ -241,7 +241,7 @@ export default function PixelOfficeWorkstation({
           {isWorking || isLoading ? (
             <div className="px-3 py-1 rounded-full bg-indigo-600/90 border border-indigo-400/80 text-[10px] font-mono font-bold text-white shadow-lg shadow-indigo-600/40 flex items-center gap-1.5 animate-bounce">
               <span className="animate-spin text-amber-300">⚡</span>
-              <span>{isLoading ? 'Menghubungkan Gemini 2.5...' : theme.statusText}</span>
+              <span>{isLoading ? 'Menghubungkan Gemini 3.x...' : theme.statusText}</span>
             </div>
           ) : (
             <div className="px-2.5 py-0.5 rounded-full bg-slate-900/80 border border-slate-800 text-[10px] font-mono text-slate-400 flex items-center gap-1">
