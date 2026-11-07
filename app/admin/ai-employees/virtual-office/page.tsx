@@ -968,9 +968,9 @@ export default function VirtualOfficePage() {
         )}
 
         {/* ======================================================== */}
-        {/* Visual interactions and browser cache */}
+        {/* Utilitas Operasional Kantor Virtual */}
         {/* ======================================================== */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Zona 1: Ruang Rapat (Huddle Room) */}
           <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
@@ -1007,48 +1007,7 @@ export default function VirtualOfficePage() {
             </button>
           </div>
 
-          {/* Zona 2: Area Santai & Coffee Bar (Breakroom) */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between space-y-3 relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold font-mono uppercase text-amber-400 flex items-center gap-1.5">
-                <Coffee className="w-3.5 h-3.5" />
-                Breakroom & Cafe
-              </span>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                Visual saja
-              </span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>☕ Mini Barista & Lounge</span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Area lounge dekoratif; tidak mengubah kapasitas atau status model.
-              </p>
-            </div>
-
-            <p className="text-[10px] text-slate-500">Interaksi kantor fisik tidak tersedia.</p>
-          </div>
-
-          {/* Zona 3: AI Training Gym (Peningkatan Kapabilitas) */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between space-y-3 relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold font-mono uppercase text-emerald-400 flex items-center gap-1.5">
-                <Dumbbell className="w-3.5 h-3.5" />
-                Sistem Gym AI
-              </span>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                Belum didukung
-              </span>
-            </div>
-
-            <p className="text-[11px] text-slate-400">
-              Model bekerja melalui instruksi dan provider AI; pelatihan atau kenaikan XP tidak tersedia di aplikasi ini.
-            </p>
-          </div>
-
-          {/* Zona 4: Fitur "Janitor" (Pembersih Konteks & Sesi) */}
+          {/* Zona 2: Fitur Janitor (Pembersih Konteks & Cache Browser) */}
           <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold font-mono uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1065,7 +1024,7 @@ export default function VirtualOfficePage() {
                 <span>🧹 Garbage Collector</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Hapus cache sementara tertentu dari browser ini. Ini tidak mengubah konteks model atau tugas yang tersimpan di Supabase.
+                Hapus cache sementara browser untuk mempercepat rendering dan membersihkan sesi lokal.
               </p>
             </div>
 

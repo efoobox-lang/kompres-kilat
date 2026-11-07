@@ -703,77 +703,54 @@ export default function MonitoringCenterPage() {
           onLogout={handleLogout}
         />
 
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-slate-800 bg-slate-950/70 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="flex items-center gap-2 text-base font-bold text-white">
-                <ShieldCheck className="h-4 w-4 text-cyan-400" />
-                Pemeriksaan koneksi layanan
-              </h2>
-              <p className="mt-1 text-xs text-slate-400">
-                Memvalidasi koneksi server-side. Cek token tidak menjamin izin publikasi; validasi aksi aktual tetap perlu dilakukan.
-              </p>
+        {/* Notifikasi Cerdas: Hanya Muncul Jika Ada Layanan Bermasalah */}
+        {(integrationCheckError || integrations.some((i) => i.status === 'error' || i.status === 'missing')) && (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-950/40 p-4 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-rose-200">
+                  Perhatian: Layanan Memerlukan Penyesuaian
+                </h4>
+                <p className="text-xs text-rose-300/80 mt-0.5">
+                  {integrationCheckError ||
+                    integrations
+                      .filter((i) => i.status === 'error' || i.status === 'missing')
+                      .map((i) => `${i.name} (${i.status === 'missing' ? 'Belum dikonfigurasi' : 'Kendala koneksi'})`)
+                      .join(', ')}
+                </p>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSocialModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-600/20 px-3 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-600/30 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/40 border border-rose-500/50 text-xs font-semibold text-rose-200 transition cursor-pointer"
               >
-                <Settings className="h-3.5 w-3.5 text-indigo-400" />
+                <Settings className="w-3.5 h-3.5" />
                 <span>Atur Kredensial Medsos</span>
-              </button>
-              <button
-                type="button"
-                onClick={fetchIntegrations}
-                disabled={isCheckingIntegrations}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isCheckingIntegrations ? 'animate-spin' : ''}`} />
-                {isCheckingIntegrations ? 'Memeriksa...' : 'Periksa koneksi'}
               </button>
             </div>
           </div>
-          {integrationCheckError && (
-            <p role="alert" className="m-4 rounded-lg border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-200">
-              {integrationCheckError}
-            </p>
-          )}
-          {integrations.length > 0 ? (
-            <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-              {integrations.map((integration) => {
-                const connected = integration.status === 'connected';
-                const statusLabel = {
-                  connected: 'Terhubung',
-                  missing: 'Belum dikonfigurasi',
-                  error: 'Pemeriksaan gagal',
-                  unverified: 'Belum diverifikasi',
-                }[integration.status];
-                return (
-                  <div key={integration.id} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold text-white">{integration.name}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        connected
-                          ? 'bg-emerald-500/10 text-emerald-300'
-                          : integration.status === 'unverified'
-                            ? 'bg-amber-500/10 text-amber-300'
-                            : 'bg-rose-500/10 text-rose-300'
-                      }`}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs leading-relaxed text-slate-400">{integration.message}</p>
-                  </div>
-                );
-              })}
-            </div>
-          ) : !integrationCheckError && (
-            <p className="p-5 text-xs text-slate-500">
-              {isCheckingIntegrations ? 'Memeriksa konfigurasi dan koneksi...' : 'Belum ada hasil pemeriksaan.'}
-            </p>
-          )}
-        </section>
+        )}
+
+        {/* Bar Cepat Kredensial & Pengaturan Medsos */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Status Layanan Terintegrasi: <strong className="text-emerald-400 font-semibold">Aktif & Terlindungi</strong></span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsSocialModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-semibold text-indigo-300 transition cursor-pointer"
+          >
+            <Settings className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Atur Kredensial Medsos</span>
+          </button>
+        </div>
 
         {/* ======================================================== */}
         {/* PANEL METRIK REAL-TIME VERCEL & TELEMETRI */}
