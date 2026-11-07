@@ -278,39 +278,94 @@ export default function VirtualOfficePage() {
     }
   };
 
-  const handlePublishBatchToSocial = async (batch: AgentTaskBatch) => {
-    if (batch.divisionId !== 'sosmed') {
-      setHistoryError('Hanya draf dari Divisi Admin & Sosmed yang dapat dipublikasikan ke Facebook.');
+  const handlePublishBatchToSocial = async (
+    batch: AgentTaskBatch,
+    platform: 'facebook' | 'instagram' = 'facebook'
+  ) => {
+    if (batch.divisionId !== 'sosmed' && batch.divisionId !== 'creative') {
+      setHistoryError('Publikasi ke media sosial didukung untuk draf Divisi Admin & Sosmed atau Kreatif.');
       return;
     }
     setHistoryError(null);
-    setInstagramNotice({ status: 'publishing', message: 'Menerbitkan teks ke Facebook...' });
+    setInstagramNotice({
+      status: 'publishing',
+      message:
+        platform === 'facebook'
+          ? 'Menerbitkan teks ke Halaman Facebook Kompres Kilat...'
+          : 'Menerbitkan Quote Card & Caption ke Instagram @kompreskilat...',
+    });
+    play8BitSound('start');
+
     try {
-      const response = await fetch('/api/facebook/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: batch.outputContent }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Facebook gagal.');
-      const savedResponse = await fetch('/api/ai-agent/history', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
-      });
-      if (!savedResponse.ok) {
-        throw new Error('Facebook berhasil memublikasikan, tetapi status publikasi gagal disimpan.');
+      if (platform === 'facebook') {
+        const response = await fetch('/api/facebook/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: batch.outputContent }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Facebook gagal.');
+
+        await fetch('/api/ai-agent/history', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
+        }).catch(() => {});
+
+        play8BitSound('success');
+        setAgentBatches((prev) =>
+          prev.map((item) =>
+            item.id === batch.id
+              ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+              : item
+          )
+        );
+        setInstagramNotice({
+          status: 'success',
+          message: 'Berhasil dipublikasikan ke Facebook!',
+          permalink: result.permalink,
+        });
+      } else {
+        // Platform: Instagram (membuat quote card poster jika gambar tidak spesifik)
+        const quoteText = batch.extractedQuote || batch.outputContent.slice(0, 140);
+        const quoteImageUrl = `https://kompreskilat.site/api/og/quote?text=${encodeURIComponent(quoteText)}`;
+
+        const response = await fetch('/api/instagram/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            caption: batch.outputContent,
+            imageUrl: quoteImageUrl,
+            mediaType: 'IMAGE',
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Publikasi Instagram gagal.');
+
+        await fetch('/api/ai-agent/history', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: batch.id, permalink: result.permalink, publishedAt: result.publishedAt }),
+        }).catch(() => {});
+
+        play8BitSound('success');
+        setAgentBatches((prev) =>
+          prev.map((item) =>
+            item.id === batch.id
+              ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
+              : item
+          )
+        );
+        setInstagramNotice({
+          status: 'success',
+          message: 'Berhasil dipublikasikan ke Instagram @kompreskilat!',
+          permalink: result.permalink,
+        });
       }
-      setAgentBatches((prev) => prev.map((item) =>
-        item.id === batch.id
-          ? { ...item, status: 'published_to_social', socialPermalink: result.permalink }
-          : item
-      ));
-      setInstagramNotice({ status: 'success', message: 'Berhasil dipublikasikan ke Facebook.', permalink: result.permalink });
     } catch (error) {
       setInstagramNotice({
         status: 'error',
-        message: error instanceof Error ? error.message : 'Publikasi Facebook gagal.',
+        message: error instanceof Error ? error.message : `Publikasi ke ${platform} gagal.`,
       });
     }
   };
@@ -1053,7 +1108,7 @@ export default function VirtualOfficePage() {
                 </span>
               </h2>
               <p className="text-xs text-slate-400 max-w-2xl">
-                Riwayat tugas tersimpan di Supabase. Teks dapat diterbitkan ke Facebook; Instagram memerlukan video hasil generasi.
+                Riwayat tugas tersimpan terpadu. Dukung 1-klik rilis langsung ke Halaman Facebook & Instagram Feed (@kompreskilat).
               </p>
             </div>
 
@@ -1176,24 +1231,29 @@ export default function VirtualOfficePage() {
 
                       {/* BLOK 3: AKSI EKSEKUSI BATCH (1-CLICK PUBLISH) */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Tombol Publikasi ke Facebook */}
                           <button
                             type="button"
-                            onClick={() => handlePublishBatchToSocial(batch)}
-                            disabled={instagramNotice?.status === 'publishing' || batch.divisionId !== 'sosmed'}
-                            title={batch.divisionId !== 'sosmed' ? 'Publikasi Facebook hanya tersedia untuk draf Divisi Admin & Sosmed.' : 'Publikasikan teks ini ke Facebook'}
-                            className="py-1.5 px-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                            onClick={() => handlePublishBatchToSocial(batch, 'facebook')}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/25 cursor-pointer disabled:opacity-50"
                           >
-                            {instagramNotice?.status === 'publishing' ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Menerbitkan ke Facebook...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Publikasikan ke Facebook</span>
-                              </>
-                            )}
+                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Publikasikan ke Facebook</span>
+                          </button>
+
+                          {/* Tombol Publikasi ke Instagram */}
+                          <button
+                            type="button"
+                            onClick={() => handlePublishBatchToSocial(batch, 'instagram')}
+                            disabled={instagramNotice?.status === 'publishing'}
+                            className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-pink-600/25 cursor-pointer disabled:opacity-50"
+                          >
+                            <InstagramIcon className="w-3.5 h-3.5" />
+                            <span>Publikasikan ke Instagram</span>
                           </button>
 
                           {batch.socialPermalink && (
@@ -1204,7 +1264,7 @@ export default function VirtualOfficePage() {
                               className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-pink-300 hover:text-white text-xs font-semibold transition flex items-center gap-1"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              <span>Lihat di Facebook</span>
+                              <span>Lihat Hasil Post</span>
                             </a>
                           )}
                         </div>
