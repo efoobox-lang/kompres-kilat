@@ -68,7 +68,12 @@ export function verifyAdminSession(request: Request) {
   const config = getAdminConfig();
   if (!config) return false;
 
-  const token = readCookie(request, SESSION_COOKIE);
+  // Baca dari Cookie HTTP, atau header kustom x-admin-token, atau Authorization Bearer
+  const token =
+    readCookie(request, SESSION_COOKIE) ||
+    request.headers.get('x-admin-token')?.trim() ||
+    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+
   if (!token) return false;
   const separator = token.indexOf('.');
   if (separator < 1) return false;
@@ -89,17 +94,25 @@ export function verifyAdminSession(request: Request) {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-export function createAdminSessionCookie() {
+export function createAdminSessionToken() {
   const config = getAdminConfig();
   if (!config) throw new Error('ADMIN_PASSWORD dan ADMIN_SESSION_SECRET belum dikonfigurasi dengan aman.');
 
   const expiresAt = String(Math.floor(Date.now() / 1000) + SESSION_DURATION_SECONDS);
   const signature = createSignature(expiresAt, config.secret).toString('base64url');
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `${SESSION_COOKIE}=${encodeURIComponent(`${expiresAt}.${signature}`)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_DURATION_SECONDS}${secure}`;
+  return `${expiresAt}.${signature}`;
+}
+
+export function createAdminSessionCookie(request?: Request) {
+  const token = createAdminSessionToken();
+  const host = request?.headers?.get('host') || '';
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+  const isHttps = request ? (request.url.startsWith('https://') || request.headers.get('x-forwarded-proto') === 'https') : false;
+  const secure = (process.env.NODE_ENV === 'production' && !isLocalhost && isHttps) ? '; Secure' : '';
+
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_DURATION_SECONDS}${secure}`;
 }
 
 export function clearAdminSessionCookie() {
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `${SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`;
+  return `${SESSION_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
 }

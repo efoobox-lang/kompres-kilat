@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import {
   clearAdminSessionCookie,
   createAdminSessionCookie,
+  createAdminSessionToken,
   isAdminConfigured,
   isSameOrigin,
   verifyAdminPassword,
@@ -53,8 +54,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Kata sandi administrator salah.' }, { status: 401 });
   }
 
-  const response = NextResponse.json({ authenticated: true });
-  response.headers.set('Set-Cookie', createAdminSessionCookie());
+  const token = createAdminSessionToken();
+  const response = NextResponse.json({ authenticated: true, token });
+  response.headers.set('Set-Cookie', createAdminSessionCookie(request));
   response.headers.set('Cache-Control', 'no-store');
   return response;
 }

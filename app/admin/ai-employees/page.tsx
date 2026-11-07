@@ -335,6 +335,7 @@ const initialDivisions: Division[] = [
 export default function AIEmployeesDashboard() {
   const [mounted, setMounted] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -719,22 +720,35 @@ export default function AIEmployeesDashboard() {
     let active = true;
     const loadProductionData = async () => {
       try {
-        const sessionResponse = await fetch('/api/admin/auth', { cache: 'no-store' });
+        const storedToken = typeof window !== 'undefined' ? localStorage.getItem('kk_admin_token') : null;
+        const headers: Record<string, string> = {};
+        if (storedToken) headers['x-admin-token'] = storedToken;
+
+        const sessionResponse = await fetch('/api/admin/auth', { cache: 'no-store', headers });
         const session = await sessionResponse.json();
         if (!active) return;
         if (!sessionResponse.ok) {
           if (sessionResponse.status !== 401) throw new Error(session.error || 'Autentikasi admin belum dikonfigurasi.');
+          setIsAuthenticated(false);
+          setIsCheckingAuth(false);
           return;
         }
-        if (!session.authenticated) return;
-        if (!isAuthenticated) {
-          setIsAuthenticated(true);
+        if (!session.authenticated) {
+          setIsAuthenticated(false);
+          setIsCheckingAuth(false);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('kk_admin_token');
+            localStorage.removeItem('kk_admin_auth');
+          }
           return;
         }
 
+        setIsAuthenticated(true);
+        setIsCheckingAuth(false);
+
         const [historyResponse, draftsResponse] = await Promise.all([
-          fetch('/api/ai-agent/history', { cache: 'no-store' }),
-          fetch('/api/ai-agent/drafts', { cache: 'no-store' }),
+          fetch('/api/ai-agent/history', { cache: 'no-store', headers }),
+          fetch('/api/ai-agent/drafts', { cache: 'no-store', headers }),
         ]);
         const history = await historyResponse.json();
         const draftResult = await draftsResponse.json();
@@ -857,7 +871,14 @@ export default function AIEmployeesDashboard() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Login gagal.');
+
+      if (result.token && typeof window !== 'undefined') {
+        localStorage.setItem('kk_admin_token', result.token);
+        localStorage.setItem('kk_admin_auth', 'true');
+      }
+
       setIsAuthenticated(true);
+      setIsCheckingAuth(false);
       setPasswordInput('');
       setAuthError(null);
     } catch (error) {
@@ -869,7 +890,12 @@ export default function AIEmployeesDashboard() {
 
   const handleLogout = async () => {
     await fetch('/api/admin/auth', { method: 'DELETE' });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kk_admin_token');
+      localStorage.removeItem('kk_admin_auth');
+    }
     setIsAuthenticated(false);
+    setIsCheckingAuth(false);
     setPasswordInput('');
     setAuthError(null);
   };
@@ -1159,8 +1185,15 @@ export default function AIEmployeesDashboard() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
   };
 
-  if (!mounted) {
-    return null;
+  if (!mounted || isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center animate-pulse mb-3">
+          <Sparkles className="w-6 h-6 text-indigo-400" />
+        </div>
+        <p className="text-xs font-mono text-slate-400">Memverifikasi sesi supervisor...</p>
+      </div>
+    );
   }
 
   // Tampilan Proteksi Autentikasi Admin (Jika belum login)
