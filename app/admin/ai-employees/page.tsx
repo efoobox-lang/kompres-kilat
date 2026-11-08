@@ -1848,10 +1848,20 @@ export default function AIEmployeesDashboard() {
                 <Eye className="w-3.5 h-3.5 text-cyan-400" />
                 Total Views
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                7 hari
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  7 hari
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsVercelSyncModalOpen(true)}
+                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-emerald-400 transition cursor-pointer"
+                  title="Sinkronkan dengan Vercel Analytics"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </button>
+              </div>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
               {analyticsData ? (

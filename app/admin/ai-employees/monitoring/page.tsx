@@ -30,6 +30,7 @@ import {
   X,
   Settings,
   Plus,
+  BarChart2,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 import VercelAnalyticsSyncModal from '@/components/admin/VercelAnalyticsSyncModal';
@@ -774,10 +775,20 @@ export default function MonitoringCenterPage() {
                 <Eye className="w-3.5 h-3.5 text-cyan-400" />
                 Total Views
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                7 hari
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  7 hari
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsVercelSyncModalOpen(true)}
+                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-emerald-400 transition cursor-pointer"
+                  title="Sinkronkan dengan Vercel Analytics"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </button>
+              </div>
             </div>
             <div className="mt-2 text-2xl font-extrabold text-white font-mono">
               {analyticsData ? analyticsData.totalViews.toLocaleString('id-ID') : <span className="animate-pulse text-lg text-slate-500">Menghitung...</span>}
@@ -1170,6 +1181,24 @@ export default function MonitoringCenterPage() {
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Pintasan ke Pengaturan Vercel Analytics */}
+            <div className="mt-4 p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3 text-xs">
+              <span className="text-slate-300 flex items-center gap-2">
+                <BarChart2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Ingin sinkronisasi <strong>Vercel Analytics</strong>?</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSocialModalOpen(false);
+                  setIsVercelSyncModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer shrink-0 shadow-sm shadow-emerald-600/30 flex items-center gap-1"
+              >
+                <span>Buka Pengaturan Vercel &rarr;</span>
               </button>
             </div>
 
