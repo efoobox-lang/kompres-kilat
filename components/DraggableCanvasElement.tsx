@@ -26,6 +26,7 @@ interface DraggableCanvasElementProps {
   onDelete?: () => void;
   onRotate?: (newRotation: number) => void;
   zIndex?: number;
+  zoom?: number;
   children: React.ReactNode;
 }
 
@@ -44,6 +45,7 @@ export default function DraggableCanvasElement({
   onDelete,
   onRotate,
   zIndex = 20,
+  zoom = 1,
   children,
 }: DraggableCanvasElementProps) {
   const elementRef = useRef<HTMLDivElement>(null);
@@ -127,8 +129,9 @@ export default function DraggableCanvasElement({
     const containerW = container ? container.clientWidth : 794;
     const containerH = container ? container.clientHeight : 1123;
 
-    const deltaX = e.clientX - startMouseX;
-    const deltaY = e.clientY - startMouseY;
+    const effectiveZoom = zoom && zoom > 0 ? zoom : 1;
+    const deltaX = (e.clientX - startMouseX) / effectiveZoom;
+    const deltaY = (e.clientY - startMouseY) / effectiveZoom;
 
     if (mode === 'move') {
       const currentH = position.height || (aspectRatio ? position.width / aspectRatio : position.width);
