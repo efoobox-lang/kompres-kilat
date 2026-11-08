@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -262,9 +263,9 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section: Copyright, Socials, & Disclaimer */}
-        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 dark:text-slate-500 gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Bottom Section: Copyright, Socials, Global Language Selector & Disclaimer */}
+        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 dark:text-slate-500 gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <p>&copy; 2026 KompresKilat. {t('footer_rights')}</p>
             <div className="flex items-center gap-2 text-[11px] font-medium">
               <a
@@ -285,8 +286,12 @@ export default function Footer() {
                 <span>Facebook</span>
               </a>
             </div>
+            {/* Global Language Selector (Persis seperti tampilan foto) */}
+            <div className="flex items-center">
+              <LanguageToggle variant="footer" direction="up" />
+            </div>
           </div>
-          <p className="text-center sm:text-right text-[11px] max-w-lg leading-relaxed">
+          <p className="text-center md:text-right text-[11px] max-w-lg leading-relaxed">
             {t('footer_disclaimer')}
           </p>
         </div>

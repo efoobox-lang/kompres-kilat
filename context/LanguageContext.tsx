@@ -1,17 +1,23 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Language, translations } from '@/lib/translations';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { Language, SUPPORTED_LANGUAGES, LanguageItem, translations } from '@/lib/translations';
 
 interface LanguageContextType {
   lang: Language;
+  currentLanguage: LanguageItem;
+  supportedLanguages: LanguageItem[];
   setLang: (lang: Language) => void;
   toggleLang: () => void;
-  t: (key: keyof typeof translations['id']) => string;
+  t: (key: string) => string;
 }
+
+const defaultLangItem = SUPPORTED_LANGUAGES.find((l) => l.code === 'id') || SUPPORTED_LANGUAGES[0];
 
 const LanguageContext = createContext<LanguageContextType>({
   lang: 'id',
+  currentLanguage: defaultLangItem,
+  supportedLanguages: SUPPORTED_LANGUAGES,
   setLang: () => {},
   toggleLang: () => {},
   t: (key) => translations.id[key] || '',
@@ -22,8 +28,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('kk_lang') as Language;
-        if (stored && (stored === 'id' || stored === 'en')) return stored;
-        if (navigator.language.toLowerCase().startsWith('en')) return 'en';
+        if (stored && SUPPORTED_LANGUAGES.some((item) => item.code === stored)) {
+          return stored;
+        }
+        const navLang = navigator.language.toLowerCase();
+        // Exact match (e.g., 'zh-cn' -> 'zh-CN')
+        const exact = SUPPORTED_LANGUAGES.find((item) => item.code.toLowerCase() === navLang);
+        if (exact) return exact.code;
+        // Prefix match (e.g., 'es-ES' -> 'es', 'ja-JP' -> 'ja')
+        const prefix = SUPPORTED_LANGUAGES.find((item) => navLang.startsWith(item.code.toLowerCase()));
+        if (prefix) return prefix.code;
       } catch {
         // fallback
       }
@@ -31,22 +45,26 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return 'id';
   });
 
+  const currentLanguage = useMemo(() => {
+    return SUPPORTED_LANGUAGES.find((item) => item.code === lang) || defaultLangItem;
+  }, [lang]);
+
   const syncGoogleTranslate = useCallback((targetLang: Language) => {
     if (typeof window === 'undefined') return;
 
     try {
       const hostname = window.location.hostname;
-      if (targetLang === 'en') {
-        document.cookie = 'googtrans=/id/en; path=/;';
-        if (hostname && hostname !== 'localhost') {
-          document.cookie = `googtrans=/id/en; path=/; domain=.${hostname};`;
-        }
-      } else {
+      if (targetLang === 'id') {
         document.cookie = 'googtrans=/id/id; path=/;';
         document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         if (hostname && hostname !== 'localhost') {
           document.cookie = `googtrans=/id/id; path=/; domain=.${hostname};`;
           document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${hostname};`;
+        }
+      } else {
+        document.cookie = `googtrans=/id/${targetLang}; path=/;`;
+        if (hostname && hostname !== 'localhost') {
+          document.cookie = `googtrans=/id/${targetLang}; path=/; domain=.${hostname};`;
         }
       }
 
@@ -66,6 +84,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('kk_lang', newLang);
       document.documentElement.lang = newLang;
+      document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
     } catch {
       // ignore
     }
@@ -90,22 +109,31 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLang(next);
   };
 
-  // Sync on initial mount if language is 'en'
+  // Sync on initial mount if language is not 'id'
   useEffect(() => {
-    if (lang === 'en') {
+    if (lang !== 'id') {
       const timer = setTimeout(() => {
-        syncGoogleTranslate('en');
+        syncGoogleTranslate(lang);
       }, 800);
       return () => clearTimeout(timer);
     }
   }, [lang, syncGoogleTranslate]);
 
-  const t = (key: keyof typeof translations['id']): string => {
-    return translations[lang]?.[key] || translations.id[key] || '';
+  const t = (key: string): string => {
+    return translations[lang]?.[key] || (lang !== 'id' && translations.en?.[key]) || translations.id?.[key] || '';
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, toggleLang, t }}>
+    <LanguageContext.Provider
+      value={{
+        lang,
+        currentLanguage,
+        supportedLanguages: SUPPORTED_LANGUAGES,
+        setLang,
+        toggleLang,
+        t,
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );

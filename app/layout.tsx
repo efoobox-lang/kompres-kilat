@@ -152,7 +152,7 @@ export default function RootLayout({
               if (window.google && window.google.translate) {
                 new window.google.translate.TranslateElement({
                   pageLanguage: 'id',
-                  includedLanguages: 'id,en',
+                  includedLanguages: 'id,en,es,fr,de,it,pt,ja,ru,ko,zh-CN,zh-TW,ar,bg,ca,nl,el,hi,ms,pl,sv,th,tr,uk,vi,sw',
                   autoDisplay: false
                 }, 'google_translate_element');
               }

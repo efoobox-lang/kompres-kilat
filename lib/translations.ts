@@ -1,6 +1,48 @@
-export type Language = 'id' | 'en';
+export interface LanguageItem {
+  code: string;
+  name: string;
+  nativeName: string;
+  column: 1 | 2 | 3;
+  dir?: 'ltr' | 'rtl';
+}
 
-export const translations = {
+export const SUPPORTED_LANGUAGES: LanguageItem[] = [
+  // Kolom 1 (9 Bahasa)
+  { code: 'en', name: 'English', nativeName: 'English', column: 1 },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', column: 1 },
+  { code: 'fr', name: 'French', nativeName: 'Français', column: 1 },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', column: 1 },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano', column: 1 },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', column: 1 },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', column: 1 },
+  { code: 'ru', name: 'Russian', nativeName: 'Pусский', column: 1 },
+  { code: 'ko', name: 'Korean', nativeName: '한국어', column: 1 },
+
+  // Kolom 2 (9 Bahasa)
+  { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '中文 (简体)', column: 2 },
+  { code: 'zh-TW', name: 'Chinese (Traditional)', nativeName: '中文 (繁體)', column: 2 },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', column: 2, dir: 'rtl' },
+  { code: 'bg', name: 'Bulgarian', nativeName: 'Български', column: 2 },
+  { code: 'ca', name: 'Catalan', nativeName: 'Català', column: 2 },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', column: 2 },
+  { code: 'el', name: 'Greek', nativeName: 'Ελληνικά', column: 2 },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', column: 2 },
+  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', column: 2 },
+
+  // Kolom 3 (8 Bahasa)
+  { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu', column: 3 },
+  { code: 'pl', name: 'Polish', nativeName: 'Polski', column: 3 },
+  { code: 'sv', name: 'Swedish', nativeName: 'Svenska', column: 3 },
+  { code: 'th', name: 'Thai', nativeName: 'ภาษาไทย', column: 3 },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', column: 3 },
+  { code: 'uk', name: 'Ukrainian', nativeName: 'Українська', column: 3 },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt', column: 3 },
+  { code: 'sw', name: 'Swahili', nativeName: 'Kiswahili', column: 3 },
+];
+
+export type Language = (typeof SUPPORTED_LANGUAGES)[number]['code'];
+
+export const translations: Record<string, Record<string, string>> = {
   id: {
     // Nav
     nav_home: 'Beranda',

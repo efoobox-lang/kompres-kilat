@@ -42,3 +42,4 @@ data/
 *.tsbuildinfo
 next-env.d.ts
 app/ai-presentation-maker/translations.ts
+public/images/route.ts
