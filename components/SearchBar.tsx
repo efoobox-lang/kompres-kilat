@@ -171,7 +171,7 @@ export default function SearchBar({
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="p-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
               aria-label="Buka pencarian alat"
               title="Cari alat (Ctrl + K)"
             >

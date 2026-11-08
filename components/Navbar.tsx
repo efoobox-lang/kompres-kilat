@@ -97,14 +97,14 @@ export default function Navbar() {
   const isToolsActive = pathname.startsWith('/tools') || pathname.startsWith('/ai-');
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-4">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors w-full">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* ========================================================== */}
         {/* SISI KIRI: Brand Logo                                      */}
         {/* ========================================================== */}
         <Link
           href="/"
-          className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl tracking-tight whitespace-nowrap shrink-0 group"
+          className="flex items-center gap-1.5 font-black text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl tracking-tight whitespace-nowrap shrink-0 group select-none"
         >
           <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform">⚡</span>
           <span>KompresKilat</span>
@@ -236,18 +236,18 @@ export default function Navbar() {
         {/* ========================================================== */}
         {/* MOBILE CONTROLS: Search Icon, Language & Hamburger         */}
         {/* ========================================================== */}
-        <div className="flex md:hidden items-center gap-1 sm:gap-1.5">
+        <div className="flex md:hidden items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Mobile Search Icon Trigger */}
           <SearchBar variant="mobile-icon" />
 
-          {/* Language Selector di Main Mobile Header Bar */}
-          <LanguageToggle className="px-2 py-1 text-xs" />
+          {/* Language Selector di Main Mobile Header Bar: Model Icon Saja di HP, Full di Web */}
+          <LanguageToggle iconOnlyOnMobile={true} />
 
           {/* Hamburger Menu Toggle Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition focus:outline-none cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition focus:outline-none cursor-pointer"
             aria-label={isMobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
             aria-expanded={isMobileMenuOpen}
           >

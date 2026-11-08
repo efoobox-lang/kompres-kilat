@@ -127,7 +127,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-800" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-slate-50 text-slate-800 overflow-x-hidden" suppressHydrationWarning>
         <ThemeProvider>
           <LanguageProvider>
             {children}
