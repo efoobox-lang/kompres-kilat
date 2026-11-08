@@ -136,83 +136,165 @@ export function buildSeoArticlePrompt(instruction?: string): string {
   const randomTopic = SEO_TOPICS[Math.floor(Math.random() * SEO_TOPICS.length)];
   const topicContext = instruction ? `Fokus Permintaan Pengguna: "${instruction}"` : `Topik Unggulan Rutin: "${randomTopic.theme}" (Target Kata Kunci: "${randomTopic.targetKeyword}")`;
 
-  return `Anda adalah Senior Technical SEO Specialist & Content Editor di portal produktivitas https://kompreskilat.site.
-Tugas Anda: Susun satu draf artikel blog EDUKATIF, MENDALAM, dan SANGAT LENGKAP dengan standar Google Helpful Content System & Kebijakan Kualitas Google AdSense.
+  return `Anda adalah Senior Technical SEO Specialist & Chief Content Editor di portal produktivitas https://kompreskilat.site.
+Tugas Anda: Susun satu draf artikel blog EDUKATIF, MENDALAM, SANGAT LENGKAP, dan 100% "MATENG" (siap langsung dipublikasikan oleh Mandor tanpa perlu penyuntingan atau penjelasan tambahan).
 
 ${topicContext}
 
-KETENTUAN KUALITAS WAJIB & NON-NEGOTIABLE:
-1. PANJANG MINIMAL 700 KATA: Artikel harus panjang, komprehensif, kaya fakta praktis, dan mengupas tuntas masalah (panjang 700 - 1.200 kata). DILARANG KERAS menghasilkan artikel pendek/ringkasan (thin content).
-2. TANPA BASA-BASI PEMBUKA: JANGAN PERNAH memulai dengan kalimat pengantar seperti "Tentu...", "Berikut draf...", "Sebagai SEO Specialist...", atau "Halo...". Baris pertama WAJIB langsung berupa Judul Artikel tingkat 1 (# [Judul]).
-3. STRUKTUR HIERARKI MARKDOWN WAJIB:
-   # [Judul Menarik, Berisi Target Keyword & Solusi Nyata]
-   **Target Keyword:** [kata kunci utama dan variasi LSI] | **Estimasi Waktu Baca:** 5-7 menit
-   **Meta Deskripsi:** [145-160 karakter ringkasan mengundang klik di mesin pencari]
+KETENTUAN KUALITAS & FORMAT MATENG (WAJIB & NON-NEGOTIABLE):
+1. DILARANG KERAS BASA-BASI: Jangan pernah menyertakan kalimat pengantar, sapaan, atau penutup seperti "Tentu...", "Berikut draf...", "Sebagai SEO Specialist...", atau "Semoga bermanfaat...".
+2. KONTEN HARUS BERSIH: Seluruh metadata (Judul, Tagline, Deskripsi, Kata Kunci) WAJIB dipisahkan di blok METADATA di awal. Di dalam blok KONTEN, DILARANG mengulang kembali judul, kata kunci, atau meta deskripsi.
+3. PANJANG MINIMAL 700 - 1.200 KATA: Artikel harus panjang, berbobot, kaya studi kasus nyata, dan mengupas tuntas masalah agar lolos standar Google Helpful Content & bebas dari resiko Thin Content AdSense.
 
-   ## 1. Latar Belakang & Kendala Nyata Pengguna
-   [Ulas situasi nyata, studi kasus frustrasi pelamar kerja, UMKM, atau staf kantor saat berurusan dengan ukuran berkas, cetak struk, atau format dokumen]
+FORMAT KELUARAN WAJIB (PERSIS SEPERTI STRUKTUR DI BAWAH INI):
 
-   ## 2. Mengapa Standar Dokumen Sangat Krusial
-   [Jelaskan aturan resmi, misalnya batas sistem portal SSCASN/BKN maksimal 200KB, standar legalitas bukti nota transaksi, atau cara kerja mesin filter parser resume ATS]
+---METADATA---
+JUDUL: [Judul artikel menarik, bernilai klik tinggi, memuat keyword utama tanpa simbol tanda kutip atau hashtag]
+TAGLINE: [1-2 kalimat ringkasan tajam untuk kutipan pengantar pembaca]
+DESKRIPSI: [140-160 karakter meta deskripsi SEO standar Google Search]
+KATA KUNCI: [Kumpulan kata kunci utama dan LSI relevan dipisahkan koma]
+KATEGORI: [Dokumen PDF / Gambar & Foto / Bisnis & UMKM / Kecerdasan Buatan (AI) / Ekspedisi & Resi]
+---KONTEN---
+## 1. Latar Belakang & Kendala Nyata Pengguna
+[Paragraf pembuka artikel yang mengalir alami dan memikat, mengupas masalah nyata pelamar kerja, UMKM, atau staf kantor]
 
-   ## 3. Panduan Langkah Demi Langkah Menggunakan KompresKilat
-   ### Langkah 1: Persiapan & Unggah Berkas
-   [Penjelasan rinci tahapan pertama]
-   ### Langkah 2: Konfigurasi Parameter (Ukuran, Kompresi, atau Format)
-   [Penjelasan mendalam tips pengaturan]
-   ### Langkah 3: Unduh & Verifikasi Hasil Akhir
-   [Penjelasan cara cek ukuran file dan kualitas visual]
+## 2. Mengapa Standar Dokumen Sangat Krusial
+[Penjelasan aturan resmi, regulasi, standar verifikasi, atau cara kerja sistem]
 
-   ## 4. Keunggulan Privasi 100% Client-Side di KompresKilat
-   [Jelaskan mengapa pemrosesan langsung di peramban pengguna (tanpa kirim data ke server pihak ketiga) menjamin keamanan data pribadi KTP, keuangan nota, dan dokumen penting]
+## 3. Panduan Langkah Demi Langkah Menggunakan Fitur KompresKilat
+### Langkah 1: Persiapan & Unggah Berkas
+[Penjelasan rinci tahapan pertama]
+### Langkah 2: Konfigurasi Parameter (Ukuran, Kompresi, atau Format)
+[Penjelasan mendalam tips pengaturan]
+### Langkah 3: Unduh & Verifikasi Hasil Akhir
+[Penjelasan cara cek ukuran file dan kualitas visual]
 
-   ## 5. Tips Pro & Praktik Terbaik Menghindari Kesalahan Fatal
-   [Berikan 3-5 tips praktis profesional berpoin-poin tebal]
+## 4. Keunggulan Privasi 100% Client-Side di KompresKilat
+[Ulas mengapa pemrosesan langsung di peramban tanpa simpan di server menjamin keamanan berkas KTP, nota, dan dokumen penting]
 
-   ## 6. Pertanyaan yang Sering Diajukan (FAQ Schema & Jawaban Lengkap)
-   - **Q: [Pertanyaan Umum 1]?**
-     **A:** [Jawaban mendalam dan solutif]
-   - **Q: [Pertanyaan Umum 2]?**
-     **A:** [Jawaban mendalam dan solutif]
-   - **Q: [Pertanyaan Umum 3]?**
-     **A:** [Jawaban mendalam dan solutif]
+## 5. Tips Pro & Praktik Terbaik Menghindari Kesalahan Fatal
+[Berikan 3-5 tips praktis profesional dengan poin-poin tebal]
 
-4. TONE OF VOICE: Profesional, bersahabat, terstruktur rapi, menggunakan Bahasa Indonesia yang baku dan mengalir natural, serta menyisipkan tautan internal alami ke fitur kompreskilat.site.`;
+## 6. Pertanyaan yang Sering Diajukan (FAQ Lengkap)
+- **Q: [Pertanyaan Umum 1]?**
+  **A:** [Jawaban mendalam dan solutif]
+- **Q: [Pertanyaan Umum 2]?**
+  **A:** [Jawaban mendalam dan solutif]
+- **Q: [Pertanyaan Umum 3]?**
+  **A:** [Jawaban mendalam dan solutif]`;
 }
 
 /**
  * Helper untuk mem-parsing draf artikel SEO yang dihasilkan oleh Agen AI
+ * Memisahkan metadata dan memastikan isi konten (content) 100% "mateng" tanpa polusi judul/tagline/kata kunci.
  */
-export function parseGeneratedSeoDraft(markdownText: string) {
-  const lines = markdownText.split('\n');
-  let title = 'Panduan Lengkap Utilitas Digital & Dokumen KompresKilat';
-  let metaDescription = 'Panduan komprehensif cara mengelola berkas digital, kompresi dokumen, dan alat produktivitas kantor gratis di kompreskilat.site.';
-  let keywords = 'kompres kilat, tools berkas gratis, produktivitas kantor, kompres dokumen';
-  let category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel' | 'Kecerdasan Buatan (AI)' | 'Keamanan Data' | 'Bisnis & UMKM' = 'Dokumen PDF';
+export function parseGeneratedSeoDraft(rawText: string) {
+  let title = '';
+  let tagline = '';
+  let metaDescription = '';
+  let keywords = '';
+  let categoryName = '';
+  let cleanContent = '';
 
-  for (const line of lines) {
-    if (line.startsWith('# ')) {
-      title = line.replace('# ', '').replace(/\*\*/g, '').trim();
-    } else if (line.toLowerCase().includes('meta deskripsi:')) {
-      const parsed = line.split(/meta deskripsi:/i)[1]?.replace(/\*\*/g, '').trim();
-      if (parsed) metaDescription = parsed;
-    } else if (line.toLowerCase().includes('target keyword:')) {
-      const parsed = line.split(/target keyword:/i)[1]?.split('|')[0]?.replace(/\*\*/g, '').trim();
-      if (parsed) keywords = parsed;
+  if (rawText.includes('---KONTEN---')) {
+    const parts = rawText.split('---KONTEN---');
+    const metaBlock = parts[0] || '';
+    cleanContent = parts.slice(1).join('---KONTEN---').trim();
+
+    // Ekstraksi dari blok METADATA
+    const metaLines = metaBlock.split('\n');
+    for (const line of metaLines) {
+      const trimmed = line.trim();
+      if (/^JUDUL\s*:/i.test(trimmed)) {
+        title = trimmed.replace(/^JUDUL\s*:/i, '').replace(/["'*#]/g, '').trim();
+      } else if (/^TAGLINE\s*:/i.test(trimmed)) {
+        tagline = trimmed.replace(/^TAGLINE\s*:/i, '').replace(/["'*]/g, '').trim();
+      } else if (/^DESKRIPSI\s*:/i.test(trimmed) || /^META\s*DESKRIPSI\s*:/i.test(trimmed)) {
+        metaDescription = trimmed.replace(/^(META\s*)?DESKRIPSI\s*:/i, '').replace(/["'*]/g, '').trim();
+      } else if (/^KATA\s*KUNCI\s*:/i.test(trimmed) || /^TARGET\s*KEYWORD\s*:/i.test(trimmed)) {
+        keywords = trimmed.replace(/^(TARGET\s*KEYWORD|KATA\s*KUNCI)\s*:/i, '').replace(/["'*]/g, '').trim();
+      } else if (/^KATEGORI\s*:/i.test(trimmed)) {
+        categoryName = trimmed.replace(/^KATEGORI\s*:/i, '').replace(/["'*]/g, '').trim();
+      }
     }
+  } else {
+    // Fallback parsing jika AI tidak menyertakan pemisah eksplisit
+    const lines = rawText.split('\n');
+    const bodyLines: string[] = [];
+    let titleFound = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (!titleFound && (trimmed.startsWith('# ') || /^JUDUL\s*:/i.test(trimmed))) {
+        title = trimmed.replace(/^(#\s*|JUDUL\s*:\s*)/i, '').replace(/["'*]/g, '').trim();
+        titleFound = true;
+        continue;
+      }
+      if (/^(meta deskripsi|deskripsi)\s*:/i.test(trimmed)) {
+        const parsed = trimmed.split(/:\s*/)[1]?.replace(/\*\*/g, '').trim();
+        if (parsed) metaDescription = parsed;
+        continue;
+      }
+      if (/^(target keyword|kata kunci|keywords)\s*:/i.test(trimmed)) {
+        const parsed = trimmed.split(/:\s*/)[1]?.split('|')[0]?.replace(/\*\*/g, '').trim();
+        if (parsed) keywords = parsed;
+        continue;
+      }
+      if (/^(tagline|ringkasan|excerpt)\s*:/i.test(trimmed)) {
+        const parsed = trimmed.split(/:\s*/)[1]?.replace(/\*\*/g, '').trim();
+        if (parsed) tagline = parsed;
+        continue;
+      }
+      if (/^---METADATA---/i.test(trimmed) || /^---KONTEN---/i.test(trimmed)) {
+        continue;
+      }
+      // Hapus kalimat pembuka basa-basi di awal konten
+      if (bodyLines.length === 0) {
+        if (/^(berikut|tentu|sebagai|halo|baiklah|ini adalah draf)/i.test(trimmed)) {
+          continue;
+        }
+        if (trimmed === '') {
+          continue;
+        }
+      }
+      bodyLines.push(line);
+    }
+    cleanContent = bodyLines.join('\n').trim();
   }
 
+  // Hapus sisa-sisa metadata yang mungkin tidak sengaja lolos di awal konten
+  cleanContent = cleanContent
+    .replace(/^#\s+[^\n]+\n+/, '') // Hapus duplikasi Judul H1 jika ada di baris pertama
+    .replace(/^\*\*Target Keyword:\*\*.*?\n+/i, '')
+    .replace(/^\*\*Meta Deskripsi:\*\*.*?\n+/i, '')
+    .replace(/^\*\*Tagline:\*\*.*?\n+/i, '')
+    .trim();
+
+  // Hapus kalimat penutup basa-basi di akhir konten
+  cleanContent = cleanContent
+    .replace(/\n*---*\s*(semoga artikel ini bermanfaat|demikian draf artikel|catatan editor:|tips seo tambahan:)[\s\S]*$/i, '')
+    .trim();
+
+  // Fallback defaults jika ada kolom yang kosong
+  if (!title) title = 'Panduan Lengkap Utilitas Digital & Dokumen KompresKilat';
+  if (!tagline) tagline = metaDescription || 'Panduan praktis pengelolaan berkas digital dan alat produktivitas kantor gratis di kompreskilat.site.';
+  if (!metaDescription) metaDescription = tagline.slice(0, 160);
+  if (!keywords) keywords = 'kompres kilat, tools berkas gratis, produktivitas kantor, kompres dokumen';
+
   // Kategorisasi otomatis berdasarkan kata kunci judul/isi
-  const lowerTitle = title.toLowerCase();
-  if (lowerTitle.includes('ktp') || lowerTitle.includes('foto') || lowerTitle.includes('gambar') || lowerTitle.includes('pasfoto')) {
+  let category: 'Tips SEO' | 'Dokumen PDF' | 'Ekspedisi & Resi' | 'Gambar & Foto' | 'Spreadsheet & Excel' | 'Kecerdasan Buatan (AI)' | 'Keamanan Data' | 'Bisnis & UMKM' = 'Dokumen PDF';
+  const checkText = `${title} ${categoryName} ${keywords}`.toLowerCase();
+  if (checkText.includes('ktp') || checkText.includes('foto') || checkText.includes('gambar') || checkText.includes('pasfoto')) {
     category = 'Gambar & Foto';
-  } else if (lowerTitle.includes('invoice') || lowerTitle.includes('nota') || lowerTitle.includes('kwitansi') || lowerTitle.includes('umkm') || lowerTitle.includes('kasir')) {
+  } else if (checkText.includes('invoice') || checkText.includes('nota') || checkText.includes('kwitansi') || checkText.includes('umkm') || checkText.includes('kasir')) {
     category = 'Bisnis & UMKM';
-  } else if (lowerTitle.includes('resume') || lowerTitle.includes('cv') || lowerTitle.includes('ats') || lowerTitle.includes('ai')) {
+  } else if (checkText.includes('resume') || checkText.includes('cv') || checkText.includes('ats') || checkText.includes('ai') || checkText.includes('lamaran')) {
     category = 'Kecerdasan Buatan (AI)';
-  } else if (lowerTitle.includes('resi') || lowerTitle.includes('paket') || lowerTitle.includes('ekspedisi')) {
+  } else if (checkText.includes('resi') || checkText.includes('paket') || checkText.includes('ekspedisi')) {
     category = 'Ekspedisi & Resi';
-  } else if (lowerTitle.includes('pdf') || lowerTitle.includes('dokumen')) {
+  } else if (checkText.includes('pdf') || checkText.includes('dokumen')) {
     category = 'Dokumen PDF';
   }
 
@@ -276,21 +358,23 @@ export function parseGeneratedSeoDraft(markdownText: string) {
     .slice(0, 80);
 
   const slug = rawSlug || `panduan-kompres-kilat-${Date.now()}`;
-  const quality = analyzeArticleQuality(markdownText);
+  const quality = analyzeArticleQuality(cleanContent);
 
   return {
     title,
+    tagline,
+    excerpt: tagline,
     slug,
     metaDescription,
     keywords,
-    content: markdownText,
+    content: cleanContent, // 100% MATENG: hanya berisi tubuh artikel murni tanpa judul ganda atau meta tags
     category,
     wordCount: quality.wordCount,
     readingTime: quality.readingTime,
     isAdSenseSafe: quality.isAdSenseSafe,
     warnings: quality.warnings,
     relatedTool,
-    status: 'draft' as const, // Selalu berstatus 'draft' secara default saat pertama kali dibuat
+    status: 'draft' as const,
   };
 }
 
@@ -300,10 +384,13 @@ export function parseGeneratedSeoDraft(markdownText: string) {
  * sehingga draf yang tersimpan selalu bebas dari resiko Thin Content AdSense.
  */
 export const FALLBACK_SEO_ARTICLES_700W: string[] = [
-  `# Panduan Lengkap: Cara Kompres Foto KTP & Pasfoto di Bawah 200KB Tanpa Buram untuk Syarat CPNS dan BUMN
-**Target Keyword:** cara kompres foto ktp 200kb, kompres pasfoto cpns online, perkecil foto tanpa buram | **Estimasi Waktu Baca:** 6 menit
-**Meta Deskripsi:** Pelajari panduan lengkap cara kompres foto KTP dan pasfoto lamaran kerja menjadi di bawah 200KB tanpa buram secara gratis dan aman 100% di browser.
-
+  `---METADATA---
+JUDUL: Panduan Lengkap: Cara Kompres Foto KTP & Pasfoto di Bawah 200KB Tanpa Buram untuk Syarat CPNS dan BUMN
+TAGLINE: Pelajari panduan lengkap cara kompres foto KTP dan pasfoto lamaran kerja menjadi di bawah 200KB tanpa buram secara gratis dan aman 100% di browser.
+DESKRIPSI: Panduan kompres foto KTP & pasfoto lamaran kerja di bawah 200KB tanpa buram, gratis dan aman 100% client-side tanpa simpan di server.
+KATA KUNCI: cara kompres foto ktp 200kb, kompres pasfoto cpns online, perkecil foto tanpa buram
+KATEGORI: Gambar & Foto
+---KONTEN---
 ## 1. Latar Belakang: Mengapa Berkas KTP Sering Ditolak Sistem SSCASN & BUMN?
 Setiap tahunnya, jutaan pelamar kerja di Indonesia menghadapi momen krusial saat mendaftarkan diri pada seleksi Calon Pegawai Negeri Sipil (CPNS), Pegawai Pemerintah dengan Perjanjian Kerja (PPPK), maupun Rekrutmen Bersama BUMN. Salah satu kendala teknis yang paling sering memicu kepanikan adalah batasan ukuran unggahan berkas identitas digital.
 
@@ -361,10 +448,13 @@ Di KompresKilat, kami menerapkan standar **Zero-Knowledge Privacy**. Seluruh pro
 - **Q: Bisakah alat ini digunakan untuk pasfoto lamaran kerja dengan latar belakang merah atau biru?**
   **A:** Sangat bisa. Anda dapat mengompres pasfoto 3x4 maupun 4x6 untuk memenuhi kualifikasi unggahan formulir pendaftaran kerja apapun.`,
 
-  `# Solusi Lengkap: Cara Membuat Invoice, Nota Kasir Thermal & Kwitansi Resmi Online Gratis untuk Pelaku UMKM
-**Target Keyword:** cara membuat nota thermal online, cetak struk kasir 58mm gratis, aplikasi kasir gratis tanpa langganan | **Estimasi Waktu Baca:** 7 menit
-**Meta Deskripsi:** Panduan praktis bagi pemilik toko dan UMKM untuk menerbitkan invoice resmi, nota kasir thermal 58mm/80mm, dan kwitansi lengkap stempel lunas gratis tanpa biaya langganan bulanan.
-
+  `---METADATA---
+JUDUL: Solusi Lengkap: Cara Membuat Invoice, Nota Kasir Thermal & Kwitansi Resmi Online Gratis untuk Pelaku UMKM
+TAGLINE: Panduan praktis bagi pemilik toko dan UMKM untuk menerbitkan invoice resmi, nota kasir thermal 58mm/80mm, dan kwitansi lengkap stempel lunas gratis tanpa biaya langganan bulanan.
+DESKRIPSI: Panduan pembuatan faktur invoice, nota kasir struk thermal, dan kwitansi resmi toko UMKM gratis dengan stempel lunas digital dan tanda tangan online.
+KATA KUNCI: cara membuat nota thermal online, cetak struk kasir 58mm gratis, aplikasi kasir gratis tanpa langganan
+KATEGORI: Bisnis & UMKM
+---KONTEN---
 ## 1. Beban Biaya Aplikasi POS Bulanan bagi Pemilik Toko & UMKM
 Di era digitalisasi usaha, para pelaku Usaha Mikro, Kecil, dan Menengah (UMKM)—mulai dari pemilik kedai kopi, toko kelontong, butik pakaian, bengkel motor, apotek herbal, hingga penyedia jasa freelance—dituntut untuk memberikan bukti transaksi yang tertib dan profesional kepada para konsumennya.
 
@@ -421,10 +511,13 @@ Di KompresKilat, seluruh kalkulasi keuangan dan lembar dokumen diproses **100% s
 - **Q: Apakah hasil cetak invoice di kertas A4 terlihat resmi dan profesional?**
   **A:** Sangat resmi. Tata letak KompresKilat dirancang mengikuti standar faktur korporat modern dengan tipografi bersih, garis tepi presisi, dan barcode transaksi otomatis.`,
 
-  `# Panduan Terpadu: Cara Mengompres & Menggabungkan Dokumen PDF Berkas Administrasi Kantor Tanpa Rusak
-**Target Keyword:** cara kompres pdf online gratis, cara gabung file pdf resmi, perkecil ukuran pdf kantor | **Estimasi Waktu Baca:** 7 menit
-**Meta Deskripsi:** Panduan lengkap cara mengompres ukuran file PDF dan menggabungkan banyak dokumen menjadi satu berkas rapi secara online, gratis, dan 100% aman privasi.
-
+  `---METADATA---
+JUDUL: Panduan Terpadu: Cara Mengompres & Menggabungkan Dokumen PDF Berkas Administrasi Kantor Tanpa Rusak
+TAGLINE: Panduan lengkap cara mengompres ukuran file PDF dan menggabungkan banyak dokumen menjadi satu berkas rapi secara online, gratis, dan 100% aman privasi.
+DESKRIPSI: Panduan kompres ukuran PDF dan gabung multi-file PDF kantor menjadi satu berkas rapi gratis, cepat, dan aman 100% client-side tanpa server luar.
+KATA KUNCI: cara kompres pdf online gratis, cara gabung file pdf resmi, perkecil ukuran pdf kantor
+KATEGORI: Dokumen PDF
+---KONTEN---
 ## 1. Tantangan Pengelolaan Berkas PDF di Lingkungan Kantor & Rekrutmen
 Format Portable Document Format (PDF) telah menjadi standar universal dalam pertukaran berkas administrasi perkantoran, surat perjanjian kerja (SPK), laporan keuangan tahunan, hingga pengumpulan berkas lamaran kerja di seluruh dunia. Keunggulan utama PDF terletak pada konsistensi tata letaknya: dokumen akan selalu tampil identik baik dibuka di ponsel Android, iPhone, tablet, maupun komputer desktop.
 

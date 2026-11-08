@@ -123,40 +123,6 @@ KompresKilat.site menghadirkan solusi pembuat invoice, nota, dan kwitansi online
   ]
 };
 
-// Helper parsing draf artikel SEO dari Markdown
-function parseArticleDraft(markdownText: string) {
-  const lines = markdownText.split('\n');
-  let title = 'Draf Artikel SEO KompresKilat';
-  let metaDescription = 'Panduan praktis utilitas berkas dan produktivitas kompreskilat.site';
-  let keywords = 'kompres kilat, tools online gratis, produktivitas umkm';
-
-  for (const line of lines) {
-    if (line.startsWith('# ')) {
-      title = line.replace('# ', '').trim();
-    } else if (line.toLowerCase().includes('meta deskripsi:')) {
-      metaDescription = line.split(/meta deskripsi:/i)[1]?.replace(/\*\*/g, '').trim() || metaDescription;
-    } else if (line.toLowerCase().includes('target keyword:')) {
-      keywords = line.split(/target keyword:/i)[1]?.split('|')[0]?.replace(/\*\*/g, '').trim() || keywords;
-    }
-  }
-
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
-    .slice(0, 60);
-
-  return {
-    title,
-    slug,
-    metaDescription,
-    keywords,
-    content: markdownText,
-    category: 'Panduan & Tutorial UMKM',
-    status: 'pending_review' as const
-  };
-}
-
 export async function POST(request: Request) {
   try {
     if (!isSameOrigin(request)) {
@@ -414,7 +380,7 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
           divisionName,
           task: taskResult,
           isArticleDraft: divisionId === 'seo',
-          articleDraft: divisionId === 'seo' ? parseArticleDraft(taskResult) : null,
+          articleDraft: divisionId === 'seo' ? parseGeneratedSeoDraft(taskResult) : null,
           videoData: null,
           model: `hermes3d/${agentId}`,
           timestamp: currentTimestamp,

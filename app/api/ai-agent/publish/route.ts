@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       title: String(article.title),
       slug: article.slug ? String(article.slug) : undefined,
       category: article.category,
+      excerpt: article.excerpt || article.tagline || article.metaDescription,
       metaDescription: article.metaDescription,
       keywords: article.keywords,
       content: String(article.content),

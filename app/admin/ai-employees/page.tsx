@@ -153,6 +153,8 @@ export interface SeoArticleDraft {
   id: string;
   title: string;
   slug: string;
+  tagline?: string;
+  excerpt?: string;
   category: string;
   keywords: string;
   metaDescription: string;
@@ -3546,6 +3548,11 @@ export default function AIEmployeesDashboard() {
                     <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">
                       {editingDraft.title}
                     </h1>
+                    {(editingDraft.tagline || editingDraft.excerpt) && (
+                      <p className="text-xs font-semibold text-emerald-400">
+                        {editingDraft.tagline || editingDraft.excerpt}
+                      </p>
+                    )}
                     <p className="text-xs text-slate-400 italic">
                       {editingDraft.metaDescription}
                     </p>
@@ -3583,6 +3590,18 @@ export default function AIEmployeesDashboard() {
                         className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
                       />
                     </div>
+                  </div>
+
+                  {/* Tagline / Ringkasan Singkat */}
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Tagline / Ringkasan (Kutipan Pengantar):</label>
+                    <input
+                      type="text"
+                      value={editingDraft.tagline || editingDraft.excerpt || ''}
+                      onChange={(e) => setEditingDraft({ ...editingDraft, tagline: e.target.value, excerpt: e.target.value })}
+                      placeholder="Ringkasan singkat pengantar artikel"
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                    />
                   </div>
 
                   {/* Meta Deskripsi & Target Keyword */}
@@ -3630,7 +3649,12 @@ export default function AIEmployeesDashboard() {
                   {/* Textarea Konten Markdown */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-slate-300">Konten Artikel Lengkap (Markdown):</label>
+                      <div className="flex items-center gap-2">
+                        <label className="font-bold text-slate-300">Konten Artikel Lengkap (Markdown):</label>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 font-medium">
+                          100% Mateng Tanpa Tag Duplikat
+                        </span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
