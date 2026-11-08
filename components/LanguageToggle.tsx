@@ -58,6 +58,9 @@ export default function LanguageToggle({
     setIsOpen(false);
   };
 
+  // Label tombol: default bahasa Indonesia diganti menjadi 'Pilih Bahasa'
+  const displayLabel = lang === 'id' ? 'Pilih Bahasa' : currentLanguage.nativeName;
+
   // Button styling based on variant & mobile responsiveness
   const getButtonClass = () => {
     if (variant === 'footer') {
@@ -80,22 +83,22 @@ export default function LanguageToggle({
       translate="no"
       dir="ltr"
     >
-      {/* Trigger Button: Handphone = Icon Saja (🌐), Desktop/Web = 🌐 [Language Native Name] ∨ */}
+      {/* Trigger Button: Handphone = Icon Saja (🌐), Desktop/Web = 🌐 [Pilih Bahasa] ∨ */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={getButtonClass()}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        title={`Ganti Bahasa / Select Language (${currentLanguage.nativeName})`}
-        aria-label={`Ganti Bahasa. Bahasa aktif: ${currentLanguage.nativeName}`}
+        title={`Pilih Bahasa / Select Language (${currentLanguage.nativeName})`}
+        aria-label={`Pilih Bahasa. Bahasa aktif: ${currentLanguage.nativeName}`}
         translate="no"
       >
         <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-500 shrink-0" />
         {shouldBeIconOnlyOnMobile ? (
           <>
             <span className="hidden sm:inline truncate max-w-[110px] md:max-w-none">
-              {currentLanguage.nativeName}
+              {displayLabel}
             </span>
             <span className="hidden sm:inline shrink-0">
               {direction === 'up' ? (
@@ -107,7 +110,7 @@ export default function LanguageToggle({
           </>
         ) : (
           <>
-            <span className="truncate max-w-[110px] sm:max-w-none">{currentLanguage.nativeName}</span>
+            <span className="truncate max-w-[110px] sm:max-w-none">{displayLabel}</span>
             {direction === 'up' ? (
               <ChevronUp className="w-3.5 h-3.5 opacity-60 shrink-0" />
             ) : (

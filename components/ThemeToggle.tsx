@@ -7,9 +7,14 @@ import { useLanguage } from '@/context/LanguageContext';
 interface ThemeToggleProps {
   className?: string;
   compact?: boolean;
+  showLabel?: boolean;
 }
 
-export default function ThemeToggle({ className = '', compact = false }: ThemeToggleProps) {
+export default function ThemeToggle({
+  className = '',
+  compact = false,
+  showLabel = false,
+}: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const { lang } = useLanguage();
   const isDark = theme === 'dark';
@@ -27,11 +32,11 @@ export default function ThemeToggle({ className = '', compact = false }: ThemeTo
           toggleTheme();
         }
       }}
-      className={`inline-flex items-center gap-2 select-none cursor-pointer focus:outline-none transition group ${className}`}
+      className={`inline-flex items-center gap-1.5 select-none cursor-pointer focus:outline-none transition group ${className}`}
       title={label}
       aria-label={label}
     >
-      {!compact && (
+      {showLabel && !compact && (
         <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 transition-colors">
           {label}
         </span>

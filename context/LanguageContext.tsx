@@ -31,17 +31,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         if (stored && SUPPORTED_LANGUAGES.some((item) => item.code === stored)) {
           return stored;
         }
-        const navLang = navigator.language.toLowerCase();
-        // Exact match (e.g., 'zh-cn' -> 'zh-CN')
-        const exact = SUPPORTED_LANGUAGES.find((item) => item.code.toLowerCase() === navLang);
-        if (exact) return exact.code;
-        // Prefix match (e.g., 'es-ES' -> 'es', 'ja-JP' -> 'ja')
-        const prefix = SUPPORTED_LANGUAGES.find((item) => navLang.startsWith(item.code.toLowerCase()));
-        if (prefix) return prefix.code;
       } catch {
         // fallback
       }
     }
+    // Default selalu Bahasa Indonesia
     return 'id';
   });
 
