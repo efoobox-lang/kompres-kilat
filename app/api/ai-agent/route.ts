@@ -4,6 +4,11 @@ import { randomUUID } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
 import { aiEmployeeStoreRequest, isAIEmployeeStoreConfigured, supabaseRpcRequest } from '@/lib/ai-employee-store';
+import {
+  buildSeoArticlePrompt,
+  parseGeneratedSeoDraft,
+  FALLBACK_SEO_ARTICLES_700W,
+} from '@/lib/seo-article-generator';
 
 function cleanAgentOutput(text: string): string {
   let cleaned = text.trim();
@@ -214,7 +219,10 @@ export async function POST(request: Request) {
 
     let systemPrompt = '';
 
-    if (instruction) {
+    if (divisionId === 'seo') {
+      // Divisi SEO: Generator draf artikel berstandar Google Helpful Content & Bebas Thin Content (Minimal 700+ kata)
+      systemPrompt = buildSeoArticlePrompt(instruction);
+    } else if (instruction) {
       systemPrompt = `Anda adalah ${canonicalDivisionName} di platform kompreskilat.site.
 Peran Anda: Berikan respons dan analisis konkret yang ON POINT langsung ke target tugas tanpa basa-basi pengantar.
 
@@ -226,38 +234,6 @@ ${divisionId === 'analytics' ? `Data telemetri analitik situs aktual: ${JSON.str
 
 Instruksi Tugas:
 ${instruction}`;
-    } else if (divisionId === 'seo') {
-      // Divisi SEO: Generator draf artikel berstandar Google Helpful Content & AdSense
-      systemPrompt = `Anda adalah Senior SEO Specialist & Content Strategist untuk website kompreskilat.site.
-Tugas Anda: Buat draf artikel tutorial edukatif berperingkat tinggi di Google Indonesia mengenai fitur kompreskilat.site (kompres foto KTP <200KB, ubah gambar ke PDF, atau cetak nota thermal kasir 58mm/80mm gratis).
-
-ATURAN WAJIB & KETAT:
-1. JANGAN PERNAH menambahkan kalimat pembuka basa-basi ("Tentu...", "Berikut artikel...").
-2. LANGSUNG MULAI dari baris pertama: Judul Markdown "# [Judul Artikel]".
-3. Format Keluaran Wajib (Markdown):
-# [Judul Artikel Menarik, Edukatif & SEO-Friendly]
-**Target Keyword:** [kata kunci utama] | **Estimasi Baca:** 3-4 menit
-**Meta Deskripsi:** [150-160 karakter ringkasan artikel]
-
-## 1. Pendahuluan
-[Tantangan pengguna berkas/cetak nota dan solusi kilatnya]
-
-## 2. Keunggulan Fitur KompresKilat.site
-[Poin keunggulan: 100% Client-side browser, privasi berkas aman, cepat tanpa instalasi aplikasi berat]
-
-## 3. Panduan Langkah Demi Langkah
-1. [Langkah 1]
-2. [Langkah 2]
-3. [Langkah 3]
-
-## 4. Tips Tambahan untuk Efisiensi Kerja
-[Tips praktis penggunaan berkas digital atau printer thermal]
-
-## 5. Tanya Jawab (FAQ Schema)
-- **Q:** [Pertanyaan 1]?
-  **A:** [Jawaban 1]
-- **Q:** [Pertanyaan 2]?
-  **A:** [Jawaban 2]`;
     } else {
       // Divisi Lainnya: Problem Solving Otomatis Memajukan kompreskilat.site
       switch (divisionId) {
@@ -500,17 +476,22 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
 
     // Jika pemanggilan API belum menghasilkan teks (misalnya limit quota atau offline), gunakan fallback terkurasi
     if (!taskResult) {
-      const pool = fallbackTasks[divisionId] || fallbackTasks.it;
-      taskResult = pool[Math.floor(Math.random() * pool.length)];
+      if (divisionId === 'seo') {
+        taskResult = FALLBACK_SEO_ARTICLES_700W[Math.floor(Math.random() * FALLBACK_SEO_ARTICLES_700W.length)];
+      } else {
+        const pool = fallbackTasks[divisionId] || fallbackTasks.it;
+        taskResult = pool[Math.floor(Math.random() * pool.length)];
+      }
       usedModel = 'kompreskilat-curated-agent';
     }
 
-    // Jika divisi SEO, parse draf artikel terstruktur
-    const articleData = isArticleDraft ? parseArticleDraft(taskResult) : null;
+    // Jika divisi SEO, parse draf artikel terstruktur mendalam (700+ kata)
+    const articleData = isArticleDraft ? parseGeneratedSeoDraft(taskResult) : null;
     const batchId = randomUUID();
     const draftId = randomUUID();
-    const effectivePrompt = instruction || `Tugas rutin (${divisionName})`;
+    const effectivePrompt = instruction || (divisionId === 'seo' ? 'Tulis draf artikel SEO mendalam (700+ kata)' : `Tugas rutin (${divisionName})`);
     const extractedQuote = extractQuote(taskResult);
+    const initialStatus = divisionId === 'seo' ? 'draft' : 'pending_approval';
 
     try {
       await saveTaskRecord({
@@ -520,8 +501,8 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
         prompt: effectivePrompt,
         output: taskResult,
         model: usedModel,
-        status: 'pending_approval',
-        data: { extractedQuote, supervisorStatus: 'pending_approval' },
+        status: initialStatus,
+        data: { extractedQuote, supervisorStatus: initialStatus },
         articleDraft: articleData,
       });
     } catch (error) {
@@ -541,7 +522,7 @@ Format: Laporan terstruktur rapi dengan status "⏳ Menunggu Persetujuan Supervi
       isArticleDraft,
       articleDraft: articleData,
       model: usedModel,
-      status: 'pending_approval',
+      status: initialStatus,
       timestamp: currentTimestamp
     });
   } catch (error: any) {
@@ -607,10 +588,11 @@ async function saveTaskRecord(record: {
           prompt: record.prompt,
           output: record.output,
           model: record.model,
-          status: 'pending_review',
+          status: 'draft',
           data: {
             ...record.articleDraft,
             id: record.id,
+            status: 'draft',
           },
         }),
       });

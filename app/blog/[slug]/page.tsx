@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { getAllPosts, getPostBySlug } from '@/lib/blog-data';
+import { getAllPosts } from '@/lib/blog-data';
+import { getPublicBlogPostBySlug } from '@/lib/blog-service';
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
 import Navbar from '@/components/Navbar';
@@ -19,7 +20,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPublicBlogPostBySlug(slug);
 
   if (!post) {
     return {
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPublicBlogPostBySlug(slug);
 
   if (!post) {
     notFound();

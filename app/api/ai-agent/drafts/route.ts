@@ -1,13 +1,25 @@
 import { NextResponse } from 'next/server';
 import { isSameOrigin, verifyAdminSession } from '@/lib/admin-auth';
 import { aiEmployeeStoreRequest, isAIEmployeeStoreConfigured } from '@/lib/ai-employee-store';
+import { publishBlogArticle, unpublishBlogArticle } from '@/lib/blog-service';
+
+export type StoredDraftStatus = 'draft' | 'review' | 'published' | 'pending_review' | 'approved' | 'revision';
 
 interface StoredDraft {
   id: string;
   title: string;
   content: string;
-  status: 'pending_review' | 'approved' | 'revision';
+  status: StoredDraftStatus;
   type?: 'article' | 'video' | 'social';
+  slug?: string;
+  category?: string;
+  keywords?: string;
+  metaDescription?: string;
+  wordCount?: number;
+  readTime?: string;
+  readingTime?: string;
+  relatedTool?: any;
+  createdAt?: string;
   [key: string]: unknown;
 }
 
@@ -54,9 +66,9 @@ export async function PUT(request: Request) {
     const rows = drafts.map((draft) => ({
       id: draft.id,
       record_type: 'draft',
-      division_id: draft.type === 'article' ? 'seo' : draft.type === 'video' ? 'creative' : 'sosmed',
-      division_name: 'AI Employee',
-      prompt: '',
+      division_id: draft.type === 'article' || !draft.type ? 'seo' : draft.type === 'video' ? 'creative' : 'sosmed',
+      division_name: 'Divisi SEO & Content Writer',
+      prompt: draft.title ? `Draf: ${draft.title}` : '',
       output: draft.content,
       model: 'human-reviewed',
       status: draft.status,
@@ -73,6 +85,26 @@ export async function PUT(request: Request) {
           body: JSON.stringify(rows),
         }
       );
+
+      // Sinkronisasi status publikasi artikel blog
+      for (const draft of drafts) {
+        if (draft.status === 'published' && draft.type !== 'video' && draft.type !== 'social') {
+          await publishBlogArticle({
+            id: draft.id,
+            title: draft.title,
+            slug: draft.slug,
+            category: draft.category as any,
+            metaDescription: draft.metaDescription,
+            keywords: draft.keywords,
+            content: draft.content,
+            wordCount: draft.wordCount,
+            readTime: draft.readTime || draft.readingTime,
+            relatedTool: draft.relatedTool,
+            status: 'published',
+            createdAt: draft.createdAt,
+          });
+        }
+      }
     }
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -98,6 +130,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    await unpublishBlogArticle(id);
     await aiEmployeeStoreRequest(`?record_type=eq.draft&id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: { Prefer: 'return=minimal' },
@@ -112,12 +145,13 @@ export async function DELETE(request: Request) {
 function isValidDraft(value: unknown): value is StoredDraft {
   if (!value || typeof value !== 'object') return false;
   const draft = value as Record<string, unknown>;
+  const allowedStatuses = ['draft', 'review', 'published', 'pending_review', 'approved', 'revision'];
   return (
     typeof draft.id === 'string' &&
     /^[0-9a-f-]{36}$/i.test(draft.id) &&
     typeof draft.title === 'string' &&
     typeof draft.content === 'string' &&
-    ['pending_review', 'approved', 'revision'].includes(String(draft.status)) &&
+    allowedStatuses.includes(String(draft.status)) &&
     (draft.type === undefined || ['article', 'video', 'social'].includes(String(draft.type)))
   );
 }

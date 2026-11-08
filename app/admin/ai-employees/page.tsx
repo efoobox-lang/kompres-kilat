@@ -60,6 +60,7 @@ import {
   Download,
   Share2,
   UploadCloud,
+  Globe,
   Image as ImageIcon
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
@@ -144,6 +145,8 @@ export interface CreativeVideoData {
   generatedAt?: string;
 }
 
+export type SeoDraftStatus = 'draft' | 'review' | 'published' | 'pending_review' | 'approved' | 'revision';
+
 export interface SeoArticleDraft {
   id: string;
   title: string;
@@ -152,12 +155,17 @@ export interface SeoArticleDraft {
   keywords: string;
   metaDescription: string;
   content: string;
-  status: 'pending_review' | 'approved' | 'revision';
+  status: SeoDraftStatus;
   createdAt: string;
+  wordCount?: number;
+  readingTime?: string;
   type?: 'article' | 'video' | 'social';
   videoUrl?: string;
   isPublishedToInstagram?: boolean;
   instagramPermalink?: string;
+  isPublishedToBlog?: boolean;
+  publishedUrl?: string;
+  relatedTool?: any;
 }
 
 export interface AgentTaskBatch {
@@ -181,11 +189,12 @@ export interface AgentTaskBatch {
 function isSeoArticleDraft(value: unknown): value is SeoArticleDraft {
   if (!value || typeof value !== 'object') return false;
   const draft = value as Record<string, unknown>;
+  const allowed = ['draft', 'review', 'published', 'pending_review', 'approved', 'revision'];
   return (
     typeof draft.id === 'string' &&
     typeof draft.title === 'string' &&
     typeof draft.content === 'string' &&
-    ['pending_review', 'approved', 'revision'].includes(String(draft.status))
+    allowed.includes(String(draft.status))
   );
 }
 
@@ -374,6 +383,86 @@ export default function AIEmployeesDashboard() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<SeoArticleDraft | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [seoDraftFilter, setSeoDraftFilter] = useState<'all' | 'draft' | 'review' | 'published'>('all');
+  const [publishingArticleId, setPublishingArticleId] = useState<string | null>(null);
+  const [publishSuccessNotice, setPublishSuccessNotice] = useState<{ id: string; url: string; title: string } | null>(null);
+  const [reviewViewMode, setReviewViewMode] = useState<'edit' | 'preview'>('edit');
+
+  // Helper publikasi artikel blog ke live web publik (SSR/ISR tanpa rebuild)
+  const handlePublishToBlog = async (draft: SeoArticleDraft) => {
+    setPublishingArticleId(draft.id);
+    try {
+      const response = await fetch('/api/ai-agent/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'publish',
+          article: {
+            ...draft,
+            status: 'published',
+          },
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal mempublikasikan artikel ke blog.');
+
+      const updatedDraft: SeoArticleDraft = {
+        ...draft,
+        status: 'published',
+        isPublishedToBlog: true,
+        publishedUrl: result.publishedUrl || `/blog/${draft.slug}`,
+      };
+
+      const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
+      setSeoDrafts(updatedList);
+      setPublishSuccessNotice({
+        id: draft.id,
+        url: result.publishedUrl || `/blog/${draft.slug}`,
+        title: draft.title,
+      });
+
+      if (editingDraft && editingDraft.id === draft.id) {
+        setEditingDraft(updatedDraft);
+      }
+    } catch (err: any) {
+      alert(`Gagal mempublikasikan: ${err.message}`);
+    } finally {
+      setPublishingArticleId(null);
+    }
+  };
+
+  // Helper menarik kembali publikasi artikel (unpublish)
+  const handleUnpublishFromBlog = async (draft: SeoArticleDraft) => {
+    setPublishingArticleId(draft.id);
+    try {
+      const response = await fetch('/api/ai-agent/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'unpublish',
+          id: draft.id,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menarik artikel.');
+
+      const updatedDraft: SeoArticleDraft = {
+        ...draft,
+        status: 'draft',
+        isPublishedToBlog: false,
+      };
+
+      const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
+      setSeoDrafts(updatedList);
+      if (editingDraft && editingDraft.id === draft.id) {
+        setEditingDraft(updatedDraft);
+      }
+    } catch (err: any) {
+      alert(`Gagal unpublish: ${err.message}`);
+    } finally {
+      setPublishingArticleId(null);
+    }
+  };
 
   // State Generator Video & Pratinjau Divisi Video & Kreatif
   const [creativeVideo, setCreativeVideo] = useState<CreativeVideoData>({
@@ -1305,19 +1394,22 @@ export default function AIEmployeesDashboard() {
 
         setAgentBatches((prev) => [newBatchItem, ...prev.slice(0, 99)]);
 
-        // Jika tugas dari Divisi SEO, simpan otomatis ke antrean draf kurasi admin (AdSense Safety)
+        // Jika tugas dari Divisi SEO, simpan otomatis ke antrean draf kurasi admin dengan status 'draft' (AdSense Safety)
         if (id === 'seo') {
           const draftPayload: SeoArticleDraft = {
-            id: data.draftId,
+            id: data.draftId || data.batchId,
             title: data.articleDraft?.title || 'Draf Artikel SEO Baru: Panduan KompresKilat',
             slug: data.articleDraft?.slug || 'panduan-kompres-kilat-artikel-baru',
-            category: data.articleDraft?.category || 'Panduan & Tutorial UMKM',
+            category: data.articleDraft?.category || 'Dokumen PDF',
             keywords: data.articleDraft?.keywords || 'kompres kilat, tools online gratis',
             metaDescription: data.articleDraft?.metaDescription || 'Panduan edukasi utilitas berkas kompreskilat.site',
             content: data.articleDraft?.content || resultTask,
-            status: 'pending_review',
+            wordCount: data.articleDraft?.wordCount || resultTask.trim().split(/\s+/).length,
+            readingTime: data.articleDraft?.readingTime || '5 menit',
+            status: 'draft',
             createdAt: `${timeStr} WIB`,
-            type: 'article'
+            type: 'article',
+            relatedTool: data.articleDraft?.relatedTool,
           };
 
           await saveDraftsToStorage([draftPayload, ...seoDrafts]);
@@ -2542,7 +2634,7 @@ export default function AIEmployeesDashboard() {
         {/* PANEL KURASI DRAF ARTIKEL SEO (EDITORIAL REVIEW QUEUE) */}
         {/* ======================================================== */}
         <section className="rounded-3xl border-2 border-slate-800 bg-slate-900/90 shadow-2xl overflow-hidden backdrop-blur-md">
-          {/* Header */}
+          {/* Header Bar */}
           <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -2552,13 +2644,13 @@ export default function AIEmployeesDashboard() {
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                Antrean Review Draf Artikel SEO (AdSense Safety Guard)
+                Manajemen Status Artikel SEO (Draft &rarr; Review &rarr; Published)
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold">
-                  {seoDrafts.length} Draf Tersedia
+                  {seoDrafts.length} Total Draf
                 </span>
               </h2>
               <p className="text-xs text-slate-400 max-w-2xl">
-                Artikel dari Divisi SEO disimpan di sini agar dapat ditinjau, diedit, dan disesuaikan kualitasnya oleh Administrator sebelum dirilis ke publik demi mematuhi kebijakan Google AdSense.
+                Alur Human-in-the-Loop yang aman untuk Google AdSense: Setiap artikel AI masuk ke status <strong>&apos;draft&apos;</strong>, ditinjau oleh Mandor, dan ketika disetujui dapat langsung di-<strong>Publish</strong> ke web publik tanpa perlu rebuild/deploy ulang!
               </p>
             </div>
 
@@ -2571,7 +2663,7 @@ export default function AIEmployeesDashboard() {
                 {loadingDivisionId === 'seo' ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Menulis Draf Baru...</span>
+                    <span>Menulis Draf 700+ Kata...</span>
                   </>
                 ) : (
                   <>
@@ -2582,6 +2674,103 @@ export default function AIEmployeesDashboard() {
               </button>
             </div>
           </div>
+
+          {/* Filter Bar & Notifikasi Sukses */}
+          <div className="px-5 pt-4 pb-2 border-b border-slate-800/80 bg-slate-950/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+            {/* Filter Tabs Status */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSeoDraftFilter('all')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                  seoDraftFilter === 'all'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Semua ({seoDrafts.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoDraftFilter('draft')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  seoDraftFilter === 'draft'
+                    ? 'bg-amber-950/70 border border-amber-500/40 text-amber-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>Draft ({seoDrafts.filter((d) => d.status === 'draft' || d.status === 'pending_review').length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoDraftFilter('review')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  seoDraftFilter === 'review'
+                    ? 'bg-indigo-950/70 border border-indigo-500/40 text-indigo-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                <span>Review ({seoDrafts.filter((d) => d.status === 'review' || d.status === 'approved').length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoDraftFilter('published')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  seoDraftFilter === 'published'
+                    ? 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Published ({seoDrafts.filter((d) => d.status === 'published').length})</span>
+              </button>
+            </div>
+
+            <div className="text-[11px] text-slate-400 flex items-center gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Standar Google AdSense: Minimal 700+ kata untuk mencegah Thin Content</span>
+            </div>
+          </div>
+
+          {/* Notifikasi Publish Berhasil */}
+          {publishSuccessNotice && (
+            <div className="m-4 sm:m-6 p-4 rounded-2xl bg-emerald-950/70 border border-emerald-500/40 text-white flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-200">
+                    Artikel Berhasil Ditayangkan di Web Publik (Real-Time ISR):
+                  </p>
+                  <p className="text-sm font-semibold text-white line-clamp-1">
+                    {publishSuccessNotice.title}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={publishSuccessNotice.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Buka Artikel di Blog</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setPublishSuccessNotice(null)}
+                  className="p-1.5 rounded-lg text-emerald-300 hover:text-white hover:bg-emerald-900/60 transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Table / List of SEO Drafts */}
           <div className="p-4 sm:p-6 space-y-4">
@@ -2600,185 +2789,226 @@ export default function AIEmployeesDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {seoDrafts.map((draft) => {
-                  const isApproved = draft.status === 'approved';
-                  const isRevision = draft.status === 'revision';
+                {seoDrafts
+                  .filter((draft) => {
+                    if (seoDraftFilter === 'all') return true;
+                    if (seoDraftFilter === 'draft') return draft.status === 'draft' || draft.status === 'pending_review';
+                    if (seoDraftFilter === 'review') return draft.status === 'review' || draft.status === 'approved';
+                    if (seoDraftFilter === 'published') return draft.status === 'published';
+                    return true;
+                  })
+                  .map((draft) => {
+                    const isPublished = draft.status === 'published';
+                    const isReview = draft.status === 'review' || draft.status === 'approved';
+                    const isDraft = draft.status === 'draft' || draft.status === 'pending_review';
+                    const isRevision = draft.status === 'revision';
+                    const wordCount = draft.content ? draft.content.trim().split(/\s+/).filter(Boolean).length : 0;
+                    const isSafeAdSense = wordCount >= 700;
 
-                  return (
-                    <div
-                      key={draft.id}
-                      className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800/90 hover:border-slate-700/80 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 group"
-                    >
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {/* Status Badge */}
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                              isApproved
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                : isRevision
-                                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                            }`}
-                          >
-                            {isApproved
-                              ? '✓ Siap Publikasi'
-                              : isRevision
-                              ? '⚠ Perlu Revisi'
-                              : '⏳ Menunggu Review Admin'}
-                          </span>
-
-                          <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-600" />
-                            Dibuat: {draft.createdAt}
-                          </span>
-
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono">
-                            Slug: /{draft.slug}
-                          </span>
-                        </div>
-
-                        {/* Title & Excerpt */}
-                        <div>
-                          <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-emerald-300 transition">
-                            {draft.title}
-                          </h3>
-                          <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
-                            {draft.metaDescription || draft.content.slice(0, 160)}
-                          </p>
-                        </div>
-
-                        {/* Keyword tags */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="text-[10px] text-slate-500 font-mono">Keywords:</span>
-                          {draft.keywords.split(',').map((kw, idx) => (
+                    return (
+                      <div
+                        key={draft.id}
+                        className={`p-4 sm:p-5 rounded-2xl bg-slate-950/80 border transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 group ${
+                          isPublished
+                            ? 'border-emerald-600/40 bg-emerald-950/10'
+                            : isReview
+                            ? 'border-indigo-600/40'
+                            : 'border-slate-800/90 hover:border-slate-700/80'
+                        }`}
+                      >
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Status Badge */}
                             <span
-                              key={idx}
-                              className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800/80 text-[10px] text-slate-300 font-mono"
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                                isPublished
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  : isReview
+                                  ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                                  : isRevision
+                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                              }`}
                             >
-                              {kw.trim()}
+                              {isPublished
+                                ? '✓ Published (Tayang Publik)'
+                                : isReview
+                                ? '🔍 Dalam Review Mandor'
+                                : isRevision
+                                ? '⚠ Perlu Revisi'
+                                : '📝 Draft AI (Belum Tayang)'}
                             </span>
-                          ))}
+
+                            {/* Word count & AdSense safety badge */}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${
+                                isSafeAdSense
+                                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                                  : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                              }`}
+                              title={isSafeAdSense ? 'Memenuhi syarat artikel mendalam AdSense' : 'Kurang dari 700 kata (berpotensi thin content)'}
+                            >
+                              {isSafeAdSense ? `🟢 ${wordCount} Kata (Aman AdSense)` : `🟡 ${wordCount} Kata (<700 Kata)`}
+                            </span>
+
+                            <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-600" />
+                              {draft.createdAt}
+                            </span>
+
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono">
+                              /{draft.slug}
+                            </span>
+                          </div>
+
+                          {/* Title & Excerpt */}
+                          <div>
+                            <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-emerald-300 transition">
+                              {draft.title}
+                            </h3>
+                            <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                              {draft.metaDescription || draft.content.slice(0, 160)}
+                            </p>
+                          </div>
+
+                          {/* Keyword tags */}
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span className="text-[10px] text-slate-500 font-mono">Keywords:</span>
+                            {draft.keywords.split(',').map((kw, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800/80 text-[10px] text-slate-300 font-mono"
+                              >
+                                {kw.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
+                          {/* Tombol Review & Edit Manual */}
+                          <button
+                            onClick={() => {
+                              setEditingDraft({ ...draft });
+                              setIsReviewModalOpen(true);
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Review & Edit</span>
+                          </button>
+
+                          {/* TOMBOL UTAMA PUBLISH KE BLOG */}
+                          {!isPublished ? (
+                            <button
+                              onClick={() => handlePublishToBlog(draft)}
+                              disabled={publishingArticleId === draft.id}
+                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 disabled:opacity-50"
+                              title="Publikasikan draf artikel ini langsung ke web publik (SSR/ISR real-time tanpa rebuild)"
+                            >
+                              {publishingArticleId === draft.id ? (
+                                <>
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Mempublikasikan...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Globe className="w-3.5 h-3.5" />
+                                  <span>Publish ke Blog</span>
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <>
+                              {/* Link Buka Artikel Publik */}
+                              <Link
+                                href={`/blog/${draft.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                title="Buka artikel langsung di blog publik KompresKilat"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>Lihat di Blog ↗</span>
+                              </Link>
+
+                              {/* Tombol Unpublish / Tarik ke Draft */}
+                              <button
+                                onClick={() => handleUnpublishFromBlog(draft)}
+                                disabled={publishingArticleId === draft.id}
+                                className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
+                                title="Tarik kembali artikel ini ke status draft"
+                              >
+                                <span>Tarik ke Draft</span>
+                              </button>
+                            </>
+                          )}
+
+                          {/* Quick Status Dropdown */}
+                          <select
+                            value={draft.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value as SeoDraftStatus;
+                              if (newStatus === 'published') {
+                                handlePublishToBlog(draft);
+                              } else {
+                                const updated = seoDrafts.map((d) =>
+                                  d.id === draft.id ? { ...d, status: newStatus } : d
+                                );
+                                saveDraftsToStorage(updated);
+                              }
+                            }}
+                            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-2 py-2 cursor-pointer focus:outline-none focus:border-indigo-500"
+                            title="Ganti status draf secara langsung"
+                          >
+                            <option value="draft">Draft</option>
+                            <option value="review">Review</option>
+                            <option value="published">Published</option>
+                            <option value="revision">Revisi</option>
+                          </select>
+
+                          {/* Tombol Salin Markdown */}
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(draft.content);
+                              setCopiedLogId(draft.id);
+                              setTimeout(() => setCopiedLogId(null), 2000);
+                            }}
+                            title="Salin Markdown Lengkap"
+                            className="p-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1.5 cursor-pointer"
+                          >
+                            {copiedLogId === draft.id ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                <span className="text-[11px] text-emerald-400">Tersalin</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-[11px] hidden sm:inline">Salin</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Hapus Draf */}
+                          <button
+                            onClick={() => {
+                              if (isPublished) {
+                                handleUnpublishFromBlog(draft);
+                              }
+                              const updated = seoDrafts.filter((d) => d.id !== draft.id);
+                              saveDraftsToStorage(updated);
+                            }}
+                            title="Hapus Draf"
+                            className="p-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-xs transition cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
-                        {/* Tombol Review & Edit Manual */}
-                        <button
-                          onClick={() => {
-                            setEditingDraft({ ...draft });
-                            setIsReviewModalOpen(true);
-                          }}
-                          className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/20"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>Review & Edit</span>
-                        </button>
-
-                        {/* Tombol Rilis ke Instagram (Graph API) */}
-                        <button
-                          onClick={() =>
-                            handlePublishToInstagram({
-                              caption: draft.content,
-                              videoUrl: draft.videoUrl,
-                              title: draft.title,
-                              draftId: draft.id,
-                            })
-                          }
-                          disabled={
-                            instagramNotice?.status === 'publishing' ||
-                            !isApproved ||
-                            !draft.videoUrl
-                          }
-                          title={
-                            !isApproved
-                              ? 'Setujui draf terlebih dahulu sebelum merilis.'
-                              : !draft.videoUrl
-                                ? 'Draf ini belum memiliki video hasil generasi.'
-                                : 'Rilis ke Akun Instagram Bisnis via Graph API'
-                          }
-                          className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md ${
-                            draft.isPublishedToInstagram
-                              ? 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-300'
-                              : 'bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white shadow-pink-600/25'
-                          } disabled:opacity-50`}
-                        >
-                          {instagramNotice?.status === 'publishing' && instagramNotice.targetId === draft.id ? (
-                            <>
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              <span className="hidden sm:inline">Mengunggah...</span>
-                            </>
-                          ) : draft.isPublishedToInstagram ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>Dirilis ke IG</span>
-                            </>
-                          ) : (
-                            <>
-                              <InstagramIcon className="w-3.5 h-3.5" />
-                              <span>Rilis ke Instagram</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Tombol Salin Markdown */}
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(draft.content);
-                            setCopiedLogId(draft.id);
-                            setTimeout(() => setCopiedLogId(null), 2000);
-                          }}
-                          title="Salin Markdown Lengkap"
-                          className="p-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1.5 cursor-pointer"
-                        >
-                          {copiedLogId === draft.id ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span className="text-[11px] text-emerald-400">Tersalin</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5 text-slate-400" />
-                              <span className="text-[11px] hidden sm:inline">Salin</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Quick Approve Toggle */}
-                        <button
-                          onClick={() => {
-                            const newStatus = isApproved ? 'pending_review' : 'approved';
-                            const updated = seoDrafts.map((d) =>
-                              d.id === draft.id ? { ...d, status: newStatus as any } : d
-                            );
-                            saveDraftsToStorage(updated);
-                          }}
-                          title={isApproved ? 'Batalkan Persetujuan' : 'Setujui Draf'}
-                          className={`p-2 rounded-xl border text-xs transition cursor-pointer ${
-                            isApproved
-                              ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400'
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-emerald-400'
-                          }`}
-                        >
-                          <CheckSquare className="w-4 h-4" />
-                        </button>
-
-                        {/* Hapus Draf */}
-                        <button
-                          onClick={() => {
-                            const updated = seoDrafts.filter((d) => d.id !== draft.id);
-                            saveDraftsToStorage(updated);
-                          }}
-                          title="Hapus Draf"
-                          className="p-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-xs transition cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             )}
           </div>
@@ -3086,150 +3316,263 @@ export default function AIEmployeesDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/80">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-slate-800 bg-slate-950/80 gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     Review & Kurasi Editorial Artikel SEO
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
-                      AdSense Safety Guard
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                      Human-in-the-Loop
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Pastikan konten orisinal, bermanfaat bagi pengguna, dan bebas dari duplikasi sebelum dirilis.
+                    Alur review mandor sebelum ditayangkan ke publik demi kepatuhan kebijakan Google AdSense.
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setIsReviewModalOpen(false);
-                  setEditingDraft(null);
-                }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body Form */}
-            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
-              {/* Judul & Slug */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Judul Artikel (H1):</label>
-                  <input
-                    type="text"
-                    value={editingDraft.title}
-                    onChange={(e) => setEditingDraft({ ...editingDraft, title: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Slug URL:</label>
-                  <input
-                    type="text"
-                    value={editingDraft.slug}
-                    onChange={(e) => setEditingDraft({ ...editingDraft, slug: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Meta Deskripsi & Target Keyword */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-300">Meta Deskripsi:</label>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      {editingDraft.metaDescription.length}/160 karakter
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={editingDraft.metaDescription}
-                    onChange={(e) => setEditingDraft({ ...editingDraft, metaDescription: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Target Keyword:</label>
-                  <input
-                    type="text"
-                    value={editingDraft.keywords}
-                    onChange={(e) => setEditingDraft({ ...editingDraft, keywords: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Status Review Dropdown */}
-              <div>
-                <label className="block font-bold text-slate-300 mb-1">Status Kurasi Administrator:</label>
-                <select
-                  value={editingDraft.status}
-                  onChange={(e) => setEditingDraft({ ...editingDraft, status: e.target.value as any })}
-                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
-                >
-                  <option value="pending_review">⏳ Menunggu Review Administrator</option>
-                  <option value="approved">✓ Siap Diterbitkan ke Blog Publik (Approved)</option>
-                  <option value="revision">⚠ Perlu Revisi / Tambahan Panduan</option>
-                </select>
-              </div>
-
-              {/* Textarea Konten Markdown */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-slate-300">Konten Artikel Lengkap (Markdown):</label>
+              {/* View Mode Toggle & Close */}
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
                   <button
                     type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(editingDraft.content);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer font-medium"
+                    onClick={() => setReviewViewMode('edit')}
+                    className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      reviewViewMode === 'edit'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
                   >
-                    <Copy className="w-3 h-3" />
-                    <span>{copied ? 'Tersalin!' : 'Salin Markdown'}</span>
+                    Editor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReviewViewMode('preview')}
+                    className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      reviewViewMode === 'preview'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Pratinjau Visual
                   </button>
                 </div>
-                <textarea
-                  rows={13}
-                  value={editingDraft.content}
-                  onChange={(e) => setEditingDraft({ ...editingDraft, content: e.target.value })}
-                  className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-xs leading-relaxed focus:outline-none focus:border-indigo-500"
-                />
+
+                <button
+                  onClick={() => {
+                    setIsReviewModalOpen(false);
+                    setEditingDraft(null);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* Word Count & AdSense Quality Banner */}
+              {(() => {
+                const words = editingDraft.content ? editingDraft.content.trim().split(/\s+/).filter(Boolean).length : 0;
+                const isSafe = words >= 700;
+                return (
+                  <div
+                    className={`p-3.5 rounded-2xl border text-xs flex flex-wrap items-center justify-between gap-2 ${
+                      isSafe
+                        ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                        : 'bg-amber-950/40 border-amber-500/30 text-amber-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold font-mono px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-white">
+                        {words} Kata
+                      </span>
+                      <span>&bull;</span>
+                      <span>
+                        {isSafe
+                          ? '✓ Memenuhi Standar Google AdSense (Bebas Thin Content & Edukatif)'
+                          : '⚠ Disarankan 700+ kata untuk ulasan mendalam & menghindari auto-generated spam'}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] text-slate-400">
+                      Est. Waktu Baca: ~{Math.max(1, Math.ceil(words / 200))} Menit
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {reviewViewMode === 'preview' ? (
+                /* PRATINJAU VISUAL ARTIKEL */
+                <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 space-y-4 max-w-none text-slate-200">
+                  <div className="border-b border-slate-800 pb-4 space-y-2">
+                    <span className="px-2.5 py-0.5 rounded-md bg-indigo-950 text-indigo-400 border border-indigo-800 text-[10px] font-mono uppercase">
+                      {editingDraft.category || 'Panduan Dokumen'}
+                    </span>
+                    <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                      {editingDraft.title}
+                    </h1>
+                    <p className="text-xs text-slate-400 italic">
+                      {editingDraft.metaDescription}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 font-mono">
+                      <span>Target Keyword: <strong>{editingDraft.keywords}</strong></span>
+                      <span>&bull;</span>
+                      <span>Slug: /{editingDraft.slug}</span>
+                    </div>
+                  </div>
+
+                  <div className="prose prose-invert max-w-none text-xs leading-relaxed space-y-3 font-sans whitespace-pre-wrap">
+                    {editingDraft.content}
+                  </div>
+                </div>
+              ) : (
+                /* FORM EDITOR */
+                <div className="space-y-4">
+                  {/* Judul & Slug */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Judul Artikel (H1):</label>
+                      <input
+                        type="text"
+                        value={editingDraft.title}
+                        onChange={(e) => setEditingDraft({ ...editingDraft, title: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Slug URL:</label>
+                      <input
+                        type="text"
+                        value={editingDraft.slug}
+                        onChange={(e) => setEditingDraft({ ...editingDraft, slug: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Meta Deskripsi & Target Keyword */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-300">Meta Deskripsi:</label>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {editingDraft.metaDescription.length}/160 karakter
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={editingDraft.metaDescription}
+                        onChange={(e) => setEditingDraft({ ...editingDraft, metaDescription: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Target Keyword:</label>
+                      <input
+                        type="text"
+                        value={editingDraft.keywords}
+                        onChange={(e) => setEditingDraft({ ...editingDraft, keywords: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status Review Dropdown */}
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Status Kurasi Administrator:</label>
+                    <select
+                      value={editingDraft.status}
+                      onChange={(e) => setEditingDraft({ ...editingDraft, status: e.target.value as any })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      <option value="draft">📝 Draft (Draf Awal AI - Belum Tayang)</option>
+                      <option value="review">🔍 Review (Dalam Pemeriksaan Mandor)</option>
+                      <option value="published">🚀 Published (Tayang Langsung di Blog Publik)</option>
+                      <option value="revision">⚠ Perlu Revisi / Tambahan Panduan</option>
+                    </select>
+                  </div>
+
+                  {/* Textarea Konten Markdown */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-300">Konten Artikel Lengkap (Markdown):</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(editingDraft.content);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer font-medium"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copied ? 'Tersalin!' : 'Salin Markdown'}</span>
+                      </button>
+                    </div>
+                    <textarea
+                      rows={14}
+                      value={editingDraft.content}
+                      onChange={(e) => setEditingDraft({ ...editingDraft, content: e.target.value })}
+                      className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-xs leading-relaxed focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer Actions */}
             <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-slate-400 text-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Format terverifikasi siap rilis untuk blog Next.js</span>
+                <span>Format terverifikasi siap rilis untuk blog Next.js (SSR/ISR)</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handlePublishToInstagram({
-                      caption: editingDraft.content,
-                      videoUrl: editingDraft.videoUrl,
-                      title: editingDraft.title,
-                      draftId: editingDraft.id,
-                    });
-                  }}
-                  disabled={instagramNotice?.status === 'publishing' || !editingDraft.videoUrl}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:opacity-90 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-pink-600/25 disabled:opacity-50"
-                >
-                  <InstagramIcon className="w-3.5 h-3.5" />
-                  <span>Rilis ke Instagram</span>
-                </button>
+                {/* Tombol Publish ke Blog Publik */}
+                {editingDraft.status !== 'published' ? (
+                  <button
+                    type="button"
+                    onClick={() => handlePublishToBlog(editingDraft)}
+                    disabled={publishingArticleId === editingDraft.id}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/25 disabled:opacity-50"
+                  >
+                    {publishingArticleId === editingDraft.id ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Mempublikasikan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>Publish ke Blog Sekarang</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      href={`/blog/${editingDraft.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Lihat di Blog ↗</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleUnpublishFromBlog(editingDraft)}
+                      disabled={publishingArticleId === editingDraft.id}
+                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
+                    >
+                      <span>Tarik ke Draft</span>
+                    </button>
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -3252,7 +3595,7 @@ export default function AIEmployeesDashboard() {
                     setIsReviewModalOpen(false);
                     setEditingDraft(null);
                   }}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/25 flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Simpan Perubahan</span>

@@ -1,4 +1,4 @@
-import { getAllPosts } from '@/lib/blog-data';
+import { getAllPublicBlogPosts } from '@/lib/blog-service';
 import BlogListClient from './BlogListClient';
 import BlogHeaderClient from './BlogHeaderClient';
 import Navbar from '@/components/Navbar';
@@ -9,8 +9,8 @@ export const metadata = {
   description: 'Kumpulan artikel dan panduan lengkap cara kompres foto KTP, dokumen PDF, ubah format file, hingga tips melacak resi pengiriman.',
 };
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+export default async function BlogPage() {
+  const posts = await getAllPublicBlogPosts();
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
