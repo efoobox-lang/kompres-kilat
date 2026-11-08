@@ -1146,26 +1146,28 @@ export default function DirectPdfEditorPage() {
           </div>
         )}
 
-        {/* Toolbar Utama Dokumen */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>{selectedFile ? 'Ganti File PDF' : 'Buka File PDF'}</span>
-            </button>
+        {/* Hidden File Input (Always accessible by fileInputRef) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+          className="hidden"
+        />
 
-            {totalPages > 0 && (
+        {/* Toolbar Utama Dokumen - Hanya tampil ketika berkas PDF telah dimuat */}
+        {totalPages > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl transition duration-150 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Ganti File PDF</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleResetDocument}
@@ -1175,16 +1177,14 @@ export default function DirectPdfEditorPage() {
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Tutup</span>
               </button>
-            )}
 
-            {selectedFile && (
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl truncate max-w-[220px]">
-                {selectedFile.name}
-              </span>
-            )}
-          </div>
+              {selectedFile && (
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl truncate max-w-[220px]">
+                  {selectedFile.name}
+                </span>
+              )}
+            </div>
 
-          {totalPages > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {/* Tombol Toggle Mode Whiteout / Koreksi */}
               <button
@@ -1269,8 +1269,8 @@ export default function DirectPdfEditorPage() {
                 )}
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Notifikasi Status Loading */}
         {statusMessage && (
