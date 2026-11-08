@@ -127,7 +127,7 @@ export default function Navbar() {
           </Link>
 
           {/* 2. Dropdown: "Semua Alat" / Fitur */}
-          <div ref={toolsDropdownRef} className="relative">
+          <div ref={toolsDropdownRef} className="relative notranslate" translate="no" dir="ltr">
             <button
               type="button"
               onClick={() => setIsToolsOpen(!isToolsOpen)}
@@ -138,6 +138,7 @@ export default function Navbar() {
               }`}
               aria-expanded={isToolsOpen}
               aria-haspopup="true"
+              translate="no"
             >
               <span>Semua Alat</span>
               <ChevronDown
@@ -147,9 +148,13 @@ export default function Navbar() {
               />
             </button>
 
-            {/* Desktop Mega Dropdown Panel */}
+            {/* Desktop Mega Dropdown Panel (Kotak Aksi - Tidak Boleh Berubah / Terpengaruh Bahasa) */}
             {isToolsOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[720px] bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div
+                translate="no"
+                dir="ltr"
+                className="notranslate absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[720px] bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+              >
                 <div className="grid grid-cols-4 gap-4">
                   {dropdownCategories.map((cat) => (
                     <div key={cat.title} className="space-y-2.5">
@@ -304,8 +309,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Daftar Kategori Alat */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+          {/* Daftar Kategori Alat (Kotak Aksi Mobile) */}
+          <div className="notranslate pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5" translate="no" dir="ltr">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
               Pilihan Alat Populer
             </p>

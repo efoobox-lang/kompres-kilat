@@ -64,7 +64,12 @@ export default function LanguageToggle({
   };
 
   return (
-    <div className={`relative inline-block text-left ${className}`} ref={containerRef}>
+    <div
+      className={`notranslate relative inline-block text-left ${className}`}
+      ref={containerRef}
+      translate="no"
+      dir="ltr"
+    >
       {/* Trigger Button: 🌐 [Language Native Name] ∨ */}
       <button
         type="button"
@@ -73,6 +78,7 @@ export default function LanguageToggle({
         aria-haspopup="true"
         aria-expanded={isOpen}
         title="Ganti Bahasa / Select Language"
+        translate="no"
       >
         <Globe className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
         <span className="truncate max-w-[110px] sm:max-w-none">{currentLanguage.nativeName}</span>
@@ -86,7 +92,9 @@ export default function LanguageToggle({
       {/* 3-Column Language Selection Modal / Popover */}
       {isOpen && (
         <div
-          className={`absolute z-50 w-[92vw] sm:w-[620px] md:w-[680px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 transition-all duration-150 animate-in fade-in zoom-in-95 ${
+          translate="no"
+          dir="ltr"
+          className={`notranslate absolute z-50 w-[92vw] sm:w-[620px] md:w-[680px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 transition-all duration-150 animate-in fade-in zoom-in-95 ${
             direction === 'up'
               ? 'bottom-full mb-3 left-0 sm:left-0'
               : 'top-full mt-2 right-0 sm:right-0'

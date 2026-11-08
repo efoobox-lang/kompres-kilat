@@ -182,3 +182,11 @@ body {
   box-shadow: none !important;
 }
 
+/* Proteksi elemen yang ditandai tidak boleh diterjemahkan / diubah */
+.notranslate,
+[translate="no"] {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+

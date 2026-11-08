@@ -84,7 +84,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('kk_lang', newLang);
       document.documentElement.lang = newLang;
-      document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.dir = 'ltr';
     } catch {
       // ignore
     }
