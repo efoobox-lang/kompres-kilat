@@ -56,6 +56,7 @@ export default function AtsResumePage() {
   const [isPasswordProtected, setIsPasswordProtected] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'template'>('editor');
   const [selectedTemplate, setSelectedTemplate] = useState<CvTemplateType>('ats');
+  const [photoUrl, setPhotoUrl] = useState<string>('');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<AtsResult | null>(null);
@@ -306,9 +307,12 @@ KEAHLIAN & TOOLS
           <div className="mb-8">
             <CvTemplatePreview
               cvText={cvText}
+              onCvTextChange={setCvText}
               template={selectedTemplate}
               onTemplateChange={setSelectedTemplate}
               onLoadSample={handleLoadSampleCv}
+              initialPhotoUrl={photoUrl}
+              onPhotoChange={setPhotoUrl}
             />
           </div>
         )}
