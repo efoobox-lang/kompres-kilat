@@ -350,12 +350,12 @@ export default function Navbar() {
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
               Media Sosial Resmi
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <a
                 href="https://www.instagram.com/kompreskilat/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-1.5 px-2.5 rounded-xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200/60 dark:border-pink-800/40 text-pink-600 dark:text-pink-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                className="py-1.5 px-2 rounded-xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200/60 dark:border-pink-800/40 text-pink-600 dark:text-pink-400 text-xs font-semibold flex items-center justify-center gap-1 transition"
               >
                 <span>Instagram</span>
               </a>
@@ -363,9 +363,17 @@ export default function Navbar() {
                 href="https://www.facebook.com/1411463522052642"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-1.5 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                className="py-1.5 px-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center gap-1 transition"
               >
                 <span>Facebook</span>
+              </a>
+              <a
+                href="https://www.youtube.com/@kompreskilat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-1.5 px-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-800/40 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center justify-center gap-1 transition"
+              >
+                <span>YouTube</span>
               </a>
             </div>
           </div>
