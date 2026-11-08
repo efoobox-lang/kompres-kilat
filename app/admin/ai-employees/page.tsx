@@ -421,6 +421,20 @@ export default function AIEmployeesDashboard() {
 
       const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
       setSeoDrafts(updatedList);
+
+      // Persistensi ke localStorage browser admin agar bisa langsung dilihat tanpa 404
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('kk_published_articles');
+          const list: any[] = raw ? JSON.parse(raw) : [];
+          const filtered = list.filter((a: any) => a.id !== draft.id && a.slug !== draft.slug);
+          filtered.unshift(updatedDraft);
+          localStorage.setItem('kk_published_articles', JSON.stringify(filtered));
+        } catch (e) {
+          console.warn('Gagal simpan ke localStorage:', e);
+        }
+      }
+
       setPublishSuccessNotice({
         id: draft.id,
         url: result.publishedUrl || `/blog/${draft.slug}`,
@@ -460,6 +474,17 @@ export default function AIEmployeesDashboard() {
 
       const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
       setSeoDrafts(updatedList);
+
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('kk_published_articles');
+          if (raw) {
+            const list: any[] = JSON.parse(raw);
+            const filtered = list.filter((a: any) => a.id !== draft.id);
+            localStorage.setItem('kk_published_articles', JSON.stringify(filtered));
+          }
+        } catch {}
+      }
       if (editingDraft && editingDraft.id === draft.id) {
         setEditingDraft(updatedDraft);
       }

@@ -21,14 +21,21 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPublicBlogPostBySlug(slug);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
 
   if (!post) {
+    const formattedTitle = slug
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
     return {
-      title: 'Artikel Tidak Ditemukan - KompresKilat',
+      title: `${formattedTitle} - KompresKilat`,
+      description: 'Panduan lengkap dan utilitas berkas online kompreskilat.site',
+      alternates: {
+        canonical: `${siteUrl}/blog/${slug}`,
+      },
     };
   }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
 
   return {
     title: `${post.title} - KompresKilat`,
@@ -51,42 +58,40 @@ export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = await getPublicBlogPostBySlug(slug);
 
-  if (!post) {
-    notFound();
-  }
-
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kompreskilat.site';
 
-  const articleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt,
-    author: {
-      '@type': 'Person',
-      name: post.author,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'KompresKilat',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${siteUrl}/favicon.ico`,
-      },
-    },
-    datePublished: post.date,
-    mainEntityOfPage: `${siteUrl}/blog/${post.slug}`,
-  };
+  const articleSchema = post
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.excerpt,
+        author: {
+          '@type': 'Person',
+          name: post.author,
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'KompresKilat',
+          logo: {
+            '@type': 'ImageObject',
+            url: `${siteUrl}/favicon.ico`,
+          },
+        },
+        datePublished: post.date,
+        mainEntityOfPage: `${siteUrl}/blog/${post.slug}`,
+      }
+    : null;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
-      <JsonLd data={articleSchema} />
+      {articleSchema && <JsonLd data={articleSchema} />}
 
       {/* Header / Navbar Responsif */}
       <Navbar />
 
-      {/* Konten Artikel Interaktif & Bilingual */}
-      <BlogPostClient post={post} />
+      {/* Konten Artikel Interaktif & Bilingual (didukung fallback client-side) */}
+      <BlogPostClient initialPost={post || null} slug={slug} />
 
       {/* Footer Komprehensif */}
       <Footer />

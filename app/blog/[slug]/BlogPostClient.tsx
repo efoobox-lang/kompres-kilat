@@ -1,18 +1,168 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
 import AdBanner from '@/components/AdBanner';
-import { ArrowLeft, Share2, Check } from 'lucide-react';
+import { ArrowLeft, Share2, Check, FileQuestion, RefreshCw, Home, BookOpen } from 'lucide-react';
 
-export default function BlogPostClient({ post }: { post: BlogPost }) {
+interface BlogPostClientProps {
+  initialPost?: BlogPost | null;
+  slug?: string;
+  post?: BlogPost;
+}
+
+export default function BlogPostClient({
+  initialPost,
+  slug,
+  post: legacyPost,
+}: BlogPostClientProps) {
   const { lang, t } = useLanguage();
+  const [post, setPost] = useState<BlogPost | null>(initialPost || legacyPost || null);
+  const [isChecking, setIsChecking] = useState<boolean>(!initialPost && !legacyPost);
   const [copied, setCopied] = useState(false);
 
+  // Fallback client-side lookup jika artikel baru diterbitkan di Vercel (Zero-Config)
+  useEffect(() => {
+    if (post) {
+      setIsChecking(false);
+      return;
+    }
+    if (typeof window === 'undefined' || !slug) {
+      setIsChecking(false);
+      return;
+    }
+
+    // 1. Cek dari localStorage kk_published_articles
+    try {
+      const raw = localStorage.getItem('kk_published_articles');
+      if (raw) {
+        const list: any[] = JSON.parse(raw);
+        const match = list.find((a) => a.slug === slug || a.id === slug);
+        if (match) {
+          setPost({
+            slug: match.slug,
+            title: match.title,
+            excerpt: match.excerpt || match.metaDescription || (match.content || '').slice(0, 160),
+            category: match.category || 'Dokumen PDF',
+            date: new Date(match.publishedAt || match.createdAt || Date.now()).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            }),
+            readTime: match.readTime || match.readingTime || '6 menit',
+            author: match.author || 'Tim SEO & Content Writer KompresKilat',
+            content: match.content,
+            relatedTool: match.relatedTool || {
+              title: 'Alat Pendukung KompresKilat',
+              description: 'Gunakan fitur utilitas berkas online gratis langsung di browser.',
+              url: '/tools/image',
+              icon: '⚡',
+              buttonText: 'Coba Fitur Sekarang',
+            },
+          });
+          setIsChecking(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal membaca localStorage kk_published_articles:', e);
+    }
+
+    // 2. Cek dari API sinkronisasi /api/blog/article?slug=...
+    fetch(`/api/blog/article?slug=${encodeURIComponent(slug)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.article) {
+          const match = data.article;
+          setPost({
+            slug: match.slug,
+            title: match.title,
+            excerpt: match.excerpt || match.metaDescription || (match.content || '').slice(0, 160),
+            category: match.category || 'Dokumen PDF',
+            date: new Date(match.publishedAt || match.createdAt || Date.now()).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            }),
+            readTime: match.readTime || match.readingTime || '6 menit',
+            author: match.author || 'Tim SEO & Content Writer KompresKilat',
+            content: match.content,
+            relatedTool: match.relatedTool || {
+              title: 'Alat Pendukung KompresKilat',
+              description: 'Gunakan fitur utilitas berkas online gratis langsung di browser.',
+              url: '/tools/image',
+              icon: '⚡',
+              buttonText: 'Coba Fitur Sekarang',
+            },
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsChecking(false);
+      });
+  }, [post, slug]);
+
   // Check if active language is English and English translation is available
-  const isEn = lang === 'en' && Boolean(post.en);
+  const isEn = lang === 'en' && Boolean(post?.en);
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  // State Memuat / Memeriksa Draf Client
+  if (isChecking) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center space-y-4">
+        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto" />
+        <h2 className="text-base font-bold text-slate-800">Menyiapkan Tampilan Artikel Blog...</h2>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          Sedang menyinkronkan data publikasi artikel KompresKilat secara real-time.
+        </p>
+      </div>
+    );
+  }
+
+  // State Jika Artikel Benar-Benar Tidak Ditemukan
+  if (!post) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
+        <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+          <FileQuestion className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Artikel Tidak Ditemukan
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+            Artikel dengan tautan <code className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-mono text-xs">/blog/{slug}</code> belum dipublikasikan atau tautannya telah berubah.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            href="/blog"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Lihat Semua Artikel Blog</span>
+          </Link>
+          <Link
+            href="/"
+            className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5"
+          >
+            <Home className="w-4 h-4" />
+            <span>Ke Beranda KompresKilat</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const title = isEn ? post.en!.title : post.title;
   const category = isEn ? post.en!.category : post.category;
@@ -24,16 +174,8 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
   const relatedToolDesc = isEn && post.en?.relatedTool ? post.en.relatedTool.description : post.relatedTool?.description;
   const relatedToolBtn = isEn && post.en?.relatedTool ? post.en.relatedTool.buttonText : post.relatedTool?.buttonText;
 
-  const paragraphs = content.trim().split('\n\n');
+  const paragraphs = (content || '').trim().split('\n\n');
   const midPoint = Math.floor(paragraphs.length / 2);
-
-  const handleCopyLink = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  };
 
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -102,23 +244,37 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
 
           return (
             <div key={idx}>
+              {/* Heading 2 (##) */}
+              {trimmed.startsWith('## ') && (
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 pt-6 pb-2 border-b border-slate-100">
+                  {trimmed.replace('## ', '')}
+                </h2>
+              )}
+
+              {/* Heading 3 (###) */}
               {trimmed.startsWith('### ') && (
                 <h3 className="text-lg md:text-xl font-bold text-slate-900 pt-4 pb-1 border-b border-slate-100">
                   {trimmed.replace('### ', '')}
                 </h3>
               )}
+
+              {/* Heading 4 (####) */}
               {trimmed.startsWith('#### ') && (
                 <h4 className="text-base font-bold text-slate-800 pt-3">
                   {trimmed.replace('#### ', '')}
                 </h4>
               )}
+
               {trimmed.startsWith('---') && <hr className="my-4 border-slate-200" />}
+
               {trimmed.startsWith('```') && (
                 <pre className="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs overflow-x-auto my-3 font-mono">
                   <code>{trimmed.replace(/```[a-z]*\n?/g, '').trim()}</code>
                 </pre>
               )}
-              {(trimmed.startsWith('- ') || trimmed.startsWith('1. ')) && (
+
+              {/* List bullet atau nomor */}
+              {(trimmed.startsWith('- ') || trimmed.startsWith('1. ') || trimmed.startsWith('* ')) && (
                 <ul className="space-y-1.5 pl-5 list-disc marker:text-indigo-500">
                   {trimmed.split('\n').map((line, lIdx) => (
                     <li key={lIdx} className="text-xs md:text-sm text-slate-700">
@@ -127,13 +283,17 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
                   ))}
                 </ul>
               )}
-              {!trimmed.startsWith('### ') &&
+
+              {/* Paragraf Biasa */}
+              {!trimmed.startsWith('## ') &&
+                !trimmed.startsWith('### ') &&
                 !trimmed.startsWith('#### ') &&
                 !trimmed.startsWith('---') &&
                 !trimmed.startsWith('```') &&
                 !trimmed.startsWith('- ') &&
+                !trimmed.startsWith('* ') &&
                 !trimmed.startsWith('1. ') && (
-                  <p className="text-xs md:text-sm text-slate-700 leading-relaxed">
+                  <p className="text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                     {trimmed}
                   </p>
                 )}
@@ -170,4 +330,3 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
     </article>
   );
 }
-

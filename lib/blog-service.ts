@@ -37,6 +37,7 @@ export interface DynamicBlogArticle {
 }
 
 const STORE_FILE_PATH = path.join(process.cwd(), 'data', 'blog-published-store.json');
+const TMP_STORE_FILE_PATH = path.join('/tmp', 'blog-published-store.json');
 
 // In-Memory Cache untuk performa tinggi
 interface ServerCache {
@@ -53,27 +54,56 @@ const getGlobalCache = (): ServerCache => {
 };
 
 /**
- * Membaca berkas persisten data/blog-published-store.json
+ * Membaca berkas persisten dari file lokal dan /tmp
  */
 function readPersistentStore(): DynamicBlogArticle[] {
+  const articlesMap = new Map<string, DynamicBlogArticle>();
+
+  // 1. Cek dari file data lokal
   try {
     if (fs.existsSync(STORE_FILE_PATH)) {
       const content = fs.readFileSync(STORE_FILE_PATH, 'utf-8');
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed)) {
-        return parsed;
+        for (const item of parsed) {
+          if (item && item.id) articlesMap.set(item.id, item);
+        }
       }
     }
   } catch (err) {
     console.warn('Gagal membaca data/blog-published-store.json:', err);
   }
-  return [];
+
+  // 2. Cek dari /tmp (lingkungan Vercel serverless writable)
+  try {
+    if (fs.existsSync(TMP_STORE_FILE_PATH)) {
+      const content = fs.readFileSync(TMP_STORE_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (item && item.id) articlesMap.set(item.id, item);
+        }
+      }
+    }
+  } catch {
+    // /tmp tidak tersedia atau belum ada file
+  }
+
+  return Array.from(articlesMap.values());
 }
 
 /**
- * Menulis ke berkas persisten data/blog-published-store.json
+ * Menulis ke berkas persisten (mencoba ke data/ lokal dan /tmp)
  */
 function writePersistentStore(articles: DynamicBlogArticle[]): void {
+  // Coba tulis ke /tmp (Vercel serverless)
+  try {
+    fs.writeFileSync(TMP_STORE_FILE_PATH, JSON.stringify(articles, null, 2), 'utf-8');
+  } catch {
+    // Abaikan jika /tmp tidak dapat ditulis
+  }
+
+  // Coba tulis ke data/
   try {
     const dir = path.dirname(STORE_FILE_PATH);
     if (!fs.existsSync(dir)) {
@@ -81,7 +111,7 @@ function writePersistentStore(articles: DynamicBlogArticle[]): void {
     }
     fs.writeFileSync(STORE_FILE_PATH, JSON.stringify(articles, null, 2), 'utf-8');
   } catch (err) {
-    console.warn('Gagal menulis data/blog-published-store.json:', err);
+    // Pada runtime Vercel filesystem /var/task read-only, sehingga error ini wajar dan sudah di-handle oleh /tmp & cache
   }
 }
 

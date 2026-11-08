@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
@@ -9,16 +9,48 @@ export default function BlogListClient({ initialPosts }: { initialPosts: BlogPos
   const { lang, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+  const [extraPosts, setExtraPosts] = useState<BlogPost[]>([]);
+
+  // Sinkronisasi artikel publik yang diterbitkan via admin (localStorage fallback)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('kk_published_articles');
+      if (raw) {
+        const list: any[] = JSON.parse(raw);
+        const mapped: BlogPost[] = list.map((a) => ({
+          slug: a.slug,
+          title: a.title,
+          excerpt: a.excerpt || a.metaDescription || (a.content || '').slice(0, 160),
+          category: a.category || 'Dokumen PDF',
+          date: new Date(a.publishedAt || a.createdAt || Date.now()).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+          readTime: a.readTime || a.readingTime || '6 menit',
+          author: a.author || 'Tim SEO & Content Writer KompresKilat',
+          content: a.content,
+          relatedTool: a.relatedTool,
+        }));
+        setExtraPosts(mapped.filter((p) => !initialPosts.some((ip) => ip.slug === p.slug)));
+      }
+    } catch {}
+  }, [initialPosts]);
+
+  const allPosts = useMemo(() => {
+    return [...extraPosts, ...initialPosts];
+  }, [extraPosts, initialPosts]);
 
   const isEn = lang === 'en';
 
   const categories = useMemo(() => {
-    const list = Array.from(new Set(initialPosts.map((p) => (isEn && p.en?.category ? p.en.category : p.category))));
+    const list = Array.from(new Set(allPosts.map((p) => (isEn && p.en?.category ? p.en.category : p.category))));
     return [isEn ? 'All' : 'Semua', ...list];
-  }, [initialPosts, isEn]);
+  }, [allPosts, isEn]);
 
   const filteredPosts = useMemo(() => {
-    return initialPosts.filter((post) => {
+    return allPosts.filter((post) => {
       const postCat = isEn && post.en?.category ? post.en.category : post.category;
       const allKey = isEn ? 'All' : 'Semua';
       const matchCategory = selectedCategory === allKey || selectedCategory === 'Semua' || postCat === selectedCategory || post.category === selectedCategory;
@@ -31,7 +63,7 @@ export default function BlogListClient({ initialPosts }: { initialPosts: BlogPos
 
       return matchCategory && (titleMatch || excerptMatch);
     });
-  }, [initialPosts, searchQuery, selectedCategory, isEn]);
+  }, [allPosts, searchQuery, selectedCategory, isEn]);
 
   return (
     <div>
