@@ -320,14 +320,15 @@ export async function publishBlogArticle(articleData: Partial<DynamicBlogArticle
 }
 
 /**
- * Batalkan publikasi artikel (kembalikan ke status 'draft')
+ * Batalkan publikasi artikel (kembalikan ke status 'draft' dan hilangkan dari website)
  */
-export async function unpublishBlogArticle(articleId: string): Promise<boolean> {
+export async function unpublishBlogArticle(articleIdOrSlug: string): Promise<boolean> {
   let list = readPersistentStore();
-  const target = list.find((a) => a.id === articleId);
-  const targetSlug = target?.slug;
+  const target = list.find((a) => a.id === articleIdOrSlug || a.slug === articleIdOrSlug);
+  const targetSlug = target?.slug || articleIdOrSlug;
+  const targetId = target?.id || articleIdOrSlug;
 
-  list = list.filter((a) => a.id !== articleId);
+  list = list.filter((a) => a.id !== targetId && a.slug !== targetSlug);
   writePersistentStore(list);
 
   const cache = getGlobalCache();
@@ -335,7 +336,7 @@ export async function unpublishBlogArticle(articleId: string): Promise<boolean> 
   cache.lastLoaded = typeof performance !== 'undefined' ? performance.now() : 0;
 
   try {
-    await aiEmployeeStoreRequest(`?record_type=eq.draft&id=eq.${encodeURIComponent(articleId)}`, {
+    await aiEmployeeStoreRequest(`?record_type=eq.draft&id=eq.${encodeURIComponent(targetId)}`, {
       method: 'PATCH',
       body: JSON.stringify({
         status: 'draft',
@@ -352,6 +353,7 @@ export async function unpublishBlogArticle(articleId: string): Promise<boolean> 
     if (targetSlug) {
       revalidatePath(`/blog/${targetSlug}`);
     }
+    revalidatePath('/sitemap.xml');
   } catch {}
 
   return true;

@@ -89,3 +89,31 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('slug') || searchParams.get('id');
+
+    if (!slug) {
+      return NextResponse.json(
+        { success: false, error: 'Parameter slug atau id artikel wajib disertakan.' },
+        { status: 400 }
+      );
+    }
+
+    const { unpublishBlogArticle } = await import('@/lib/blog-service');
+    await unpublishBlogArticle(slug);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Artikel berhasil dinonaktifkan (ditarik ke status draft).',
+      status: 'draft',
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Gagal menonaktifkan artikel.' },
+      { status: 500 }
+    );
+  }
+}

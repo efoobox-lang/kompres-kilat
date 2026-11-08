@@ -23,13 +23,30 @@ export default function BlogPostClient({
   const [isChecking, setIsChecking] = useState<boolean>(!initialPost && !legacyPost);
   const [copied, setCopied] = useState(false);
 
+  const [isDeactivated, setIsDeactivated] = useState<boolean>(false);
+
   // Fallback client-side lookup jika artikel baru diterbitkan di Vercel (Zero-Config)
   useEffect(() => {
-    if (post) {
+    if (typeof window === 'undefined' || !slug) {
       setIsChecking(false);
       return;
     }
-    if (typeof window === 'undefined' || !slug) {
+
+    // Periksa apakah artikel ini masuk dalam daftar slug yang dinonaktifkan (ditarik ke draft)
+    try {
+      const deactRaw = localStorage.getItem('kk_deactivated_slugs');
+      if (deactRaw) {
+        const deactList: string[] = JSON.parse(deactRaw);
+        if (deactList.includes(slug)) {
+          setPost(null);
+          setIsDeactivated(true);
+          setIsChecking(false);
+          return;
+        }
+      }
+    } catch {}
+
+    if (post) {
       setIsChecking(false);
       return;
     }
@@ -129,19 +146,26 @@ export default function BlogPostClient({
     );
   }
 
-  // State Jika Artikel Benar-Benar Tidak Ditemukan
+  // State Jika Artikel Dinonaktifkan (Draft) atau Tidak Ditemukan
   if (!post) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-sm ${
+          isDeactivated
+            ? 'bg-amber-100 text-amber-700 border border-amber-300'
+            : 'bg-slate-100 text-slate-600 border border-slate-300'
+        }`}>
           <FileQuestion className="w-8 h-8" />
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Artikel Tidak Ditemukan
+            {isDeactivated ? 'Artikel Sedang Dinonaktifkan (Draft)' : 'Artikel Tidak Ditemukan'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-            Artikel dengan tautan <code className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-mono text-xs">/blog/{slug}</code> belum dipublikasikan atau tautannya telah berubah.
+            {isDeactivated
+              ? 'Konten artikel ini telah dinonaktifkan oleh administrator dan dikembalikan ke status draf sehingga otomatis ditarik dari publikasi website.'
+              : <>Artikel dengan tautan <code className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-mono text-xs">/blog/{slug}</code> belum dipublikasikan atau tautannya telah berubah.</>
+            }
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">

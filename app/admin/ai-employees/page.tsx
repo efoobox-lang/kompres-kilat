@@ -62,6 +62,7 @@ import {
   UploadCloud,
   Globe,
   CalendarClock,
+  PauseCircle,
   Image as ImageIcon
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
@@ -421,10 +422,20 @@ export default function AIEmployeesDashboard() {
 
       const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
       setSeoDrafts(updatedList);
+      await saveDraftsToStorage(updatedList);
 
-      // Persistensi ke localStorage browser admin agar bisa langsung dilihat tanpa 404
+      // Persistensi ke localStorage: Hapus dari daftar nonaktif & tambahkan ke published
       if (typeof window !== 'undefined') {
         try {
+          // 1. Hapus slug dari daftar nonaktif jika sebelumnya dinonaktifkan
+          const deactRaw = localStorage.getItem('kk_deactivated_slugs');
+          if (deactRaw) {
+            const deactList: string[] = JSON.parse(deactRaw);
+            const filteredDeact = deactList.filter((s) => s !== draft.slug && s !== updatedDraft.slug);
+            localStorage.setItem('kk_deactivated_slugs', JSON.stringify(filteredDeact));
+          }
+
+          // 2. Simpan artikel ke daftar published
           const raw = localStorage.getItem('kk_published_articles');
           const list: any[] = raw ? JSON.parse(raw) : [];
           const filtered = list.filter((a: any) => a.id !== draft.id && a.slug !== draft.slug);
@@ -451,7 +462,7 @@ export default function AIEmployeesDashboard() {
     }
   };
 
-  // Helper menarik kembali publikasi artikel (unpublish)
+  // Helper menonaktifkan / menarik kembali publikasi artikel (kembali ke status draft)
   const handleUnpublishFromBlog = async (draft: SeoArticleDraft) => {
     setPublishingArticleId(draft.id);
     try {
@@ -464,7 +475,7 @@ export default function AIEmployeesDashboard() {
         }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Gagal menarik artikel.');
+      if (!response.ok) throw new Error(result.error || 'Gagal menonaktifkan artikel.');
 
       const updatedDraft: SeoArticleDraft = {
         ...draft,
@@ -474,22 +485,40 @@ export default function AIEmployeesDashboard() {
 
       const updatedList = seoDrafts.map((d) => (d.id === draft.id ? updatedDraft : d));
       setSeoDrafts(updatedList);
+      await saveDraftsToStorage(updatedList);
 
+      // Persistensi ke localStorage: Tandai sebagai nonaktif & bersihkan dari publikasi website
       if (typeof window !== 'undefined') {
         try {
+          // 1. Catat slug ke daftar nonaktif agar langsung hilang seketika dari website
+          const deactRaw = localStorage.getItem('kk_deactivated_slugs');
+          const deactList: string[] = deactRaw ? JSON.parse(deactRaw) : [];
+          if (!deactList.includes(draft.slug)) {
+            deactList.push(draft.slug);
+            localStorage.setItem('kk_deactivated_slugs', JSON.stringify(deactList));
+          }
+
+          // 2. Hapus dari daftar published
           const raw = localStorage.getItem('kk_published_articles');
           if (raw) {
             const list: any[] = JSON.parse(raw);
-            const filtered = list.filter((a: any) => a.id !== draft.id);
+            const filtered = list.filter((a: any) => a.id !== draft.id && a.slug !== draft.slug);
             localStorage.setItem('kk_published_articles', JSON.stringify(filtered));
           }
-        } catch {}
+        } catch (e) {
+          console.warn('Gagal perbarui localStorage unpublish:', e);
+        }
       }
+
+      if (publishSuccessNotice && publishSuccessNotice.id === draft.id) {
+        setPublishSuccessNotice(null);
+      }
+
       if (editingDraft && editingDraft.id === draft.id) {
         setEditingDraft(updatedDraft);
       }
     } catch (err: any) {
-      alert(`Gagal unpublish: ${err.message}`);
+      alert(`Gagal menonaktifkan: ${err.message}`);
     } finally {
       setPublishingArticleId(null);
     }
@@ -3028,23 +3057,23 @@ export default function AIEmployeesDashboard() {
 
                         {/* 4 PANEL AKSI MANDOR (HUMAN-IN-THE-LOOP WORKFLOW) */}
                         <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
-                          {/* Aksi 1: SETUJU & PUBLISH */}
+                          {/* Aksi 1: PUBLISH / AKTIFKAN vs NONAKTIFKAN */}
                           {!isPublished ? (
                             <button
                               onClick={() => handlePublishToBlog(draft)}
                               disabled={publishingArticleId === draft.id}
                               className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 disabled:opacity-50"
-                              title="Setujui draf dan publikasikan langsung ke web publik kompreskilat.site (SSR/ISR real-time tanpa rebuild)"
+                              title="Aktifkan dan publikasikan artikel langsung ke website kompreskilat.site"
                             >
                               {publishingArticleId === draft.id ? (
                                 <>
                                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                  <span>Mempublikasikan...</span>
+                                  <span>Mengaktifkan...</span>
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  <span>Setuju & Publish</span>
+                                  <Globe className="w-3.5 h-3.5" />
+                                  <span>{draft.status === 'draft' ? 'Aktifkan / Publish' : 'Setuju & Publish'}</span>
                                 </>
                               )}
                             </button>
@@ -3054,7 +3083,7 @@ export default function AIEmployeesDashboard() {
                                 href={`/blog/${draft.slug}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                className="px-3 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                                 title="Buka artikel langsung di blog publik KompresKilat"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -3064,10 +3093,20 @@ export default function AIEmployeesDashboard() {
                               <button
                                 onClick={() => handleUnpublishFromBlog(draft)}
                                 disabled={publishingArticleId === draft.id}
-                                className="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
-                                title="Tarik kembali artikel ini ke status draft"
+                                className="px-3 py-2 rounded-xl bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                                title="Nonaktifkan artikel ini dari website publik dan otomatis ubah statusnya menjadi Draft"
                               >
-                                <span>Tarik ke Draft</span>
+                                {publishingArticleId === draft.id ? (
+                                  <>
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Menonaktifkan...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <PauseCircle className="w-3.5 h-3.5" />
+                                    <span>Nonaktifkan (Draft)</span>
+                                  </>
+                                )}
                               </button>
                             </>
                           )}
@@ -3712,7 +3751,7 @@ export default function AIEmployeesDashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Tombol Publish ke Blog Publik */}
+                {/* Tombol Publish / Nonaktifkan ke Blog Publik */}
                 {editingDraft.status !== 'published' ? (
                   <button
                     type="button"
@@ -3723,12 +3762,12 @@ export default function AIEmployeesDashboard() {
                     {publishingArticleId === editingDraft.id ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Mempublikasikan...</span>
+                        <span>Mengaktifkan...</span>
                       </>
                     ) : (
                       <>
                         <Globe className="w-3.5 h-3.5" />
-                        <span>Publish ke Blog Sekarang</span>
+                        <span>Aktifkan / Publish ke Blog</span>
                       </>
                     )}
                   </button>
@@ -3747,9 +3786,20 @@ export default function AIEmployeesDashboard() {
                       type="button"
                       onClick={() => handleUnpublishFromBlog(editingDraft)}
                       disabled={publishingArticleId === editingDraft.id}
-                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                      title="Nonaktifkan artikel ini dari website publik dan otomatis ubah statusnya menjadi Draft"
                     >
-                      <span>Tarik ke Draft</span>
+                      {publishingArticleId === editingDraft.id ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Menonaktifkan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <PauseCircle className="w-3.5 h-3.5" />
+                          <span>Nonaktifkan (Ubah ke Draft)</span>
+                        </>
+                      )}
                     </button>
                   </>
                 )}
