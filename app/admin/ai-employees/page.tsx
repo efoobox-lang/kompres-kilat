@@ -61,6 +61,7 @@ import {
   Share2,
   UploadCloud,
   Globe,
+  CalendarClock,
   Image as ImageIcon
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
@@ -145,7 +146,7 @@ export interface CreativeVideoData {
   generatedAt?: string;
 }
 
-export type SeoDraftStatus = 'draft' | 'review' | 'published' | 'pending_review' | 'approved' | 'revision';
+export type SeoDraftStatus = 'draft' | 'review' | 'published' | 'pending_review' | 'approved' | 'revision' | 'scheduled' | 'rejected';
 
 export interface SeoArticleDraft {
   id: string;
@@ -158,6 +159,7 @@ export interface SeoArticleDraft {
   status: SeoDraftStatus;
   createdAt: string;
   wordCount?: number;
+  scheduledAt?: string;
   readingTime?: string;
   type?: 'article' | 'video' | 'social';
   videoUrl?: string;
@@ -383,7 +385,7 @@ export default function AIEmployeesDashboard() {
   const [storageError, setStorageError] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<SeoArticleDraft | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
-  const [seoDraftFilter, setSeoDraftFilter] = useState<'all' | 'draft' | 'review' | 'published'>('all');
+  const [seoDraftFilter, setSeoDraftFilter] = useState<'all' | 'draft' | 'review' | 'scheduled' | 'published' | 'rejected'>('all');
   const [publishingArticleId, setPublishingArticleId] = useState<string | null>(null);
   const [publishSuccessNotice, setPublishSuccessNotice] = useState<{ id: string; url: string; title: string } | null>(null);
   const [reviewViewMode, setReviewViewMode] = useState<'edit' | 'preview'>('edit');
@@ -462,6 +464,42 @@ export default function AIEmployeesDashboard() {
     } finally {
       setPublishingArticleId(null);
     }
+  };
+
+  // State & Handler Penjadwalan Draf (Simpan / Jadwalkan Publikasi Mandor)
+  const [schedulingDraft, setSchedulingDraft] = useState<SeoArticleDraft | null>(null);
+  const [scheduleDateTime, setScheduleDateTime] = useState<string>('');
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
+
+  const handleOpenScheduleModal = (draft: SeoArticleDraft) => {
+    setSchedulingDraft(draft);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    setScheduleDateTime(tomorrow.toISOString().slice(0, 16));
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleConfirmSchedule = async () => {
+    if (!schedulingDraft) return;
+    const dateObj = new Date(scheduleDateTime);
+    const formattedStr = `${dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} ${dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`;
+    const updatedDraft: SeoArticleDraft = {
+      ...schedulingDraft,
+      status: 'scheduled',
+      scheduledAt: formattedStr,
+    };
+    const updatedList = seoDrafts.map((d) => (d.id === schedulingDraft.id ? updatedDraft : d));
+    await saveDraftsToStorage(updatedList);
+    setIsScheduleModalOpen(false);
+    setSchedulingDraft(null);
+  };
+
+  const handleRejectDraft = async (draftId: string) => {
+    const updatedList = seoDrafts.map((d) =>
+      d.id === draftId ? { ...d, status: 'rejected' as SeoDraftStatus } : d
+    );
+    await saveDraftsToStorage(updatedList);
   };
 
   // State Generator Video & Pratinjau Divisi Video & Kreatif
@@ -2716,6 +2754,18 @@ export default function AIEmployeesDashboard() {
               </button>
               <button
                 type="button"
+                onClick={() => setSeoDraftFilter('scheduled')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  seoDraftFilter === 'scheduled'
+                    ? 'bg-purple-950/70 border border-purple-500/40 text-purple-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-purple-400" />
+                <span>Terjadwal ({seoDrafts.filter((d) => d.status === 'scheduled').length})</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setSeoDraftFilter('published')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   seoDraftFilter === 'published'
@@ -2725,6 +2775,18 @@ export default function AIEmployeesDashboard() {
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Published ({seoDrafts.filter((d) => d.status === 'published').length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoDraftFilter('rejected')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  seoDraftFilter === 'rejected'
+                    ? 'bg-rose-950/70 border border-rose-500/40 text-rose-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span>Ditolak ({seoDrafts.filter((d) => d.status === 'rejected').length})</span>
               </button>
             </div>
 
@@ -2794,13 +2856,17 @@ export default function AIEmployeesDashboard() {
                     if (seoDraftFilter === 'all') return true;
                     if (seoDraftFilter === 'draft') return draft.status === 'draft' || draft.status === 'pending_review';
                     if (seoDraftFilter === 'review') return draft.status === 'review' || draft.status === 'approved';
+                    if (seoDraftFilter === 'scheduled') return draft.status === 'scheduled';
                     if (seoDraftFilter === 'published') return draft.status === 'published';
+                    if (seoDraftFilter === 'rejected') return draft.status === 'rejected';
                     return true;
                   })
                   .map((draft) => {
                     const isPublished = draft.status === 'published';
                     const isReview = draft.status === 'review' || draft.status === 'approved';
                     const isDraft = draft.status === 'draft' || draft.status === 'pending_review';
+                    const isScheduled = draft.status === 'scheduled';
+                    const isRejected = draft.status === 'rejected';
                     const isRevision = draft.status === 'revision';
                     const wordCount = draft.content ? draft.content.trim().split(/\s+/).filter(Boolean).length : 0;
                     const isSafeAdSense = wordCount >= 700;
@@ -2811,6 +2877,10 @@ export default function AIEmployeesDashboard() {
                         className={`p-4 sm:p-5 rounded-2xl bg-slate-950/80 border transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 group ${
                           isPublished
                             ? 'border-emerald-600/40 bg-emerald-950/10'
+                            : isScheduled
+                            ? 'border-purple-600/40 bg-purple-950/10'
+                            : isRejected
+                            ? 'border-rose-900/50 bg-rose-950/10 opacity-75'
                             : isReview
                             ? 'border-indigo-600/40'
                             : 'border-slate-800/90 hover:border-slate-700/80'
@@ -2823,15 +2893,23 @@ export default function AIEmployeesDashboard() {
                               className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                                 isPublished
                                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  : isScheduled
+                                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                                  : isRejected
+                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                                   : isReview
                                   ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
                                   : isRevision
-                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                                   : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                               }`}
                             >
                               {isPublished
                                 ? '✓ Published (Tayang Publik)'
+                                : isScheduled
+                                ? `⏰ Terjadwal: ${draft.scheduledAt || 'Otomatis'}`
+                                : isRejected
+                                ? '✕ Ditolak Mandor'
                                 : isReview
                                 ? '🔍 Dalam Review Mandor'
                                 : isRevision
@@ -2885,27 +2963,15 @@ export default function AIEmployeesDashboard() {
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* 4 PANEL AKSI MANDOR (HUMAN-IN-THE-LOOP WORKFLOW) */}
                         <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
-                          {/* Tombol Review & Edit Manual */}
-                          <button
-                            onClick={() => {
-                              setEditingDraft({ ...draft });
-                              setIsReviewModalOpen(true);
-                            }}
-                            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Review & Edit</span>
-                          </button>
-
-                          {/* TOMBOL UTAMA PUBLISH KE BLOG */}
+                          {/* Aksi 1: SETUJU & PUBLISH */}
                           {!isPublished ? (
                             <button
                               onClick={() => handlePublishToBlog(draft)}
                               disabled={publishingArticleId === draft.id}
-                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 disabled:opacity-50"
-                              title="Publikasikan draf artikel ini langsung ke web publik (SSR/ISR real-time tanpa rebuild)"
+                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/30 disabled:opacity-50"
+                              title="Setujui draf dan publikasikan langsung ke web publik kompreskilat.site (SSR/ISR real-time tanpa rebuild)"
                             >
                               {publishingArticleId === draft.id ? (
                                 <>
@@ -2914,14 +2980,13 @@ export default function AIEmployeesDashboard() {
                                 </>
                               ) : (
                                 <>
-                                  <Globe className="w-3.5 h-3.5" />
-                                  <span>Publish ke Blog</span>
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>Setuju & Publish</span>
                                 </>
                               )}
                             </button>
                           ) : (
                             <>
-                              {/* Link Buka Artikel Publik */}
                               <Link
                                 href={`/blog/${draft.slug}`}
                                 target="_blank"
@@ -2933,17 +2998,51 @@ export default function AIEmployeesDashboard() {
                                 <span>Lihat di Blog ↗</span>
                               </Link>
 
-                              {/* Tombol Unpublish / Tarik ke Draft */}
                               <button
                                 onClick={() => handleUnpublishFromBlog(draft)}
                                 disabled={publishingArticleId === draft.id}
-                                className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
+                                className="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 text-xs font-medium transition cursor-pointer"
                                 title="Tarik kembali artikel ini ke status draft"
                               >
                                 <span>Tarik ke Draft</span>
                               </button>
                             </>
                           )}
+
+                          {/* Aksi 2: TOLAK */}
+                          {draft.status !== 'rejected' && (
+                            <button
+                              onClick={() => handleRejectDraft(draft.id)}
+                              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                              title="Tolak draf ini jika tidak memenuhi standar editorial atau AdSense"
+                            >
+                              <X className="w-3.5 h-3.5 text-rose-400" />
+                              <span>Tolak</span>
+                            </button>
+                          )}
+
+                          {/* Aksi 3: EDIT */}
+                          <button
+                            onClick={() => {
+                              setEditingDraft({ ...draft });
+                              setIsReviewModalOpen(true);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md"
+                            title="Buka modal penyuntingan teks dan metadata sebelum disetujui"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Edit</span>
+                          </button>
+
+                          {/* Aksi 4: SIMPAN / JADWALKAN */}
+                          <button
+                            onClick={() => handleOpenScheduleModal(draft)}
+                            className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-indigo-950/60 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 hover:border-indigo-500/60 text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                            title="Tunda publikasi sesuai tanggal dan jam tertentu, atau simpan draf"
+                          >
+                            <CalendarClock className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Simpan / Jadwalkan</span>
+                          </button>
 
                           {/* Quick Status Dropdown */}
                           <select
@@ -2964,7 +3063,9 @@ export default function AIEmployeesDashboard() {
                           >
                             <option value="draft">Draft</option>
                             <option value="review">Review</option>
+                            <option value="scheduled">Terjadwal</option>
                             <option value="published">Published</option>
+                            <option value="rejected">Ditolak</option>
                             <option value="revision">Revisi</option>
                           </select>
 
@@ -2976,18 +3077,12 @@ export default function AIEmployeesDashboard() {
                               setTimeout(() => setCopiedLogId(null), 2000);
                             }}
                             title="Salin Markdown Lengkap"
-                            className="p-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1.5 cursor-pointer"
+                            className="p-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs transition flex items-center gap-1 cursor-pointer"
                           >
                             {copiedLogId === draft.id ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span className="text-[11px] text-emerald-400">Tersalin</span>
-                              </>
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
                             ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[11px] hidden sm:inline">Salin</span>
-                              </>
+                              <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
 
@@ -3000,10 +3095,10 @@ export default function AIEmployeesDashboard() {
                               const updated = seoDrafts.filter((d) => d.id !== draft.id);
                               saveDraftsToStorage(updated);
                             }}
-                            title="Hapus Draf"
+                            title="Hapus Permanen Draf"
                             className="p-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-xs transition cursor-pointer"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -3789,6 +3884,145 @@ export default function AIEmployeesDashboard() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* POP-UP MODAL: JADWALKAN PUBLIKASI MANDOR (HUMAN-IN-THE-LOOP) */}
+      {/* ======================================================== */}
+      {isScheduleModalOpen && schedulingDraft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-indigo-500/40 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <CalendarClock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    Jadwalkan / Tunda Publikasi
+                  </h3>
+                  <p className="text-xs text-slate-400">Workflow Mandor Human-in-the-Loop</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsScheduleModalOpen(false);
+                  setSchedulingDraft(null);
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4">
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                <p className="text-[11px] font-mono text-indigo-400 font-bold">DRAF YANG DIJADWALKAN:</p>
+                <h4 className="text-sm font-semibold text-white line-clamp-2">{schedulingDraft.title}</h4>
+                <p className="text-xs text-slate-400 font-mono">/{schedulingDraft.slug}</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-300">
+                  Pilih Waktu Tayang Otomatis:
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduleDateTime}
+                  onChange={(e) => setScheduleDateTime(e.target.value)}
+                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-slate-400 font-medium">Pilihan Cepat Waktu:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      tomorrow.setHours(9, 0, 0, 0);
+                      setScheduleDateTime(tomorrow.toISOString().slice(0, 16));
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium text-left transition cursor-pointer"
+                  >
+                    📅 Besok 09:00 WIB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const lusa = new Date();
+                      lusa.setDate(lusa.getDate() + 2);
+                      lusa.setHours(10, 0, 0, 0);
+                      setScheduleDateTime(lusa.toISOString().slice(0, 16));
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium text-left transition cursor-pointer"
+                  >
+                    📅 Lusa 10:00 WIB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const weekend = new Date();
+                      weekend.setDate(weekend.getDate() + (6 - weekend.getDay()));
+                      weekend.setHours(8, 0, 0, 0);
+                      setScheduleDateTime(weekend.toISOString().slice(0, 16));
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium text-left transition cursor-pointer"
+                  >
+                    🗓️ Akhir Pekan 08:00 WIB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const updatedList = seoDrafts.map((d) =>
+                        d.id === schedulingDraft.id ? { ...d, status: 'draft' as SeoDraftStatus, scheduledAt: undefined } : d
+                      );
+                      await saveDraftsToStorage(updatedList);
+                      setIsScheduleModalOpen(false);
+                      setSchedulingDraft(null);
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-xs font-medium text-left transition cursor-pointer"
+                  >
+                    📝 Simpan Draf Saja
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-[11px] text-indigo-300 leading-relaxed">
+                💡 Autonomous Background Agent (Vercel Cron) memeriksa draf terjadwal secara berkala. Ketika jadwal tercapai, artikel otomatis dipublikasikan dan ISR Next.js diperbarui seketika tanpa rebuild.
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/90 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsScheduleModalOpen(false);
+                  setSchedulingDraft(null);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSchedule}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 cursor-pointer"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                <span>Konfirmasi Jadwalkan</span>
+              </button>
             </div>
           </div>
         </div>
