@@ -66,6 +66,7 @@ import {
 } from 'lucide-react';
 import PixelOfficeWorkstation from '@/components/admin/PixelOfficeWorkstation';
 import AdminHeader from '@/components/admin/AdminHeader';
+import VercelAnalyticsSyncModal from '@/components/admin/VercelAnalyticsSyncModal';
 
 // Ikon Instagram Resmi berbasis SVG
 const InstagramIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
@@ -375,6 +376,7 @@ export default function AIEmployeesDashboard() {
   const [copied, setCopied] = useState<boolean>(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+  const [isVercelSyncModalOpen, setIsVercelSyncModalOpen] = useState<boolean>(false);
 
   // State Batch Riwayat Perintah & Output Terpadu Agen AI (Workstation Batches)
   const [agentBatches, setAgentBatches] = useState<AgentTaskBatch[]>([]);
@@ -1812,8 +1814,32 @@ export default function AIEmployeesDashboard() {
         )}
 
         {/* ======================================================== */}
-        {/* METRIK EVENT ANALYTICS DARI SUPABASE */}
+        {/* METRIK REAL-TIME VERCEL WEB ANALYTICS & TELEMETRI */}
         {/* ======================================================== */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-300 font-medium">
+              Sumber Data: <strong className="text-emerald-400 font-mono">{analyticsData?.source || 'Vercel Web Analytics'}</strong>
+            </span>
+            <span className="text-slate-600 hidden sm:inline">&bull;</span>
+            <span className="text-slate-400 font-mono text-[11px] hidden sm:inline">
+              Sinkronisasi: {analyticsData ? new Date(analyticsData.syncedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Live'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsVercelSyncModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Sinkronkan Data Vercel</span>
+            </button>
+          </div>
+        </div>
+
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Metrik 1: Total Views */}
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md">
@@ -4027,6 +4053,21 @@ export default function AIEmployeesDashboard() {
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* POP-UP MODAL: SINKRONISASI METRIK VERCEL ANALYTICS */}
+      {/* ======================================================== */}
+      <VercelAnalyticsSyncModal
+        isOpen={isVercelSyncModalOpen}
+        onClose={() => setIsVercelSyncModalOpen(false)}
+        currentViews={analyticsData?.totalViews}
+        currentVisitors={analyticsData?.uniqueVisitors}
+        currentClicks={analyticsData?.totalClicks}
+        currentSource={analyticsData?.source}
+        onSyncSuccess={(updatedData) => {
+          setAnalyticsData(updatedData);
+        }}
+      />
     </div>
   );
 }

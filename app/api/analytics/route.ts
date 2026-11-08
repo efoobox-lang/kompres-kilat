@@ -1,20 +1,13 @@
 import { createHmac } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/admin-auth';
-import { getSupabaseConfig, supabaseRpcRequest, supabaseTableRequest } from '@/lib/ai-employee-store';
+import { getSupabaseConfig, supabaseTableRequest } from '@/lib/ai-employee-store';
 import { checkRateLimit } from '@/lib/security';
-
-const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
-interface AnalyticsRpcResult {
-  totalViews: number;
-  totalClicks: number;
-  uniqueVisitors: number;
-  viewsGrowth: string;
-  clicksGrowth: string;
-  weekly: Array<{ date: string; views: number; clicks: number }>;
-}
+import {
+  getSiteAnalyticsMetrics,
+  recordAnalyticsEvent,
+  syncVercelAnalyticsBaseline,
+} from '@/lib/analytics-service';
 
 export async function GET(request: Request) {
   if (!verifyAdminSession(request)) {
@@ -22,41 +15,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    const metrics = await supabaseRpcRequest<AnalyticsRpcResult>('get_site_analytics_metrics', {
-      method: 'POST',
-      body: '{}',
-    });
-    const weekly = (metrics?.weekly || []).map((day) => {
-      const date = new Date(`${day.date}T00:00:00Z`);
-      return {
-        day: DAY_NAMES[date.getUTCDay()],
-        date: `${String(date.getUTCDate()).padStart(2, '0')} ${MONTH_NAMES[date.getUTCMonth()]}`,
-        views: day.views,
-        clicks: day.clicks,
-        sales: null,
-      };
-    });
+    const metrics = await getSiteAnalyticsMetrics();
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        totalViews: metrics.totalViews,
-        totalClicks: metrics.totalClicks,
-        totalSales: null,
-        uniqueVisitors: metrics.uniqueVisitors,
-        viewsGrowth: metrics.viewsGrowth,
-        clicksGrowth: metrics.clicksGrowth,
-        salesGrowth: 'not tracked',
-        avgDailyViews: Math.round(metrics.totalViews / 7),
-        peakViews: Math.max(0, ...weekly.map((day) => day.views)),
-        ctr: `${((metrics.totalClicks / Math.max(1, metrics.totalViews)) * 100).toFixed(2)}%`,
-        latency: '24ms Optimal',
-        uptime: '99.98%',
-        weekly,
-        source: getSupabaseConfig() ? 'Supabase event tracking (7-day window)' : 'Vercel Analytics Riil (7 Visitors / 91 Views)',
-        syncedAt: new Date().toISOString(),
+    return NextResponse.json(
+      {
+        success: true,
+        data: metrics,
       },
-    }, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error in GET /api/analytics:', error);
     const message = error instanceof Error ? error.message : 'Gagal memuat analitik.';
@@ -66,39 +37,77 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous';
-  if (!checkRateLimit(`analytics:${ip}`, 120, 60_000).allowed) {
+  if (!checkRateLimit(`analytics:${ip}`, 180, 60_000).allowed) {
     return NextResponse.json({ success: false, error: 'Batas pencatatan analitik tercapai.' }, { status: 429 });
   }
 
-  const config = getSupabaseConfig();
-  if (!config) {
-    return NextResponse.json({ success: true, localOnly: true });
-  }
-
   try {
-    const body = await request.json();
-    const eventType = body?.action;
-    if (eventType !== 'pageview' && eventType !== 'click') {
+    const body = await request.json().catch(() => ({}));
+    const action = body?.action;
+
+    // 1. Aksi Sinkronisasi Angka Vercel Analytics dari Admin Panel
+    if (action === 'sync_vercel') {
+      if (!verifyAdminSession(request)) {
+        return NextResponse.json({ success: false, error: 'Sesi administrator tidak valid.' }, { status: 401 });
+      }
+
+      const totalViews = Number(body.totalViews);
+      const uniqueVisitors = Number(body.uniqueVisitors);
+      const totalClicks = body.totalClicks !== undefined ? Number(body.totalClicks) : undefined;
+      const vercelToken = typeof body.vercelToken === 'string' ? body.vercelToken.trim() : undefined;
+      const projectId = typeof body.projectId === 'string' ? body.projectId.trim() : undefined;
+      const teamId = typeof body.teamId === 'string' ? body.teamId.trim() : undefined;
+
+      const updated = await syncVercelAnalyticsBaseline({
+        totalViews,
+        uniqueVisitors,
+        totalClicks,
+        vercelToken,
+        projectId,
+        teamId,
+        sourceNote: body.sourceNote || 'Vercel Web Analytics (Tersinkronisasi)',
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Data analitik berhasil disinkronkan dengan Vercel Analytics.',
+        data: updated,
+      });
+    }
+
+    // 2. Aksi Telemetri Pengunjung Riil (Pageview & Click)
+    if (action !== 'pageview' && action !== 'click') {
       return NextResponse.json({ success: false, error: 'Jenis event analitik tidak valid.' }, { status: 400 });
     }
 
     const visitorId = typeof body.visitorId === 'string' ? body.visitorId.slice(0, 128) : '';
-    const pagePath = typeof body.path === 'string' && body.path.startsWith('/')
-      ? body.path.slice(0, 300)
-      : '/';
-    const visitorHash = visitorId
-      ? createHmac('sha256', config.key).update(visitorId).digest('hex')
-      : null;
+    const pagePath = typeof body.path === 'string' && body.path.startsWith('/') ? body.path.slice(0, 300) : '/';
 
-    await supabaseTableRequest('site_analytics_events', '', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        event_type: eventType,
-        visitor_hash: eventType === 'pageview' ? visitorHash : null,
-        page_path: pagePath,
-      }),
+    // Rekam ke sistem analitik persisten internal secara real-time
+    recordAnalyticsEvent({
+      action,
+      path: pagePath,
+      visitorId,
     });
+
+    // Jika Supabase aktif, rekam juga salinannya ke Supabase
+    const config = getSupabaseConfig();
+    if (config) {
+      try {
+        const visitorHash = visitorId ? createHmac('sha256', config.key).update(visitorId).digest('hex') : null;
+        await supabaseTableRequest('site_analytics_events', '', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            event_type: action,
+            visitor_hash: action === 'pageview' ? visitorHash : null,
+            page_path: pagePath,
+          }),
+        });
+      } catch (err) {
+        console.warn('Gagal mencatat event ke Supabase, data disimpan lokal:', err);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -32,6 +32,7 @@ import {
   Plus,
 } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
+import VercelAnalyticsSyncModal from '@/components/admin/VercelAnalyticsSyncModal';
 
 export type AgentStatusType = 'Working' | 'Idle' | 'Blocked';
 
@@ -237,6 +238,7 @@ export default function MonitoringCenterPage() {
   // Live Telemetry Vercel
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+  const [isVercelSyncModalOpen, setIsVercelSyncModalOpen] = useState<boolean>(false);
   const [integrations, setIntegrations] = useState<IntegrationCheck[]>([]);
   const [isCheckingIntegrations, setIsCheckingIntegrations] = useState<boolean>(false);
   const [integrationCheckError, setIntegrationCheckError] = useState<string | null>(null);
@@ -736,20 +738,30 @@ export default function MonitoringCenterPage() {
           </div>
         )}
 
-        {/* Bar Cepat Kredensial & Pengaturan Medsos */}
+        {/* Bar Cepat Kredensial & Pengaturan Medsos / Vercel Analytics */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Status Layanan Terintegrasi: <strong className="text-emerald-400 font-semibold">Aktif & Terlindungi</strong></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Sumber Analitik: <strong className="text-emerald-400 font-semibold">{analyticsData?.source || 'Vercel Web Analytics'}</strong></span>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsSocialModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-semibold text-indigo-300 transition cursor-pointer"
-          >
-            <Settings className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Atur Kredensial Medsos</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsVercelSyncModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-600/10 hover:bg-emerald-600/20 text-xs font-semibold text-emerald-300 transition cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sinkronkan Vercel Analytics</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSocialModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-semibold text-indigo-300 transition cursor-pointer"
+            >
+              <Settings className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Atur Kredensial Medsos</span>
+            </button>
+          </div>
         </div>
 
         {/* ======================================================== */}
@@ -1246,6 +1258,19 @@ export default function MonitoringCenterPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Sinkronisasi Vercel Analytics */}
+      <VercelAnalyticsSyncModal
+        isOpen={isVercelSyncModalOpen}
+        onClose={() => setIsVercelSyncModalOpen(false)}
+        currentViews={analyticsData?.totalViews}
+        currentVisitors={analyticsData?.uniqueVisitors}
+        currentClicks={analyticsData?.totalClicks}
+        currentSource={analyticsData?.source}
+        onSyncSuccess={(updatedData) => {
+          setAnalyticsData(updatedData);
+        }}
+      />
     </div>
   );
 }
