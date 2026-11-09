@@ -1,11 +1,60 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
 import AdBanner from '@/components/AdBanner';
-import { ArrowLeft, Share2, Check, FileQuestion, RefreshCw, Home, BookOpen } from 'lucide-react';
+import {
+  ArrowLeft,
+  Share2,
+  Check,
+  FileQuestion,
+  RefreshCw,
+  Home,
+  BookOpen,
+  AlignLeft,
+  Clock,
+  UserCheck
+} from 'lucide-react';
+
+function slugifyHeading(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function renderFormattedInlineText(text: string) {
+  if (!text) return null;
+  // Format bold (**...**), italic (*...*), and code (`...`)
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={i} className="font-bold text-slate-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em key={i} className="italic text-slate-800 dark:text-slate-200">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={i} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 rounded text-[11px] font-mono">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
 
 interface BlogPostClientProps {
   initialPost?: BlogPost | null;
@@ -201,13 +250,26 @@ export default function BlogPostClient({
   const paragraphs = (content || '').trim().split('\n\n');
   const midPoint = Math.floor(paragraphs.length / 2);
 
+  // Ekstrak heading H2 untuk membuat Daftar Isi (Table of Contents) otomatis pada artikel panjang
+  const tableOfContents = useMemo(() => {
+    return paragraphs
+      .filter((p) => p.trim().startsWith('## '))
+      .map((p) => {
+        const title = p.trim().replace('## ', '');
+        return {
+          title,
+          id: slugifyHeading(title),
+        };
+      });
+  }, [paragraphs]);
+
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Navigation & Action Bar */}
       <div className="flex items-center justify-between gap-3 mb-6">
         <Link 
           href="/blog" 
-          className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition inline-flex items-center gap-1.5"
+          className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition inline-flex items-center gap-1.5"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>{t('blog_back_to_all')}</span>
@@ -217,7 +279,7 @@ export default function BlogPostClient({
         <button
           onClick={handleCopyLink}
           type="button"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-indigo-600 transition px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
           title="Bagikan Tautan Artikel"
         >
           {copied ? (
@@ -237,7 +299,7 @@ export default function BlogPostClient({
       {/* Article Header */}
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mb-2.5">
-          <span className="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-0.5 rounded-md border border-indigo-100/70">
+          <span className="bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-semibold px-2.5 py-0.5 rounded-md border border-indigo-100/70 dark:border-indigo-900/60">
             {category}
           </span>
           <span>•</span>
@@ -245,23 +307,44 @@ export default function BlogPostClient({
           <span>•</span>
           <span>{readTime} {isEn ? 'read' : 'baca'}</span>
           {isEn && (
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-medium px-2 py-0.5 rounded border border-emerald-100">
+            <span className="text-[10px] bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-medium px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/60">
               English Edition
             </span>
           )}
         </div>
 
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight mb-3">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight mb-3">
           {title}
         </h1>
 
-        <p className="text-xs md:text-sm text-slate-500 border-l-2 border-indigo-400 pl-3 py-0.5">
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 border-l-2 border-indigo-400 pl-3 py-0.5">
           {isEn ? 'Written by' : 'Oleh'} {post.author} • KompresKilat
         </p>
       </div>
 
+      {/* Daftar Isi Otomatis untuk Artikel Panjang (Table of Contents) */}
+      {tableOfContents.length >= 2 && (
+        <div className="mb-8 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+            <AlignLeft className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>{isEn ? 'Table of Contents' : 'Daftar Isi Panduan'}</span>
+          </div>
+          <nav className="space-y-1 text-xs">
+            {tableOfContents.map((toc, tIdx) => (
+              <a
+                key={tIdx}
+                href={`#${toc.id}`}
+                className="block text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition py-0.5 pl-2 border-l border-slate-200 dark:border-slate-800 hover:border-indigo-500"
+              >
+                {tIdx + 1}. {toc.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
+
       {/* Article Content Container */}
-      <div className="bg-white p-6 md:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-5 text-sm text-slate-700 leading-relaxed">
+      <div className="bg-white dark:bg-slate-900 p-6 md:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
         {paragraphs.map((p, idx) => {
           const trimmed = p.trim();
           const isMidArticle = idx === midPoint;
@@ -270,26 +353,32 @@ export default function BlogPostClient({
             <div key={idx}>
               {/* Heading 2 (##) */}
               {trimmed.startsWith('## ') && (
-                <h2 className="text-xl md:text-2xl font-bold text-slate-900 pt-6 pb-2 border-b border-slate-100">
-                  {trimmed.replace('## ', '')}
+                <h2
+                  id={slugifyHeading(trimmed.replace('## ', ''))}
+                  className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white pt-6 pb-2 border-b border-slate-100 dark:border-slate-800 scroll-mt-24"
+                >
+                  {renderFormattedInlineText(trimmed.replace('## ', ''))}
                 </h2>
               )}
 
               {/* Heading 3 (###) */}
               {trimmed.startsWith('### ') && (
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 pt-4 pb-1 border-b border-slate-100">
-                  {trimmed.replace('### ', '')}
+                <h3
+                  id={slugifyHeading(trimmed.replace('### ', ''))}
+                  className="text-lg md:text-xl font-bold text-slate-900 dark:text-white pt-4 pb-1 border-b border-slate-100 dark:border-slate-800 scroll-mt-24"
+                >
+                  {renderFormattedInlineText(trimmed.replace('### ', ''))}
                 </h3>
               )}
 
               {/* Heading 4 (####) */}
               {trimmed.startsWith('#### ') && (
-                <h4 className="text-base font-bold text-slate-800 pt-3">
-                  {trimmed.replace('#### ', '')}
+                <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 pt-3">
+                  {renderFormattedInlineText(trimmed.replace('#### ', ''))}
                 </h4>
               )}
 
-              {trimmed.startsWith('---') && <hr className="my-4 border-slate-200" />}
+              {trimmed.startsWith('---') && <hr className="my-4 border-slate-200 dark:border-slate-800" />}
 
               {trimmed.startsWith('```') && (
                 <pre className="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs overflow-x-auto my-3 font-mono">
@@ -301,8 +390,8 @@ export default function BlogPostClient({
               {(trimmed.startsWith('- ') || trimmed.startsWith('1. ') || trimmed.startsWith('* ')) && (
                 <ul className="space-y-1.5 pl-5 list-disc marker:text-indigo-500">
                   {trimmed.split('\n').map((line, lIdx) => (
-                    <li key={lIdx} className="text-xs md:text-sm text-slate-700">
-                      {line.replace(/^[-*]\s+|\d+\.\s+/, '')}
+                    <li key={lIdx} className="text-xs md:text-sm text-slate-700 dark:text-slate-300">
+                      {renderFormattedInlineText(line.replace(/^[-*]\s+|\d+\.\s+/, ''))}
                     </li>
                   ))}
                 </ul>
@@ -317,15 +406,15 @@ export default function BlogPostClient({
                 !trimmed.startsWith('- ') &&
                 !trimmed.startsWith('* ') &&
                 !trimmed.startsWith('1. ') && (
-                  <p className="text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                    {trimmed}
+                  <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                    {renderFormattedInlineText(trimmed)}
                   </p>
                 )}
 
               {/* Slot Iklan In-Article (Mid-Content) */}
               {isMidArticle && (
                 <div className="my-6">
-                  <AdBanner zone="mid-article" label={isEn ? 'Sponsored Ad' : 'Iklan Sponsor'} />
+                  <AdBanner zone="mid-article" label={isEn ? 'Sponsored Ad' : 'Iklan'} />
                 </div>
               )}
             </div>
@@ -334,12 +423,12 @@ export default function BlogPostClient({
 
         {/* Call to Action Box to Related Tool */}
         {post.relatedTool && (
-          <div className="mt-10 p-6 md:p-8 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 text-center shadow-sm">
+          <div className="mt-10 p-6 md:p-8 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-slate-800 rounded-2xl border border-indigo-100 dark:border-indigo-900/60 text-center shadow-sm">
             <span className="text-3xl mb-2 block">{post.relatedTool.icon}</span>
-            <h3 className="font-extrabold text-lg text-indigo-950 mb-2">
+            <h3 className="font-extrabold text-lg text-indigo-950 dark:text-indigo-200 mb-2">
               {relatedToolTitle}
             </h3>
-            <p className="text-xs text-indigo-800 max-w-md mx-auto mb-5 leading-relaxed">
+            <p className="text-xs text-indigo-800 dark:text-indigo-300 max-w-md mx-auto mb-5 leading-relaxed">
               {relatedToolDesc}
             </p>
             <Link

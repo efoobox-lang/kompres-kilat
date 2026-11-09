@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
 import ThemeToggle from '@/components/ThemeToggle';
+import JsonLd from '@/components/JsonLd';
 import { ALL_TOOLS, CATEGORY_TABS, ToolCategoryKey, ToolItem } from '@/lib/tools-data';
 import {
   Sparkles,
@@ -14,11 +15,54 @@ import {
   Layers,
   ChevronRight,
   BookOpen,
+  ChevronDown,
+  HelpCircle,
+  Lock,
+  Cpu,
+  FileCheck2
 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<ToolCategoryKey>('all');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Home FAQ Data untuk Editorial & Schema JSON-LD
+  const homeFaqItems = [
+    {
+      q: 'Apakah seluruh alat utilitas di KompresKilat dapat digunakan secara gratis?',
+      a: 'Ya, seluruh 42+ alat utilitas di KompresKilat (mulai dari kompres foto KTP, editor PDF, kalkulator pajak PPh 21, pembuat nota kasir, hingga pelacakan nomor resi) dapat diakses 100% gratis tanpa batasan kuota harian dan tanpa perlu mendaftar akun.',
+    },
+    {
+      q: 'Bagaimana KompresKilat menjamin keamanan berkas dan foto KTP saya?',
+      a: 'KompresKilat menerapkan standar Zero-Knowledge Client-Side Processing. Dokumen dan foto Anda diolah langsung di dalam memori peramban (browser) laptop atau ponsel Anda menggunakan WebAssembly dan HTML5 Canvas. Berkas Anda tidak pernah diunggah atau disimpan di server luar mana pun.',
+    },
+    {
+      q: 'Apakah fitur KompresKilat dapat diakses dengan lancar melalui ponsel Android dan iPhone?',
+      a: 'Tentu saja. Seluruh antarmuka KompresKilat dirancang sepenuhnya responsif (Mobile-First) dan ringan, kompatibel dengan browser Google Chrome, Safari, Samsung Internet, Microsoft Edge, dan Mozilla Firefox pada smartphone.',
+    },
+    {
+      q: 'Apakah dokumen yang dihasilkan (seperti PDF dan Word) memenuhi standar resmi lamaran kerja?',
+      a: 'Ya. Dokumen PDF yang dikompresi atau digabungkan mempertahankan spesifikasi standar ISO PDF 1.7 / 2.0 yang dapat dibaca sempurna oleh sistem ATS (Applicant Tracking System), portal SSCASN BKN, portal rekrutmen BUMN, maupun sistem HRD perusahaan.',
+    },
+    {
+      q: 'Bagaimana cara KompresKilat membiayai operasional layanan tanpa memungut biaya dari pengguna?',
+      a: 'Kami membiayai infrastruktur dan pemeliharaan platform melalui penayangan unit iklan terverifikasi dari Google AdSense. Seluruh iklan disematkan sesuai kebijakan resmi penerbit untuk menjaga kenyamanan pengalaman pengguna tanpa iklan pop-up yang mengganggu.',
+    },
+  ];
+
+  const faqSchemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: homeFaqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
 
   // Filter tools sesuai tab kategori aktif
   const displayedTools = useMemo(() => {
@@ -323,6 +367,109 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           ))}
         </div>
       </section>
+
+      {/* ============================================================ */}
+      {/* 5. EDITORIAL GUIDE & FAQ EKOSISTEM KOMPRESKILAT (AdSense Value) */}
+      {/* ============================================================ */}
+      <section className="mb-14 sm:mb-20">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 md:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-8 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+          <div>
+            <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-bold mb-3">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Pusat Edukasi &amp; Standar Komputasi Mandiri</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+              Mengenal Ekosistem KompresKilat: Solusi Utilitas Digital, Bisnis &amp; Berkas Terpadu
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+              Di era digital saat ini, masyarakat Indonesia, pelaku UMKM, mahasiswa, dan pelamar kerja kerap menghadapi kendala teknis dalam mengelola dokumen digital. Mulai dari penolakan berkas foto KTP di portal SSCASN karena melebihi kuota 200 KB, dokumen skripsi PDF yang terlalu berat untuk dikirim via email, kebutuhan cetak nota kasir thermal tanpa aplikasi berbayar, hingga pengecekan nomor resi belanja online yang terpisah-pisah. KompresKilat hadir sebagai platform terintegrasi yang menghadirkan lebih dari 40 perkakas produktivitas gratis dalam satu pintu peramban.
+            </p>
+          </div>
+
+          {/* 4 Pilar Fitur Utama */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-2xl block">📄</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Dokumen &amp; PDF</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                Editor teks PDF langsung, penggabung berkas, kompresi skripsi, konversi OCR ke Word, dan proteksi sandi dokumen.
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-2xl block">🖼️</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Foto &amp; Gambar</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                Preset foto KTP &lt; 200 KB, ganti latar belakang pasfoto merah/biru via AI, kuas penghapus objek, dan resize 2x3/3x4/4x6.
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-2xl block">🧾</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Bisnis &amp; Pajak</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                Pembuat invoice &amp; nota kasir cetak thermal, kalkulator simulasi PPh 21 skema TER, dan analisis margin BEP UMKM.
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-2xl block">📦</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Logistik &amp; Utilitas</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                Pelacakan otomatis nomor resi multi-kurir (SPX, JNE, J&amp;T, SiCepat), generator QR code, dan arsip ZIP mandiri.
+              </p>
+            </div>
+          </div>
+
+          {/* Keamanan & Arsitektur Zero-Knowledge */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 space-y-2">
+            <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold text-xs sm:text-sm">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Standar Keamanan Tertinggi: Zero-Knowledge Client-Side Processing</span>
+            </div>
+            <p className="text-xs text-indigo-950/80 dark:text-indigo-300/80 leading-relaxed">
+              Berbeda dengan situs kompresi konvensional yang mewajibkan Anda mengunggah dokumen pribadi ke server cloud asing, KompresKilat dibangun dengan arsitektur <b>Client-Side First</b>. Berkas Anda diproses secara instan di dalam memori peramban pengguna memanfaatkan teknologi modern HTML5 Canvas, WebAssembly, dan Web Workers. Data Anda tidak pernah diunggah atau disimpan di server kami, menjamin kepatuhan penuh terhadap UU Perlindungan Data Pribadi (UU PDP).
+            </p>
+          </div>
+
+          {/* ============================================================ */}
+          {/* FAQ Homepage (Pertanyaan Umum Pengunjung)                     */}
+          {/* ============================================================ */}
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Pertanyaan yang Sering Diajukan (FAQ KompresKilat)
+              </h3>
+            </div>
+
+            {homeFaqItems.map((item, idx) => (
+              <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full p-4 text-left font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer gap-3"
+                >
+                  <span className="text-xs sm:text-sm">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
+                      openFaq === idx ? 'rotate-180 text-indigo-600' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+                {openFaq === idx && (
+                  <div className="p-4 pt-0 text-slate-600 dark:text-slate-400 text-xs sm:text-sm border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Structured Data FAQPage for Homepage */}
+      <JsonLd data={faqSchemaData} />
     </div>
   );
 }

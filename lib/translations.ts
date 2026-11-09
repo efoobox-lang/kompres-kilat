@@ -147,6 +147,7 @@ export const translations: Record<string, Record<string, string>> = {
     footer_link_guide_pdf: 'Kecilkan PDF Tugas Skripsi',
     footer_policy_privacy: 'Kebijakan Privasi (Privacy Policy)',
     footer_policy_terms: 'Syarat & Ketentuan (Terms)',
+    footer_policy_disclaimer: 'Penafian (Disclaimer)',
     footer_policy_about: 'Tentang Kami (About Us)',
     footer_policy_contact: 'Hubungi Kami (Contact Us)',
 
@@ -262,6 +263,7 @@ export const translations: Record<string, Record<string, string>> = {
     footer_link_guide_pdf: 'Compress Thesis PDF Guide',
     footer_policy_privacy: 'Privacy Policy',
     footer_policy_terms: 'Terms of Service',
+    footer_policy_disclaimer: 'Disclaimer',
     footer_policy_about: 'About Us',
     footer_policy_contact: 'Contact Us',
 

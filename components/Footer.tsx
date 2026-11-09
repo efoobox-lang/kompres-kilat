@@ -257,6 +257,14 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
+                    href="/disclaimer"
+                    className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
+                  >
+                    {t('footer_policy_disclaimer')}
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/about"
                     className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
                   >

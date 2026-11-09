@@ -14,7 +14,9 @@ import {
   Sparkles,
   Sliders,
   Layers,
-  FileCheck2
+  FileCheck2,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
 
 interface PageExtractionDetail {
@@ -43,6 +45,44 @@ export default function PdfToWordPage() {
   const [docxSize, setDocxSize] = useState<number>(0);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isGeneratingDocx, setIsGeneratingDocx] = useState<boolean>(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // FAQ Data untuk Konten Editorial & Schema JSON-LD
+  const pdfToWordFaqItems = [
+    {
+      q: 'Apakah hasil konversi PDF ke Word di KompresKilat bisa diedit secara bebas?',
+      a: 'Ya, format .docx yang dihasilkan adalah dokumen Microsoft Word OpenXML native standar. Seluruh kalimat, paragraf, dan tata letak teks dapat Anda edit langsung di Microsoft Office Word (versi 2010 s/d 2024 / Microsoft 365), Google Docs, Apple Pages, maupun WPS Office.',
+    },
+    {
+      q: 'Bagaimana jika PDF saya merupakan hasil scan kertas atau foto kamera HP yang buram?',
+      a: 'KompresKilat dilengkapi mesin cerdas Tesseract OCR AI berbasis WebAssembly. Sistem otomatis mendeteksi citra scan, mengoptimalkan kontras piksel hitam-putih, dan mengekstrak karakter teks huruf demi huruf dengan akurasi tinggi.',
+    },
+    {
+      q: 'Apakah susunan baris dan jarak paragraf asli dokumen PDF akan berantakan?',
+      a: 'Tidak. Mesin kami memetakan koordinat X dan Y setiap baris kata pada canvas PDF, mendeteksi jeda spasi alami, dan menyusun ulang struktur paragraf secara proporsional sehingga hasil konversi menyerupai format aslinya.',
+    },
+    {
+      q: 'Apakah berkas rahasia seperti ijazah, kontrak kerja, atau transkrip nilai aman dikonversi di sini?',
+      a: 'Sangat aman 100%. KompresKilat beroperasi dengan prinsip Zero-Knowledge Privacy di mana seluruh proses ekstraksi dan penyusunan file Word berjalan langsung di dalam memori peramban (browser) perangkat Anda tanpa pernah diunggah ke server database mana pun.',
+    },
+    {
+      q: 'Apakah ada batasan jumlah halaman atau ukuran file PDF yang dapat dikonversi?',
+      a: 'Tidak ada batasan. Anda dapat mengonversi dokumen PDF tebal puluhan halaman secara gratis tanpa batasan kuota harian dan tanpa perlu mendaftar akun.',
+    },
+  ];
+
+  const faqSchemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pdfToWordFaqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -718,8 +758,45 @@ export default function PdfToWordPage() {
               <li><b>Kompatibilitas Format:</b> File `.docx` yang diunduh berbasis standar Microsoft OpenXML resmi, dapat dibuka sempurna di Microsoft Office 2010 s/d 2024, Microsoft 365, Google Docs, Apple Pages, dan WPS Office.</li>
             </ul>
           </div>
+
+          {/* ============================================================ */}
+          {/* FAQ (Pertanyaan yang Sering Diajukan)                         */}
+          {/* ============================================================ */}
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Pertanyaan yang Sering Diajukan Seputar Konversi PDF ke Word (FAQ)
+              </h3>
+            </div>
+
+            {pdfToWordFaqItems.map((item, idx) => (
+              <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full p-4 text-left font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer gap-3"
+                >
+                  <span className="text-xs sm:text-sm">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
+                      openFaq === idx ? 'rotate-180 text-indigo-600' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+                {openFaq === idx && (
+                  <div className="p-4 pt-0 text-slate-600 dark:text-slate-400 text-xs sm:text-sm border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* JSON-LD Structured Data for FAQPage */}
+      <JsonLd data={faqSchemaData} />
 
       <Footer />
     </main>

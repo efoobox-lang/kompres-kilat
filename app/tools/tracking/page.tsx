@@ -6,6 +6,14 @@ import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import {
+  ChevronDown,
+  BookOpen,
+  HelpCircle,
+  Truck,
+  ShieldCheck,
+  PackageCheck
+} from 'lucide-react';
 
 interface HistoryItem {
   date: string;
@@ -69,6 +77,44 @@ export default function TrackingPage() {
     return [];
   });
   const [copied, setCopied] = useState<boolean>(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // FAQ Data untuk Konten Editorial & Schema JSON-LD
+  const trackingFaqItems = [
+    {
+      q: 'Berapa lama waktu yang dibutuhkan agar nomor resi baru mulai terlacak di sistem?',
+      a: 'Umumnya nomor resi baru akan mulai terlacak 1 hingga 6 jam setelah paket diserahkan ke gerai kurir atau dijemput kurir pick-up. Pada saat penjual baru membuat label pengiriman (booking), status mungkin masih berstatus "Data Belum Ditemukan" atau "Manifested" hingga paket tiba dan dipindai di agen sortir pertama.',
+    },
+    {
+      q: 'Apa yang harus dilakukan jika riwayat paket berhenti (stuck) di hub sortir selama berhari-hari?',
+      a: 'Jika paket tidak mengalami pergerakan status lebih dari 48-72 jam di kota transit, segera hubungi layanan pelanggan ekspedisi terkait melalui WhatsApp atau email resmi dengan menyebutkan nomor resi Anda, atau hubungi penjual marketplace untuk mengajukan investigasi kendala logistik.',
+    },
+    {
+      q: 'Mengapa status paket tertulis "Delivered" tetapi penerima belum memegang paket fisik?',
+      a: 'Sering kali kurir menitipkan paket kepada anggota keluarga serumah, petugas keamanan (satpam pos), resepsionis kantor, atau tetangga sekitar. Periksa kolom "Diterima Oleh" pada timeline riwayat di atas untuk melihat nama pihak yang menandatangani penerimaan paket.',
+    },
+    {
+      q: 'Apakah riwayat nomor resi yang saya lacak tersimpan di server KompresKilat?',
+      a: 'Tidak. KompresKilat menerapkan Zero-Knowledge Privacy di mana riwayat 5 resi terakhir Anda hanya disimpan secara lokal di dalam memori browser (LocalStorage) perangkat Anda sendiri. Anda dapat membersihkannya kapan saja dengan tombol "Hapus Riwayat".',
+    },
+    {
+      q: 'Ekspedisi kurir apa saja yang dapat dilacak secara akurat di KompresKilat?',
+      a: 'KompresKilat mendukung pelacakan real-time untuk lebih dari 11 ekspedisi besar di Indonesia, meliputi Shopee Xpress (SPX), JNE Express, J&T Express, SiCepat Ekspres, Anteraja, Pos Indonesia, TIKI, Wahana Logistik, Ninja Xpress, ID Express, dan Lion Parcel.',
+    },
+  ];
+
+  const faqSchemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: trackingFaqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
 
   // Simpan riwayat ke LocalStorage
   const saveToHistory = (awb: string, courierCode: string, courierName: string) => {
@@ -382,27 +428,136 @@ export default function TrackingPage() {
           </div>
         )}
 
+        {/* Slot Iklan Kepatuhan AdSense */}
+        <div className="my-10">
+          <AdBanner zone="in-tool" label="Iklan" />
+        </div>
+
+        {/* ============================================================ */}
+        {/* KONTEN EDITORIAL: Panduan Lengkap Cek Resi & Ekspedisi        */}
+        {/* ============================================================ */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-10">
+          <div>
+            <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3 py-1 rounded-full font-bold mb-3">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Panduan Cek Resi Logistik Indonesia</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+              Panduan Cek Resi &amp; Cara Memantau Perjalanan Paket Belanja Online
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              Dalam era transaksi belanja daring (*e-commerce*) di Indonesia, nomor resi pengiriman atau <em>Air Waybill</em> (AWB) adalah bukti sah bahwa barang pesanan Anda telah diserahkan oleh penjual (*seller*) ke pihak penyedia jasa kurir logistik. Setiap kali paket berpindah dari kota asal, pusat sortir transit (*Hub Gateway*), kantor cabang pembantu (*Drop Point*), hingga dibawa kurir pengantar (*Delivery Rider*), barcode resi akan dipindai secara digital untuk memperbarui koordinat posisi paket secara real-time.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">🚚</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Deteksi Kurir Otomatis</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                Sistem secara cerdas mengenali kode awalan nomor resi Shopee Express (SPXID), JNE, J&amp;T, SiCepat, dan Anteraja tanpa perlu Anda pilih manual.
+              </p>
+            </div>
+
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">⏱️</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Riwayat Checkpoint Lengkap</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                Menampilkan timeline lengkap tanggal, jam, lokasi gudang transit, dan status pengantaran dari awal kirim hingga tiba di tangan penerima.
+              </p>
+            </div>
+
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">💾</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Simpan Riwayat Lokal</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                5 nomor resi terakhir tersimpan rapi di browser Anda sehingga Anda dapat mengecek status harian cukup dengan satu ketukan jari.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Arti Istilah Status Pengiriman yang Wajib Diketahui:
+            </h3>
+            <ul className="list-disc pl-5 space-y-2 text-slate-600 dark:text-slate-400">
+              <li>
+                <strong>Manifested / Shipment Created:</strong> Nomor resi telah dicetak oleh penjual di sistem, namun paket fisik belum tentu sudah diserahkan ke pihak ekspedisi.
+              </li>
+              <li>
+                <strong>On Process / In Transit:</strong> Paket sedang dalam perjalanan antarkota menggunakan armada truk logistik atau kargo udara menuju fasilitas hub sortir kota tujuan Anda.
+              </li>
+              <li>
+                <strong>Received at Sorting Hub:</strong> Paket telah tiba di pusat pemilahan regional dan sedang dikelompokkan berdasarkan area kecamatan/kelurahan pengantaran.
+              </li>
+              <li>
+                <strong>With Delivery Courier / Out for Delivery:</strong> Paket sudah dibawa oleh kurir bertugas dan akan diantarkan ke alamat rumah Anda pada hari itu juga.
+              </li>
+              <li>
+                <strong>Delivered:</strong> Paket telah sukses diserahkan dan ditandatangani oleh penerima atau pihak keluarga/keamanan di lokasi.
+              </li>
+            </ul>
+          </div>
+
+          {/* ============================================================ */}
+          {/* FAQ (Pertanyaan yang Sering Diajukan)                         */}
+          {/* ============================================================ */}
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Pertanyaan yang Sering Diajukan Seputar Pelacakan Resi (FAQ)
+              </h3>
+            </div>
+
+            {trackingFaqItems.map((item, idx) => (
+              <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full p-4 text-left font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer gap-3"
+                >
+                  <span className="text-xs sm:text-sm">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
+                      openFaq === idx ? 'rotate-180 text-indigo-600' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+                {openFaq === idx && (
+                  <div className="p-4 pt-0 text-slate-600 dark:text-slate-400 text-xs sm:text-sm border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Artikel Panduan Terkait (SEO Internal Link) */}
-        <div className="mt-10 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900 mb-3">📚 Panduan Ekspedisi Terkait:</h2>
+        <div className="mt-8 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">📚 Panduan Ekspedisi Terkait:</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <Link 
               href="/blog/cara-lacak-paket-shopee-express-spx-akurat" 
-              className="p-3 bg-slate-50 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition border border-slate-100 block"
+              className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-slate-100 dark:border-slate-700/60 block"
             >
-              <span className="font-semibold block">Cara Lacak Paket Shopee Express (SPX)</span>
-              <span className="text-[11px] text-slate-500">Pahami arti status sortir transit di Hub SPX.</span>
+              <span className="font-semibold block text-slate-800 dark:text-slate-200">Cara Lacak Paket Shopee Express (SPX)</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Pahami arti status sortir transit di Hub SPX.</span>
             </Link>
             <Link 
               href="/blog/arti-status-resi-jne-jnt-sicepat-lengkap" 
-              className="p-3 bg-slate-50 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition border border-slate-100 block"
+              className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 hover:text-indigo-600 dark:hover:text-indigo-400 transition border border-slate-100 dark:border-slate-700/60 block"
             >
-              <span className="font-semibold block">Daftar Istilah Resi JNE, J&T, SiCepat</span>
-              <span className="text-[11px] text-slate-500">Ketahui arti istilah Manifested, Transit, Bad Address.</span>
+              <span className="font-semibold block text-slate-800 dark:text-slate-200">Daftar Istilah Resi JNE, J&amp;T, SiCepat</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Ketahui arti istilah Manifested, Transit, Bad Address.</span>
             </Link>
           </div>
         </div>
       </section>
+
+      {/* JSON-LD Structured Data for FAQPage */}
+      <JsonLd data={faqSchemaData} />
 
       {/* Footer Komprehensif */}
       <Footer />

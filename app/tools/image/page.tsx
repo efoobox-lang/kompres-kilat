@@ -7,6 +7,14 @@ import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import {
+  ChevronDown,
+  ShieldCheck,
+  HelpCircle,
+  BookOpen,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 type QualityPreset = 'cpns' | '500kb' | 'medium' | 'high';
 
@@ -22,6 +30,44 @@ export default function CompressImagePage() {
   const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
   const [compressedUrl, setCompressedUrl] = useState<string>('');
   const [compressedSize, setCompressedSize] = useState<number>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // FAQ Data untuk Konten Editorial & Schema JSON-LD
+  const imageFaqItems = [
+    {
+      q: 'Mengapa portal resmi SSCASN CPNS & BUMN membatasi ukuran foto di bawah 200 KB atau 500 KB?',
+      a: 'Portal seleksi nasional seperti SSCASN BKN dan FHCI BUMN melayani jutaan pendaftar secara serentak. Pembatasan ukuran foto KTP (maks. 200 KB) dan swafoto/pasfoto (maks. 500 KB) diterapkan demi efisiensi kapasitas bandwidth server dan mempercepat pemrosesan verifikasi otomatis dokumen oleh sistem pencocokan wajah (face recognition).',
+    },
+    {
+      q: 'Apakah aman mengompres foto KTP dan dokumen identitas penting di KompresKilat?',
+      a: 'Sangat aman 100%. KompresKilat beroperasi dengan prinsip Zero-Knowledge Privacy di mana seluruh proses kompresi dilakukan secara lokal di dalam memori browser perangkat Anda (Client-Side). Berkas foto KTP, KK, atau ijazah Anda tidak pernah dikirim atau disimpan di server mana pun.',
+    },
+    {
+      q: 'Bagaimana cara agar teks NIK dan nama pada foto KTP tidak blur saat dikompres?',
+      a: 'Gunakan preset "Standar CPNS (< 200 KB)" atau "Sedang (< 500 KB)" dengan format keluaran JPG/JPEG. Algoritma kami secara cerdas mempertahankan ketajaman kontras pada area teks dan angka NIK sehingga tulisan tetap terbaca jelas oleh panitia seleksi meskipun ukuran file menyusut drastis.',
+    },
+    {
+      q: 'Apa perbedaan antara format output JPG, WebP, dan PNG saat kompresi foto?',
+      a: 'Format JPG/JPEG adalah standar universal yang paling banyak diterima portal pendaftaran kerja dan instansi pemerintah. WebP menghasilkan ukuran file paling hemat dengan kualitas visual superior (sangat cocok untuk website), sedangkan PNG paling cocok untuk grafis atau foto dengan latar belakang transparan.',
+    },
+    {
+      q: 'Apakah ada batasan kuota jumlah foto yang dapat saya kompresi di situs ini?',
+      a: 'Tidak ada batasan sama sekali. Anda dapat mengompresi foto dan gambar sebanyak yang Anda butuhkan tanpa biaya langganan, tanpa batasan harian, dan tanpa perlu melakukan pendaftaran akun.',
+    },
+  ];
+
+  const faqSchemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: imageFaqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
 
   // Handle saat user memilih file gambar
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,22 +358,125 @@ export default function CompressImagePage() {
         )}
 
         {/* Slot Iklan Resmi AdSense (Berjarak aman dari tombol aksi) */}
-        <AdBanner zone="in-tool" label="Iklan" />
+        <div className="my-10">
+          <AdBanner zone="in-tool" label="Iklan" />
+        </div>
+
+        {/* ============================================================ */}
+        {/* KONTEN EDITORIAL: Panduan Lengkap Standar Ukuran Foto & CPNS */}
+        {/* ============================================================ */}
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-10">
+          <div>
+            <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3 py-1 rounded-full font-bold mb-3">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Panduan Resmi Kompresi Foto Digital</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+              Panduan Lengkap Standar Ukuran Foto KTP, Pasfoto &amp; Berkas Seleksi Online
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              Dalam proses seleksi calon pegawai negeri sipil (CPNS), rekrutmen bersama BUMN, pendaftaran sekolah kedinasan, maupun pengajuan beasiswa, tahap seleksi administrasi berkas sering kali menjadi kendala pertama yang menggugurkan peserta. Salah satu faktor penyebab paling umum adalah berkas foto atau dokumen scan identitas (KTP) yang diunggah melebihi batas kuota ukuran maksimal sistem, seperti batas maksimal <b>200 KB</b> untuk foto KTP atau <b>500 KB</b> untuk pasfoto resmi dan swafoto (*selfie*).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">📋</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Standar Ukuran SSCASN</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                SSCASN BKN mewajibkan foto KTP berukuran maksimal 200 KB dalam format JPG/JPEG dengan NIK dan nama jelas terbaca tanpa distorsi.
+              </p>
+            </div>
+
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">🔒</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Privasi 100% Client-Side</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                Foto identitas Anda diproses langsung di memori browser perangkat Anda menggunakan teknologi HTML5 Canvas tanpa dikirim ke server luar.
+              </p>
+            </div>
+
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <span className="text-xl block">⚡</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Preset Cepat Sekali Klik</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                Tersedia tombol preset &lt; 200 KB dan &lt; 500 KB yang secara otomatis menyesuaikan resolusi piksel dan tingkat kompresi optimal.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Langkah demi Langkah Mengompres Foto di KompresKilat:
+            </h3>
+            <ol className="list-decimal pl-5 space-y-2 text-slate-600 dark:text-slate-400">
+              <li>
+                <strong>Pilih atau Seret Foto:</strong> Klik tombol &quot;Pilih File Gambar&quot; dan ambil foto KTP atau pasfoto dari galeri ponsel maupun penyimpanan laptop Anda.
+              </li>
+              <li>
+                <strong>Tentukan Preset Kebutuhan:</strong> Untuk pendaftaran CPNS, pilih preset <em>&quot;Standar CPNS (&lt; 200 KB)&quot;</em>. Untuk foto umum, pilih <em>&quot;Sedang (&lt; 500 KB)&quot;</em> atau <em>&quot;Kualitas Maksimal&quot;</em>.
+              </li>
+              <li>
+                <strong>Pilih Format Output:</strong> Rekomendasi format adalah <em>JPG/JPEG</em> karena diterima di seluruh sistem portal pemerintah dan instansi swasta.
+              </li>
+              <li>
+                <strong>Mulai Kompres &amp; Unduh:</strong> Klik tombol <em>&quot;Mulai Kompres Gambar&quot;</em>. Hasil file yang telah dioptimalkan langsung siap diunduh dalam hitungan detik.
+              </li>
+            </ol>
+          </div>
+
+          {/* ============================================================ */}
+          {/* FAQ (Pertanyaan yang Sering Diajukan)                         */}
+          {/* ============================================================ */}
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Pertanyaan yang Sering Diajukan (FAQ)
+              </h3>
+            </div>
+
+            {imageFaqItems.map((item, idx) => (
+              <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full p-4 text-left font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer gap-3"
+                >
+                  <span className="text-xs sm:text-sm">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
+                      openFaq === idx ? 'rotate-180 text-indigo-600' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+                {openFaq === idx && (
+                  <div className="p-4 pt-0 text-slate-600 dark:text-slate-400 text-xs sm:text-sm border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Link ke Blog Terkait */}
-        <div className="mt-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+        <div className="mt-8 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-xs font-bold text-slate-800">Butuh panduan resmi ukuran foto CPNS & BUMN?</h3>
-            <p className="text-[11px] text-slate-500">Baca artikel cara kompres KTP & swafoto agar lolos seleksi berkas.</p>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">Butuh panduan resmi ukuran foto CPNS &amp; BUMN?</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Baca artikel cara kompres KTP &amp; swafoto agar lolos seleksi berkas.</p>
           </div>
           <Link 
             href="/blog/cara-kompres-foto-ktp-kurang-dari-500kb"
-            className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-3 py-2 rounded-xl transition whitespace-nowrap"
+            className="text-xs bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 font-semibold px-3 py-2 rounded-xl transition whitespace-nowrap"
           >
             Baca Panduan →
           </Link>
         </div>
       </section>
+
+      {/* JSON-LD Structured Data for FAQPage */}
+      <JsonLd data={faqSchemaData} />
 
       {/* Footer Komprehensif */}
       <Footer />
