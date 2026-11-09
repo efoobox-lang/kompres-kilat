@@ -549,4 +549,17 @@ export const ALL_TOOLS: ToolItem[] = [
     icon: '🗜️',
     keywords: ['zip', 'arsip', 'ekstrak', 'unzip', 'compress', 'berkas', 'file', 'rar'],
   },
+  {
+    id: 'seo-audit',
+    title: 'Website SEO & Security Audit',
+    description: 'Audit teknis SEO on-page, skor kesehatan web, validasi keamanan SSL/HTTPS, Core Web Vitals, dan preview Google SERP.',
+    href: '/tools/seo-audit',
+    category: 'Utilitas & Logistik',
+    categoryKey: 'utility',
+    icon: '🔍',
+    badge: 'BARU',
+    badgeColor: 'purple',
+    isPopular: true,
+    keywords: ['seo', 'audit', 'website', 'keamanan', 'ssl', 'https', 'serp', 'google', 'onpage', 'meta', 'adsense', 'kesehatan'],
+  },
 ];

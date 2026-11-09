@@ -70,6 +70,7 @@ export default function Navbar() {
       title: 'Bisnis & Utilitas',
       icon: <Calculator className="w-4 h-4 text-emerald-500" />,
       items: [
+        { label: 'Website SEO & Security Audit', href: '/tools/seo-audit', badge: 'Baru' },
         { label: 'Kalkulator Pajak (PPh 21, 23, 4(2))', href: '/tools/kalkulator-pajak', badge: 'Baru' },
         { label: 'Konverter Kurs Valas & Haji', href: '/tools/currency-converter' },
         { label: 'Kalkulator Bisnis & UMKM', href: '/tools/kalkulator-umkm' },
