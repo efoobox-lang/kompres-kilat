@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import { PDFDocument } from 'pdf-lib';
 import {
   Scan,
@@ -821,6 +822,11 @@ export default function SmartScanPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Editorial Section: FAQ & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="scan-dokumen" showAdBanner={false} />
         </div>
       </section>
 

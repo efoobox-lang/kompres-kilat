@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import JSZip from 'jszip';
 import imageCompression from 'browser-image-compression';
@@ -217,8 +217,8 @@ export default function BatchCompressPage() {
           )}
         </div>
 
-        <div className="mt-10 sm:mt-12">
-          <AdBanner zone="in-tool" label="Iklan" />
+        <div className="mt-8">
+          <ToolEditorialSection toolId="batch-compress" />
         </div>
       </section>
 

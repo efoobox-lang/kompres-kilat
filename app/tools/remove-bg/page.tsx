@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 import { Sparkles, Download, ShieldCheck, Sliders, CheckCircle2, RefreshCw, Wand2 } from 'lucide-react';
@@ -647,22 +647,24 @@ export default function RemoveBgPage() {
           </div>
         )}
 
-        {/* Slot Iklan High-CTR */}
-        <AdBanner zone="in-tool" label="Iklan Sponsor" />
-
         {/* Edukasi Pas Foto CPNS */}
-        <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h2 className="text-sm font-bold text-slate-900">📌 Ketentuan Background Pas Foto Instansi Resmi:</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
-            <div className="p-3 bg-red-50 rounded-xl border border-red-100">
-              <b className="text-red-900 block mb-1">🔴 Background Merah:</b>
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 mb-8">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">📌 Ketentuan Background Pas Foto Instansi Resmi:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400">
+            <div className="p-3 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-100 dark:border-red-900/40">
+              <b className="text-red-900 dark:text-red-300 block mb-1">🔴 Background Merah:</b>
               Untuk pelamar/pegawai dengan tahun kelahiran <b>GANJIL</b> (misal: 1995, 1997, 1999, 2001).
             </div>
-            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-              <b className="text-blue-900 block mb-1">🔵 Background Biru:</b>
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/40">
+              <b className="text-blue-900 dark:text-blue-300 block mb-1">🔵 Background Biru:</b>
               Untuk pelamar/pegawai dengan tahun kelahiran <b>GENAP</b> (misal: 1996, 1998, 2000, 2002).
             </div>
           </div>
+        </div>
+
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="remove-bg" />
         </div>
       </section>
 

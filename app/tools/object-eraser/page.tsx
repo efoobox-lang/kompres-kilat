@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 
 export default function ObjectEraserPage() {
@@ -391,8 +391,10 @@ export default function ObjectEraserPage() {
           </div>
         )}
 
-        {/* Slot Iklan */}
-        <AdBanner zone="in-tool" label="Iklan Sponsor" />
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="object-eraser" />
+        </div>
       </section>
 
       <Footer />

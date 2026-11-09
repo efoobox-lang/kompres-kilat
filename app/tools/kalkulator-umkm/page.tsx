@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import {
   TrendingUp,
@@ -733,9 +733,9 @@ Dihitung via Kalkulator Bisnis & UMKM KompresKilat.`;
           </div>
         )}
 
-        {/* Slot Iklan Google AdSense */}
-        <div className="mt-10">
-          <AdBanner slotId="2482390885" zone="in-tool" />
+        {/* Editorial Section: Panduan, FAQ Schema, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="kalkulator-umkm" />
         </div>
       </section>
 

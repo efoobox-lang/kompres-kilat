@@ -4,7 +4,7 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import Link from 'next/link';
 
@@ -240,8 +240,10 @@ export default function ExcelToCsvPage() {
           </div>
         )}
 
-        {/* Slot Iklan */}
-        <AdBanner zone="in-tool" label="Iklan Sponsor" />
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="excel-to-csv" />
+        </div>
       </section>
 
       <Footer />

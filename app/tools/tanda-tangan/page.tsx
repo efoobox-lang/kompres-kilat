@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import {
   PenTool,
   Undo2,
@@ -861,6 +862,11 @@ export default function SignatureGeneratorPage() {
               <li>Klik kanan pada gambar tanda tangan, pilih <b>Wrap Text &gt; In Front of Text</b> agar Anda bebas menggeser dan mengatur ukurannya persis di atas garis tanda tangan Anda.</li>
             </ol>
           </div>
+        </div>
+
+        {/* Editorial Section: FAQ & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="tanda-tangan" showAdBanner={false} />
         </div>
       </section>
 

@@ -3,7 +3,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import CreativeStudio from '@/components/CreativeStudio';
 import { Sparkles, ShieldCheck, Palette, Layers, Award } from 'lucide-react';
@@ -50,13 +50,8 @@ export default function CreativeStudioPage() {
         </div>
 
         {/* Komponen Utama Creative Studio */}
-        <div className="mb-12">
+        <div className="mb-8">
           <CreativeStudio />
-        </div>
-
-        {/* Slot Iklan Kepatuhan AdSense */}
-        <div className="my-10">
-          <AdBanner zone="in-tool" label="Iklan" />
         </div>
 
         {/* Panduan & Keunggulan Fitur */}
@@ -96,6 +91,11 @@ export default function CreativeStudioPage() {
               Akses galeri template desain kartu ucapan, poster promo UMKM, dan sertifikat prestasi beresolusi tajam (1200×1200 px) yang dapat langsung diunduh atau diedit.
             </p>
           </div>
+        </div>
+
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="creative-studio" />
         </div>
       </section>
 

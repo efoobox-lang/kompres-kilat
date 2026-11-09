@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 
@@ -591,17 +591,9 @@ export default function AiPresentationMakerPage() {
           </div>
         )}
 
-        {/* Slot Iklan Kepatuhan AdSense */}
-        <AdBanner zone="in-tool" label="Iklan" />
-
-        {/* Panduan & FAQ Singkat */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs text-slate-600">
-          <h3 className="text-sm font-bold text-slate-900">💡 Keunggulan AI Presentation Generator:</h3>
-          <ul className="space-y-1.5 list-disc pl-5">
-            <li><b>Format Asli PowerPoint (.pptx):</b> Bukan sekadar teks atau gambar, melainkan file OpenXML presentasi asli yang bisa dibuka dan diedit di Microsoft PowerPoint, Google Slides, maupun WPS Office.</li>
-            <li><b>Dilengkapi Catatan Pembicara:</b> Setiap slide dibekali panduan apa yang harus diucapkan saat presentasi berlangsung di depan umum.</li>
-            <li><b>Privasi Terjaga:</b> Ekspor dan perakitan file .pptx diproses langsung di peramban Anda.</li>
-          </ul>
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="ai-presentation-maker" />
         </div>
       </section>
 

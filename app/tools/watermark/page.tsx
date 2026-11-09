@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 
 export default function WatermarkPage() {
@@ -230,7 +230,10 @@ export default function WatermarkPage() {
           </div>
         )}
 
-        <AdBanner zone="in-tool" label="Iklan" />
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="watermark" />
+        </div>
       </section>
 
       <Footer />

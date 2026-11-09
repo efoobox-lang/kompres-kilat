@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import { validateUploadedFile, downloadBlobSafely } from '@/lib/file-security';
 import {
@@ -495,11 +495,6 @@ export default function PdfToPptPage() {
           )}
         </div>
 
-        {/* AdSense Slot - Berjarak aman dari tombol aksi */}
-        <div className="my-8">
-          <AdBanner zone="in-tool" label="Iklan" />
-        </div>
-
         {/* Informational SEO & Educational Content */}
         <section className="mt-12 space-y-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8">
@@ -536,6 +531,11 @@ export default function PdfToPptPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+          <div className="mt-8">
+            <ToolEditorialSection toolId="pdf-to-ppt" />
           </div>
         </section>
       </main>

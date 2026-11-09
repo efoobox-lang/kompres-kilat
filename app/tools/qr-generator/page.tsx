@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import QRCode from 'qrcode';
 import { Download, Copy, Check, Sparkles } from 'lucide-react';
@@ -251,7 +251,7 @@ export default function QrGeneratorPage() {
         </div>
 
         <div className="mt-8">
-          <AdBanner slotId="2482390885" zone="in-tool" />
+          <ToolEditorialSection toolId="qr-generator" />
         </div>
       </section>
 

@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { extractTextFromPdf, loadPdfJs } from '@/lib/pdf-text-extractor';
@@ -982,71 +982,9 @@ export default function AdvancedPdfPage() {
           </div>
         </div>
 
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="advanced-pdf-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar Fitur Tingkat Lanjut (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Apakah semua berkas PDF yang rusak pasti bisa diperbaiki?',
-                a: 'Tergantung tingkat kerusakannya. Jika kerusakan terjadi pada tabel xref, header, atau trailer, alat kami dapat merekonstruksinya hingga 100%. Namun jika aliran biner data gambar atau teks telah terpotong total atau ter-overwrite 0-byte, bagian yang hilang tidak dapat dipulihkan kembali.',
-              },
-              {
-                q: 'Apa perbedaan PDF biasa dengan standar PDF/A?',
-                a: 'PDF/A adalah standar ISO untuk preservasi jangka panjang. Format ini melarang penggunaan elemen dinamis yang bergantung pada sistem eksternal (seperti JavaScript, audio, atau font yang tidak di-embed), sehingga dokumen dijamin abadi.',
-              },
-              {
-                q: 'Apakah fitur bandingkan PDF (Compare) dapat mendeteksi perubahan huruf kecil dan spasi?',
-                a: 'Ya, parser teks mendeteksi rekonstruksi baris teks asli per paragraf dan menandai setiap baris yang mengalami penambahan, pengurangan, maupun perubahan susunan kata.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Link to Related Tools */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <span>Perkakas Terkait:</span>
-          <Link href="/tools/organize-pdf" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Atur & Ekstrak Halaman PDF
-          </Link>
-          <span>•</span>
-          <Link href="/tools/pdf-editor" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Edit Teks PDF
-          </Link>
-          <span>•</span>
-          <Link href="/tools/pdf-password" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Kunci & Buka Password PDF
-          </Link>
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="advanced-pdf" />
         </div>
       </main>
 

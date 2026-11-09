@@ -4,6 +4,7 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 
 export default function ZipPage() {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -104,6 +105,11 @@ export default function ZipPage() {
             )}
           </div>
         )}
+
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="zip-utility" />
+        </div>
       </section>
 
       <Footer />

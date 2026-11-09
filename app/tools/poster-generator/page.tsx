@@ -2,7 +2,7 @@
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import AIImageGenerator from '@/components/AIImageGenerator';
 
@@ -37,17 +37,9 @@ export default function PosterGeneratorPage() {
         {/* Komponen Utama AI Image Generator */}
         <AIImageGenerator />
 
-        {/* Slot Iklan Kepatuhan AdSense */}
-        <AdBanner zone="in-tool" label="Iklan" />
-
-        {/* Tips Pembuatan Desain */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3 text-xs text-slate-600">
-          <h3 className="text-sm font-bold text-slate-900">💡 Tips Menulis Prompt Poster AI yang Menarik:</h3>
-          <ul className="space-y-1.5 list-disc pl-5">
-            <li><b>Sebutkan Objek Utama:</b> Jelaskan produk atau figur utama (contoh: cangkir kopi latte art, model berpakaian formal, mockup aplikasi).</li>
-            <li><b>Tentukan Suasana &amp; Palet Warna:</b> Tambahkan gaya desain seperti *minimalist modern*, *retro vintage*, *cyberpunk neon*, atau *warm natural earthy*.</li>
-            <li><b>Pilih Rasio Sesuai Kebutuhan:</b> Gunakan rasio 1:1 untuk feed Instagram/Facebook, rasio 9:16 untuk Instagram Story/TikTok, atau 16:9 untuk banner website.</li>
-          </ul>
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="poster-generator" />
         </div>
       </section>
 

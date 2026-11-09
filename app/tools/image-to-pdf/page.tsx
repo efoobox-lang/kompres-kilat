@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import { PDFDocument, PageSizes } from 'pdf-lib';
 import JSZip from 'jszip';
@@ -690,71 +690,9 @@ export default function ImageToPdfPage() {
           </div>
         </div>
 
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="image-to-pdf-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar Konversi Gambar ke PDF
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Format gambar apa saja yang dapat dikonversi?',
-                a: 'KompresKilat mendukung berkas JPG, JPEG, PNG, dan WebP. Anda bahkan dapat mencampur beberapa format berbeda sekaligus dalam satu kali proses.',
-              },
-              {
-                q: 'Bagaimana jika sebagian gambar saya posisinya terbalik atau miring?',
-                a: 'Setiap thumbnail gambar memiliki tombol putar 90°. Anda dapat menyesuaikan orientasi masing-masing gambar sebelum berkas diekspor ke format PDF.',
-              },
-              {
-                q: 'Apakah ukuran file PDF akan menjadi sangat besar?',
-                a: 'Ukuran PDF disesuaikan dengan resolusi asli gambar Anda. Jika ingin memperkecil ukurannya lebih lanjut setelah diunduh, Anda dapat memasukkannya ke alat Kompres PDF kami.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Link to Related Tools */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <span>Perkakas Terkait:</span>
-          <Link href="/tools/pdf-to-image" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            PDF ke JPG / PNG
-          </Link>
-          <span>•</span>
-          <Link href="/tools/organize-pdf" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Atur Urutan Halaman PDF
-          </Link>
-          <span>•</span>
-          <Link href="/tools/pdf-merge" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Gabung File PDF
-          </Link>
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="image-to-pdf" />
         </div>
       </main>
 

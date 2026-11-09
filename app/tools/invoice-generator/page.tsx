@@ -2877,8 +2877,11 @@ export default function InvoiceGeneratorPage() {
         {/* ======================================================== */}
         <section className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed print:hidden">
           <div>
+            <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3 py-1 rounded-full font-bold mb-3">
+              <span>Panduan &amp; Edukasi Dokumen Usaha</span>
+            </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Perbedaan Invoice, Nota Toko, dan Kwitansi Pembayaran
+              Panduan Lengkap: Perbedaan Invoice, Nota Toko, dan Kwitansi Pembayaran
             </h2>
             <p>
               Dalam tata kelola keuangan bisnis dan administrasi perpajakan di Indonesia, ketiga dokumen ini memiliki fungsi hukum dan momen penggunaan yang berbeda:
@@ -2959,6 +2962,48 @@ export default function InvoiceGeneratorPage() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Hub & Spoke Internal Linking */}
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+            <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm mb-3">
+              Alat Pendukung Bisnis &amp; Artikel Panduan Terkait:
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <Link
+                href="/tools/kalkulator-pajak"
+                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
+              >
+                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-indigo-600">
+                  🧾 Kalkulator Pajak PPh 21 &amp; 23
+                </span>
+                <span className="text-[11px] text-slate-500 mt-0.5 block">
+                  Hitung potongan pajak jasa dan vendor secara akurat.
+                </span>
+              </Link>
+              <Link
+                href="/tools/kalkulator-umkm"
+                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
+              >
+                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-indigo-600">
+                  💰 Kalkulator Margin &amp; BEP
+                </span>
+                <span className="text-[11px] text-slate-500 mt-0.5 block">
+                  Simulasi penetapan harga jual dan batas titik impas usaha.
+                </span>
+              </Link>
+              <Link
+                href="/blog/cara-membuat-invoice-nota-kwitansi-resmi-online-gratis-cetak-thermal"
+                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
+              >
+                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-emerald-600">
+                  📚 Panduan Cetak Struk Thermal
+                </span>
+                <span className="text-[11px] text-slate-500 mt-0.5 block">
+                  Langkah praktis menghubungkan printer kasir mini Bluetooth.
+                </span>
+              </Link>
+            </div>
           </div>
         </section>
       </section>

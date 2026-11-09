@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import JSZip from 'jszip';
 import { loadPdfJs } from '@/lib/pdf-text-extractor';
@@ -563,71 +563,9 @@ export default function PdfToImagePage() {
           </div>
         </div>
 
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="pdf-to-image-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar PDF ke JPG/PNG (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Apa perbedaan antara format JPG dan PNG pada konversi ini?',
-                a: 'JPG menggunakan algoritma kompresi foto dengan latar putih bersih sehingga ukuran file jauh lebih kecil. PNG mempertahankan kualitas visual 100% tanpa kompresi grafis, sangat tepat untuk diagram, tabel, dan tipografi halus.',
-              },
-              {
-                q: 'Bisakah saya hanya mengunduh halaman ke-3 saja tanpa mengunduh seluruh dokumen?',
-                a: 'Tentu bisa. Setiap kartu halaman dilengkapi tombol "Unduh" individual. Anda juga dapat menggunakan tombol "Unduh Semua (ZIP)" jika membutuhkan seluruh halaman dalam satu paket arsip.',
-              },
-              {
-                q: 'Apakah teks pada gambar hasil konversi masih bisa di-copy paste?',
-                a: 'Karena format akhir berupa gambar (JPG/PNG), teks di dalamnya telah di-render menjadi piksel visual. Jika Anda membutuhkan teksnya kembali, silakan gunakan fitur OCR di menu Konversi PDF ke Word kami.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Link to Related Tools */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <span>Perkakas Terkait:</span>
-          <Link href="/tools/image-to-pdf" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Gambar ke PDF
-          </Link>
-          <span>•</span>
-          <Link href="/tools/organize-pdf" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Atur & Ekstrak Halaman PDF
-          </Link>
-          <span>•</span>
-          <Link href="/tools/pdf" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Kompres Ukuran PDF
-          </Link>
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="pdf-to-image" />
         </div>
       </main>
 

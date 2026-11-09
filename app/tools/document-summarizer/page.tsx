@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import { extractTextFromPdf } from '@/lib/pdf-text-extractor';
 import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
@@ -339,7 +339,10 @@ export default function DocumentSummarizerPage() {
           </div>
         )}
 
-        <AdBanner zone="in-tool" label="Iklan" />
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="document-summarizer" />
+        </div>
       </section>
 
       <Footer />

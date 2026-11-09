@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import {
   Sliders,
   Sparkles,
@@ -964,6 +965,11 @@ export default function ProEditorPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Editorial Section: FAQ & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="pro-editor" showAdBanner={false} />
         </div>
       </section>
 

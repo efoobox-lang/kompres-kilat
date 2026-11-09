@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 
 interface PresetSize {
@@ -429,34 +429,36 @@ export default function ResizePasFotoPage() {
           </div>
         )}
 
-        {/* AdSense Placement */}
-        <AdBanner zone="in-tool" label="Iklan" />
-
         {/* Panduan & Info Persyaratan */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs text-slate-600 leading-relaxed mt-6">
-          <h2 className="text-sm sm:text-base font-bold text-slate-900">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-6 mb-8">
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
             Panduan Standar Ukuran Pas Foto Resmi di Indonesia
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <h3 className="font-bold text-slate-900 mb-1">Ukuran 3×4 cm</h3>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/60">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-1">Ukuran 3×4 cm</h3>
               <p className="text-[11px]">
                 Wajib untuk akun SSCASN BKN (CPNS &amp; PPPK), seleksi BUMN, verifikasi Kemenkumham, dan kartu mahasiswa.
               </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <h3 className="font-bold text-slate-900 mb-1">Ukuran 4×6 cm</h3>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/60">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-1">Ukuran 4×6 cm</h3>
               <p className="text-[11px]">
                 Digunakan untuk ijazah sarjana/diploma, formulir pendaftaran pernikahan di KUA, serta permohonan SKCK Mabes Polri.
               </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <h3 className="font-bold text-slate-900 mb-1">Tanda Tangan Digital</h3>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/60">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-1">Tanda Tangan Digital</h3>
               <p className="text-[11px]">
                 Dipotong presisi pada bidang tanda tangan dengan kontras bersih, siap ditempel pada meterai elektronik (e-Meterai).
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Editorial Section: Panduan, FAQ, AdSense & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="resize-pasfoto" />
         </div>
       </section>
 

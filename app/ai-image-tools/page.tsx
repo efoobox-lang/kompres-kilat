@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdBanner from '@/components/AdBanner';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import JsonLd from '@/components/JsonLd';
 import AIProgressBar, { useAIProgress } from '@/components/AIProgressBar';
 
@@ -411,15 +411,9 @@ export default function AiImageToolsPage() {
           </div>
         )}
 
-        {/* Slot Iklan Kepatuhan AdSense */}
-        <AdBanner zone="in-tool" label="Iklan" />
-
-        {/* Panduan Singkat */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3 text-xs text-slate-600">
-          <h3 className="text-sm font-bold text-slate-900">💡 Cara Kerja AI Super Resolution KompresKilat:</h3>
-          <p>
-            Alat ini memadukan interpolasi sub-piksel presisi tinggi dengan filter konvolusi <i>Unsharp Masking</i> dan penyeimbangan kurva kontras adaptif. Foto buram atau berukuran kecil dapat diperbesar hingga 4x lipat tanpa pecah berpiksel kasar, sangat cocok untuk syarat berkas KTP, ijazah, pas foto CPNS, maupun portofolio visual Anda.
-          </p>
+        {/* Editorial Section: Panduan, FAQ, AdSense Safe Zone & Hub-Spoke Links */}
+        <div className="mt-8">
+          <ToolEditorialSection toolId="ai-image-tools" />
         </div>
       </section>
 
