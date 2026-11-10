@@ -1,4 +1,4 @@
-export type ToolCategoryKey = 'all' | 'document' | 'image' | 'ai' | 'business' | 'utility';
+export type ToolCategoryKey = 'document' | 'image' | 'ai' | 'business' | 'utility';
 
 export interface CategoryTab {
   key: ToolCategoryKey;
@@ -13,7 +13,7 @@ export interface ToolItem {
   description: string;
   href: string;
   category: string;
-  categoryKey: Exclude<ToolCategoryKey, 'all'>;
+  categoryKey: ToolCategoryKey;
   icon: string;
   badge?: string;
   badgeColor?: 'indigo' | 'purple' | 'emerald' | 'amber' | 'orange' | 'blue';
@@ -22,7 +22,6 @@ export interface ToolItem {
 }
 
 export const CATEGORY_TABS: CategoryTab[] = [
-  { key: 'all', label: 'Semua Alat', icon: '⚡' },
   { key: 'document', label: 'Dokumen & PDF', icon: '📄' },
   { key: 'image', label: 'Foto & Gambar', icon: '🖼️' },
   { key: 'ai', label: 'AI & Kreatif', icon: '✨' },
