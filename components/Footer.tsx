@@ -121,9 +121,6 @@ export default function Footer() {
               <Link href="/#tools" className="hover:text-blue-400 transition-colors">
                 Semua Tools
               </Link>
-              <Link href="/#categories" className="hover:text-blue-400 transition-colors">
-                Kategori
-              </Link>
               <Link href="/blog" className="hover:text-blue-400 transition-colors">
                 Blog
               </Link>

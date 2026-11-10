@@ -14,7 +14,6 @@ import {
   FileText,
   Image as ImageIcon,
   Calculator,
-  Truck,
   X,
   Menu,
   BookOpen,
@@ -29,10 +28,8 @@ import {
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
 
   const toolsDropdownRef = useRef<HTMLDivElement | null>(null);
-  const categoriesDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const pathname = usePathname();
   const { t } = useLanguage();
@@ -98,23 +95,11 @@ export default function Navbar() {
     },
   ];
 
-  // Kategori Quick Links
-  const quickCategories = [
-    { title: 'Dokumen & PDF', href: '/#tools-pdf', icon: <FileText className="w-4 h-4 text-blue-500" />, count: '14 Tools' },
-    { title: 'Foto & Gambar', href: '/#tools-image', icon: <ImageIcon className="w-4 h-4 text-emerald-500" />, count: '10 Tools' },
-    { title: 'Kecerdasan Buatan (AI)', href: '/#tools-ai', icon: <Sparkles className="w-4 h-4 text-amber-500" />, count: '8 Tools' },
-    { title: 'Bisnis & Finansial', href: '/#tools-business', icon: <Calculator className="w-4 h-4 text-indigo-500" />, count: '7 Tools' },
-    { title: 'Ekspedisi & Logistik', href: '/#tools-tracking', icon: <Truck className="w-4 h-4 text-rose-500" />, count: '4 Tools' },
-  ];
-
   // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(e.target as Node)) {
         setIsToolsOpen(false);
-      }
-      if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(e.target as Node)) {
-        setIsCategoriesOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -147,7 +132,7 @@ export default function Navbar() {
         </Link>
 
         {/* ========================================================== */}
-        {/* SISI TENGAH: Navigation Bar Persis Sesuai Mockup Gambar     */}
+        {/* SISI TENGAH: Navigation Bar (Tanpa Menu Kategori)          */}
         {/* ========================================================== */}
         <nav className="hidden lg:flex items-center space-x-1.5 text-sm font-medium">
           {/* 1. Beranda Pill Button Aktif */}
@@ -167,10 +152,7 @@ export default function Navbar() {
           <div ref={toolsDropdownRef} className="relative notranslate" translate="no" dir="ltr">
             <button
               type="button"
-              onClick={() => {
-                setIsToolsOpen(!isToolsOpen);
-                setIsCategoriesOpen(false);
-              }}
+              onClick={() => setIsToolsOpen(!isToolsOpen)}
               className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer font-medium ${
                 isToolsActive || isToolsOpen
                   ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-semibold'
@@ -242,60 +224,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* 3. Dropdown: Kategori ∨ */}
-          <div ref={categoriesDropdownRef} className="relative notranslate" translate="no" dir="ltr">
-            <button
-              type="button"
-              onClick={() => {
-                setIsCategoriesOpen(!isCategoriesOpen);
-                setIsToolsOpen(false);
-              }}
-              className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer font-medium ${
-                isCategoriesOpen
-                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-              aria-expanded={isCategoriesOpen}
-              aria-haspopup="true"
-            >
-              <span>Kategori</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  isCategoriesOpen ? 'rotate-180 text-blue-600' : 'text-slate-400'
-                }`}
-              />
-            </button>
-
-            {/* Dropdown Panel Kategori */}
-            {isCategoriesOpen && (
-              <div
-                translate="no"
-                dir="ltr"
-                className="notranslate absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-              >
-                <div className="space-y-1">
-                  {quickCategories.map((cat) => (
-                    <Link
-                      key={cat.title}
-                      href={cat.href}
-                      onClick={() => setIsCategoriesOpen(false)}
-                      className="flex items-center justify-between p-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/70 dark:hover:bg-slate-800 transition"
-                    >
-                      <div className="flex items-center gap-2">
-                        {cat.icon}
-                        <span className="font-medium">{cat.title}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-semibold">
-                        {cat.count}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 4. Blog */}
+          {/* 3. Blog */}
           <Link
             href="/blog"
             className={`px-3.5 py-2 rounded-xl transition font-medium ${
@@ -307,7 +236,7 @@ export default function Navbar() {
             Blog
           </Link>
 
-          {/* 5. Tentang */}
+          {/* 4. Tentang */}
           <Link
             href="/about"
             className={`px-3.5 py-2 rounded-xl transition font-medium ${
@@ -319,7 +248,7 @@ export default function Navbar() {
             Tentang
           </Link>
 
-          {/* 6. Kontak */}
+          {/* 5. Kontak */}
           <Link
             href="/contact"
             className={`px-3.5 py-2 rounded-xl transition font-medium ${
@@ -333,7 +262,7 @@ export default function Navbar() {
         </nav>
 
         {/* ========================================================== */}
-        {/* SISI KANAN: Multibahasa & Dark Mode Switcher (Sesuai Gambar) */}
+        {/* SISI KANAN: Multibahasa & Dark Mode Switcher               */}
         {/* ========================================================== */}
         <div className="hidden lg:flex items-center gap-3">
           {/* Fitur Multibahasa Preserved (26 Bahasa) */}
@@ -361,7 +290,6 @@ export default function Navbar() {
                   : 'bg-slate-200/90 border-slate-300/80'
               }`}
             >
-              {/* Sliding knob with moon / sun */}
               <span
                 className={`inline-flex items-center justify-center h-5.5 w-5.5 rounded-full bg-white dark:bg-slate-900 shadow-md transform transition-transform duration-300 ease-in-out text-[11px] ${
                   isDark ? 'translate-x-[26px] text-amber-300' : 'translate-x-[3px] text-slate-700'
@@ -380,7 +308,6 @@ export default function Navbar() {
           <SearchBar variant="mobile-icon" />
           <LanguageToggle iconOnlyOnMobile={true} />
 
-          {/* Quick theme button on mobile */}
           <button
             type="button"
             onClick={toggleTheme}
@@ -390,7 +317,6 @@ export default function Navbar() {
             {isDark ? <Moon className="w-4 h-4 text-amber-300" /> : <Sun className="w-4 h-4 text-slate-600" />}
           </button>
 
-          {/* Hamburger Menu Toggle Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -476,25 +402,6 @@ export default function Navbar() {
               <Mail className="w-4 h-4 text-amber-500" />
               <span>Kontak Kami</span>
             </Link>
-          </div>
-
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 mb-1.5">
-              Pilihan Kategori
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {quickCategories.map((cat) => (
-                <Link
-                  key={cat.title}
-                  href={cat.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-2 p-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  {cat.icon}
-                  <span className="truncate">{cat.title}</span>
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       )}
