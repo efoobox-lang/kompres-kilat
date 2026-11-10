@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import {
@@ -961,58 +962,9 @@ export default function MemeGeneratorPage() {
           </div>
         </div>
 
-        {/* Slot Iklan Kepatuhan AdSense dengan Padding Aman */}
-        <div className="my-10 pt-4">
-          <AdBanner zone="in-tool" label="Iklan Sponsor" />
-        </div>
-
-        {/* Konten Edukasi & SEO: Panduan Membuat Meme Berkualitas */}
-        <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-slate-600 text-xs sm:text-sm leading-relaxed">
-          <div>
-            <h2 className="text-base sm:text-xl font-bold text-slate-900 mb-2">
-              💡 Panduan &amp; Trik Membuat Meme Viral Berkualitas Tinggi
-            </h2>
-            <p>
-              Meme adalah media komunikasi visual paling populer di era digital. Baik untuk hiburan, sindiran santai, promosi media sosial, hingga materi presentasi agar tidak membosankan. Generator meme KompresKilat hadir untuk memudahkan siapa saja merancang meme dalam sekejap tanpa memerlukan software desain rumit seperti Photoshop.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🎯</span> Teks Singkat &amp; Mengena
-              </h3>
-              <p className="text-xs text-slate-500">
-                Gunakan kalimat yang to-the-point dan *relatable* dengan kehidupan sehari-hari pembaca. Pola klasik &ldquo;Premis di Atas&rdquo; dan &ldquo;Punchline di Bawah&rdquo; terbukti paling mudah dicerna audiens.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🖋️</span> Rahasia Font Impact &amp; Stroke
-              </h3>
-              <p className="text-xs text-slate-500">
-                Font berbobot tebal seperti <b>Impact</b> yang dilapisi garis luar hitam (stroke outline) memastikan teks tetap terbaca dengan kontras sempurna di atas latar belakang gambar apapun, baik terang maupun gelap.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-              <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
-                <span>🔒</span> Jaminan Keamanan &amp; Privasi
-              </h3>
-              <p className="text-xs text-slate-500">
-                Foto pribadi, wajah teman, atau materi internal kantor Anda diproses 100% menggunakan teknologi HTML5 Canvas langsung di RAM browser tanpa pernah dikirim ke server backend KompresKilat.
-              </p>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-100 pt-5 space-y-2 text-xs">
-            <h4 className="font-bold text-slate-800">FAQ Singkat:</h4>
-            <ul className="space-y-1.5 list-disc pl-5 text-slate-500">
-              <li><b>Apakah ada watermark dari aplikasi?</b> Tidak ada. Meme yang Anda unduh bersih tanpa watermark otomatis dari situs kami. Anda dapat menambahkan tag nama akun Anda sendiri secara sukarela.</li>
-              <li><b>Format apa yang sebaiknya saya unduh?</b> Gunakan format <b>PNG</b> jika ingin ketajaman teks maksimal, atau <b>JPG</b> jika ingin ukuran file lebih kecil agar cepat dikirim lewat WhatsApp.</li>
-            </ul>
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12">
+          <ToolEditorialSection toolId="meme-generator" />
         </div>
       </section>
 

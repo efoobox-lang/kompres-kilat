@@ -401,6 +401,174 @@ export const TOOLS_EDITORIAL_CATALOG: Record<string, ToolEditorialData> = {
     ],
     relatedToolIds: ['pdf-merge', 'file-utility', 'batch-compress'],
     relatedBlogSlugs: ['cara-menggabungkan-file-pdf-menjadi-satu-online-gratis', 'cara-edit-foto-dokumen-ktp-watermark-keamanan']
+  },
+
+  'pdf-to-excel': {
+    id: 'pdf-to-excel',
+    badge: 'Ekstraksi Tabel Cerdas & Presisi',
+    h1: 'Konversi Dokumen PDF ke Excel (.xlsx) Online',
+    tagline: 'Ubah Tabel Laporan Keuangan, Invoice, dan Rekening Koran PDF Menjadi Spreadsheet Siap Olah',
+    intro: 'Konversi Dokumen PDF ke Excel KompresKilat hadir untuk menyelesaikan masalah umum akuntan, staf administrasi, analis data, dan pemilik bisnis yang sering kali harus menyalin data tabel dari PDF secara manual satu per satu. Dengan mesin pengurai struktur dokumen cerdas, berkas PDF yang memuat tabel laporan keuangan, daftar gaji karyawan, rekening koran bank, mutasi transaksi, hingga faktur pajak dapat diekstraksi secara presisi ke dalam format spreadsheet Microsoft Excel (.xlsx) maupun CSV. Garis pembatas baris dan kolom direkonstruksi secara proporsional sehingga angka nominal, persentase, dan teks deskripsi tidak akan bertumpuk atau bergeser ke kolom yang salah. Seluruh proses pembedahan data berjalan aman di dalam browser perangkat Anda tanpa risiko kebocoran data rahasia perusahaan.',
+    benefits: [
+      { icon: '📊', title: 'Rekonstruksi Kolom Rapi', desc: 'Mendeteksi batas sel tabel secara otomatis agar angka dan teks masuk ke sel yang tepat.' },
+      { icon: '⚡', title: 'Format .xlsx Asli', desc: 'Berkas hasil konversi langsung kompatibel dengan Microsoft Excel, Google Sheets, dan LibreOffice.' },
+      { icon: '🔒', title: 'Privasi Data Finansial', desc: 'Laporan laba rugi, slip gaji, dan data keuangan Anda tidak pernah diunggah ke server pihak ketiga.' }
+    ],
+    howToTitle: 'Cara Mengonversi Dokumen PDF ke Microsoft Excel:',
+    howToSubtitle: 'Panduan praktis 4 langkah mengekstrak tabel data PDF menjadi file Excel siap edit',
+    howToSteps: [
+      { step: 1, title: 'Unggah Dokumen PDF', desc: 'Pilih atau seret file PDF laporan, invoice, atau mutasi bank ke kotak area unggah.' },
+      { step: 2, title: 'Analisis Struktur Tabel', desc: 'Sistem secara otomatis membaca baris tabel, kolom data, dan pemisah angka pada dokumen.' },
+      { step: 3, title: 'Pratinjau Hasil Spreadsheet', desc: 'Tinjau tata letak tabel yang berhasil diekstraksi dan pastikan pembagian kolom sudah sesuai.' },
+      { step: 4, title: 'Unduh Berkas Excel (.xlsx)', desc: 'Klik tombol "Unduh File Excel" untuk menyimpan berkas spreadsheet yang siap diedit dan dihitung rumusnya.' }
+    ],
+    faq: [
+      { q: 'Apakah rumus dan formula di dalam PDF akan otomatis aktif di Excel?', a: 'Dokumen PDF hanya menyimpan nilai teks/angka statis. Sistem kami mengekstrak nilai angka murni ke dalam format numerik Excel sehingga Anda dapat langsung menerapkan formula SUM, AVERAGE, atau VLOOKUP tanpa perlu memformat ulang sel.' },
+      { q: 'Bagaimana jika PDF saya merupakan hasil scan foto fisik (bukan teks digital)?', a: 'Untuk PDF hasil scan foto kamera yang tidak memiliki lapisan teks vektor, pastikan foto memiliki pencahayaan terang dan kontras tajam. Anda juga dapat menggunakan utilitas PDF ke Word OCR kami terlebih dahulu untuk mengekstrak karakternya.' },
+      { q: 'Apakah ada batasan jumlah baris atau halaman tabel yang bisa diproses?', a: 'Tidak ada batasan kuota. Anda dapat mengonversi dokumen tabel multi-halaman secara gratis tanpa perlu mendaftar akun atau berlangganan.' }
+    ],
+    relatedToolIds: ['pdf-editor', 'excel-to-csv', 'csv-to-excel'],
+    relatedBlogSlugs: ['cara-mengubah-pdf-ke-excel-tabel-rapi-tanpa-software', 'cara-ubah-pdf-hasil-scan-ke-word-bisa-diedit-ocr']
+  },
+
+  'organize-pdf': {
+    id: 'organize-pdf',
+    badge: 'Manajemen Lembar PDF Fleksibel',
+    h1: 'Atur, Hapus & Ekstrak Halaman PDF Online',
+    tagline: 'Susun Ulang Lembaran, Hapus Halaman Kosong, dan Pisahkan Bagian Penting Dokumen Secara Visual',
+    intro: 'Alat Atur, Hapus & Ekstrak Halaman PDF KompresKilat memberikan kendali penuh dalam mengelola lembar demi lembar berkas dokumen PDF Anda secara visual dan interaktif. Kerap kali berkas PDF yang kita miliki memiliki urutan halaman yang terbalik saat dipindai lewat mesin fotokopi, memuat halaman kosong yang membuang-buang kertas saat dicetak, atau berisi lampiran rahasia yang tidak boleh disertakan saat dikirim ke pihak luar. Dengan antarmuka thumbnail interaktif berbasis drag-and-drop, Anda dapat memindahkan posisi lembaran dengan mudah, menghapus halaman yang tidak diinginkan hanya dengan satu klik tempat sampah, atau mengekstrak rentang halaman tertentu menjadi dokumen mandiri baru tanpa merusak ketajaman font maupun format aslinya.',
+    benefits: [
+      { icon: '🖐️', title: 'Visual Drag & Drop', desc: 'Tinjau thumbnail tiap lembaran secara visual dan geser posisinya sesuai urutan yang Anda inginkan.' },
+      { icon: '✂️', title: 'Ekstraksi Rentang Halaman', desc: 'Pilih lembar tertentu (misalnya halaman 3-7) untuk diekspor menjadi file PDF terpisah yang mandiri.' },
+      { icon: '🛡️', title: 'Kualitas Asli Terjaga', desc: 'Struktur vektor, resolusi gambar, dan bookmark tautan tetap terjaga utuh tanpa penurunan mutu.' }
+    ],
+    howToTitle: 'Cara Mengatur Urutan dan Menghapus Halaman PDF:',
+    howToSubtitle: 'Panduan praktis 4 langkah merapikan urutan lembaran dokumen PDF di browser Anda',
+    howToSteps: [
+      { step: 1, title: 'Buka File PDF Multi-Halaman', desc: 'Pilih dokumen PDF yang ingin Anda tata lembarannya. Sistem akan langsung merender thumbnail visual setiap halaman.' },
+      { step: 2, title: 'Geser Posisi untuk Mengubah Urutan', desc: 'Klik dan tahan (drag) thumbnail halaman yang ingin dipindahkan, lalu letakkan (drop) pada nomor urut yang benar.' },
+      { step: 3, title: 'Hapus Halaman yang Tidak Diperlukan', desc: 'Klik ikon tempat sampah merah pada thumbnail lembaran kosong atau halaman yang ingin disingkirkan.' },
+      { step: 4, title: 'Simpan Dokumen PDF Baru', desc: 'Klik tombol "Simpan & Unduh PDF" untuk mengunduh dokumen akhir yang telah tertata rapi dan bersih.' }
+    ],
+    faq: [
+      { q: 'Apakah saya bisa memutar (rotate) halaman yang posisinya miring atau terbalik?', a: 'Ya, tiap thumbnail halaman dilengkapi tombol putar 90 derajat searah jarum jam sehingga Anda dapat membetulkan orientasi lembaran landscape atau portrait yang salah arah.' },
+      { q: 'Apakah file berukuran ratusan halaman dapat diorganisasi dengan lancar?', a: 'Tentu. Sistem kami menggunakan virtualized rendering yang ringan di memori, sehingga Anda tetap nyaman menata dokumen skripsi, modul pelatihan, atau buku kerja tebal.' },
+      { q: 'Apakah dokumen yang saya atur diunggah ke server lain?', a: 'Tidak pernah. Seluruh pemisahan lembar, pengubahan urutan, dan penghapusan halaman dieksekusi 100% di browser lokal Anda menggunakan library WebAssembly client-side.' }
+    ],
+    relatedToolIds: ['pdf-merge', 'pdf-editor', 'page-number-pdf'],
+    relatedBlogSlugs: ['cara-mengatur-urutan-menghapus-dan-mengekstrak-halaman-pdf-online', 'cara-memberi-nomor-halaman-pdf-online-gratis-lewati-cover']
+  },
+
+  'passport-id-utility': {
+    id: 'passport-id-utility',
+    badge: 'Standar Biometrik ICAO & Kedutaan',
+    h1: 'Global ID & Passport Photo Utility Online',
+    tagline: 'Format Pasfoto Paspor, Visa Mancanegara, dan Kartu Identitas Resmi Sesuai Regulasi Global',
+    intro: 'Global ID & Passport Utility KompresKilat dirancang untuk memastikan foto paspor, visa internasional, kartu identitas, dan berkas lamaran kerja Anda memenuhi standar ketat otoritas imigrasi dan kedutaan besar di seluruh dunia. Pengajuan visa seperti Visa Amerika Serikat (2x2 inci), Visa Schengen Eropa (35x45 mm), Paspor RI (4x6 cm & 3.5x4.5 cm), hingga Paspor Jepang dan Australia kerap kali ditolak karena proporsi kepala yang terlalu kecil, latar belakang yang tidak polos, atau rasio piksel yang tidak sesuai spesifikasi ICAO 9303. Alat ini menghadirkan kisi pemandu biometrik (biometric head sizing guide) otomatis untuk memastikan jarak mata dan dagu tepat di tengah bingkai, mengatur latar belakang putih/merah/biru, serta menghasilkan lembar cetak pasfoto resolusi 300 DPI siap cetak di kertas foto standar.',
+    benefits: [
+      { icon: '🌐', title: 'Preset Standar Visa Dunia', desc: 'Tersedia template resmi untuk Paspor Indonesia, US Visa 2x2, Schengen 35x45, Jepang, dan Australia.' },
+      { icon: '📏', title: 'Pemandu Biometrik Presisi', desc: 'Garis bantu proporsi kepala 70-80% memastikan foto Anda lolos verifikasi mesin imigrasi.' },
+      { icon: '🖨️', title: 'Lembar Siap Cetak (4R / A4)', desc: 'Ekspor paket pasfoto multi-keping dalam ukuran lembar cetak foto 4R hemat biaya cetak.' }
+    ],
+    howToTitle: 'Cara Membuat Pasfoto Paspor & Visa Standar Global:',
+    howToSubtitle: 'Panduan 4 langkah mudah menghasilkan pasfoto resmi yang lolos verifikasi kedutaan',
+    howToSteps: [
+      { step: 1, title: 'Unggah Foto Wajah Anda', desc: 'Pilih foto potret menghadap depan dengan pencahayaan merata dan pandangan lurus ke arah kamera.' },
+      { step: 2, title: 'Pilih Preset Dokumen / Negara', desc: 'Tentukan tujuan dokumen Anda, seperti Paspor RI (4x6 cm), US Visa (51x51 mm / 2x2 inci), atau Visa Schengen (35x45 mm).' },
+      { step: 3, title: 'Posisikan Wajah Sesuai Garis Bantu', desc: 'Sesuaikan zoom dan posisi agar dagu dan puncak kepala berada pas di dalam lingkaran biometrik hijau.' },
+      { step: 4, title: 'Unduh Foto Satuan atau Lembar 4R', desc: 'Simpan file digital satuan beresolusi tinggi (300 DPI) atau unduh lembar cetak 4R isi 4–8 pasfoto.' }
+    ],
+    faq: [
+      { q: 'Mengapa proporsi kepala pada foto visa sangat ketat diperiksa?', a: 'Standar ICAO mewajibkan tinggi kepala (dari bawah dagu hingga puncak rambut) menempati 70% hingga 80% dari total tinggi foto agar kamera pemindai gerbang otomatis (autogate) bandara dapat mengenali geometri wajah Anda tanpa bias.' },
+      { q: 'Bagaimana cara mengganti latar belakang foto menjadi putih atau merah?', a: 'Anda dapat memanfaatkan alat Hapus & Ganti Latar Belakang AI kami terlebih dahulu untuk mengubah latar menjadi warna polos sebelum menyesuaikan ukurannya di alat pasfoto ini.' },
+      { q: 'Berapa resolusi minimal yang disarankan untuk cetak fisik?', a: 'Sistem kami secara otomatis mengekspor gambar pada ketajaman 300 DPI (Dots Per Inch), standar baku industri percetakan foto agar hasil cetak tidak pecah atau bergaris.' }
+    ],
+    relatedToolIds: ['resize-pasfoto', 'remove-bg', 'censor-ktp'],
+    relatedBlogSlugs: ['cara-membuat-watermark-ktp-dan-resize-pasfoto-paspor-standar-global', 'aturan-warna-background-pas-foto-cpns-bumn-merah-biru']
+  },
+
+  'meme-generator': {
+    id: 'meme-generator',
+    badge: 'Editor Grafis Media Sosial Tanpa Watermark',
+    h1: 'Meme & Image Caption Generator Online',
+    tagline: 'Buat Meme Lucu, Tipografi Caption Estetik, dan Konten Viral dalam Sekejap Tanpa Watermark',
+    intro: 'Meme & Image Caption Generator KompresKilat adalah sarana kreatif bagi pembuat konten, pengelola media sosial (social media specialist), komunitas digital, dan pelaku pemasaran untuk memproduksi visual meme jenaka dan caption gambar berkualitas tinggi. Anda dapat memilih dari puluhan template meme legendaris dunia yang paling sering trending di Twitter/X, Instagram, dan Reddit, atau mengunggah foto orisinal karya Anda sendiri. Didukung perenderan font Impact klasik bergaris tepi hitam pekat (outline stroke), penyesuaian ukuran font dinamis, perataan teks otomatis, serta penempatan stiker teks bebas, konten yang dihasilkan dijamin bersih tanpa tempelan watermark otomatis situs yang mengganggu estetika karya Anda.',
+    benefits: [
+      { icon: '✨', title: '100% Bebas Watermark', desc: 'Hasil unduhan bersih tanpa logo atau cap situs KompresKilat sehingga bebas Anda publikasikan.' },
+      { icon: '🔤', title: 'Font Klasik & Modern', desc: 'Tersedia pilihan font Impact klasik, Montserrat tebal, Comic Neue, hingga tipografi kasual.' },
+      { icon: '📱', title: 'Format Siap Sosial Media', desc: 'Simpan dalam format PNG tajam atau JPG ringan yang langsung optimal dibagikan via WhatsApp & status IG.' }
+    ],
+    howToTitle: 'Cara Membuat Meme dan Menambahkan Caption Gambar:',
+    howToSubtitle: 'Panduan praktis 4 langkah memproduksi meme lucu siap viral di media sosial',
+    howToSteps: [
+      { step: 1, title: 'Pilih Template atau Unggah Gambar', desc: 'Gunakan koleksi template meme terpopuler yang tersedia atau klik "Unggah Gambar" untuk memakai foto sendiri.' },
+      { step: 2, title: 'Tulis Teks Atas & Teks Bawah', desc: 'Ketik kalimat punchline pada kolom teks atas (Top Text) dan teks penutup pada kolom teks bawah (Bottom Text).' },
+      { step: 3, title: 'Atur Gaya Font & Warna Outline', desc: 'Sesuaikan ukuran huruf, warna font, ketebalan outline hitam, serta posisi teks agar tidak menutupi ekspresi wajah.' },
+      { step: 4, title: 'Simpan & Bagikan Meme', desc: 'Klik tombol "Unduh Meme" untuk menyimpan gambar beresolusi tinggi siap diunggah ke media sosial.' }
+    ],
+    faq: [
+      { q: 'Apakah saya bisa menambahkan lebih dari dua baris teks pada meme?', a: 'Ya, Anda dapat menambahkan kotak teks tambahan secara fleksibel, memindahkannya dengan kursor drag, serta memutar sudut teks sesuai tata letak gambar.' },
+      { q: 'Apakah foto internal yang saya unggah aman dari publik?', a: 'Sangat aman. Seluruh proses pembuatan meme berlangsung secara lokal di dalam RAM peramban komputer atau ponsel Anda tanpa diunggah atau disimpan di database online.' },
+      { q: 'Bisakah alat ini digunakan untuk membuat poster tipografi quote?', a: 'Bisa. Anda dapat mematikan outline hitam dan menggunakan font modern estetik untuk membuat gambar kutipan motivasi, pengumuman promo toko, atau ucapan selamat.' }
+    ],
+    relatedToolIds: ['creative-studio', 'poster-generator', 'image'],
+    relatedBlogSlugs: ['cara-bikin-meme-lucu-dan-caption-gambar-online', 'cara-membuat-kartu-ucapan-online-gratis-dengan-foto-sendiri']
+  },
+
+  'currency-converter': {
+    id: 'currency-converter',
+    badge: 'Nilai Tukar Pasar Antarbank Terkini',
+    h1: 'Konverter Mata Uang Global Real-Time & Riwayat Kurs',
+    tagline: 'Hitung Konversi Valuta Asing USD, EUR, JPY, SAR, SGD, dan Puluhan Mata Uang Dunia ke Rupiah',
+    intro: 'Konverter Mata Uang Global KompresKilat menyajikan kalkulasi nilai tukar valuta asing secara akurat dan transparan bagi pebisnis ekspor-impor, pekerja lepas (freelancer) internasional, pelancong wisata, jemaah haji dan umrah, serta investor keuangan. Fluktuasi kurs mata uang dunia seperti Dolar AS (USD), Euro (EUR), Yen Jepang (JPY), Riyal Arab Saudi (SAR), Dolar Singapura (SGD), hingga Ringgit Malaysia (MYR) dihitung secara instan menggunakan acuan kurs pasar antarbank terkini. Dilengkapi dengan kalkulator multi-konversi serentak dan simulasi biaya margin transaksi penukaran uang, Anda dapat merencanakan anggaran belanja luar negeri dan transfer remitansi secara matang tanpa terkejut oleh selisih kurs tersembunyi.',
+    benefits: [
+      { icon: '💱', title: 'Kurs Global Terakreditasi', desc: 'Menghubungkan referensi nilai tukar mata uang global yang diperbarui secara berkala dan tepercaya.' },
+      { icon: '🕋', title: 'Kalkulator Biaya Haji & Umroh', desc: 'Dilengkapi konversi khusus SAR ke IDR untuk estimasi living cost dan uang saku tanah suci.' },
+      { icon: '⚡', title: 'Konversi Multi-Valas Seketika', desc: 'Ketik satu angka nominal dan lihat langsung konversinya ke dalam berbagai mata uang populer sekaligus.' }
+    ],
+    howToTitle: 'Cara Menghitung Nilai Tukar Kurs Mata Uang:',
+    howToSubtitle: 'Panduan 4 langkah praktis menghitung konversi valuta asing secara akurat',
+    howToSteps: [
+      { step: 1, title: 'Tentukan Mata Uang Asal & Tujuan', desc: 'Pilih mata uang sumber yang ingin dikonversi (misal: USD) dan mata uang tujuan hasil konversi (misal: IDR).' },
+      { step: 2, title: 'Masukkan Jumlah Nominal Uang', desc: 'Ketik nominal angka pada kolom input. Angka dapat memuat nilai desimal sen untuk akurasi transfer presisi.' },
+      { step: 3, title: 'Pantau Nilai Konversi Otomatis', desc: 'Hasil perhitungan kurs langsung muncul seketika lengkap dengan nilai kurs satuan (1 USD = Rp ...).' },
+      { step: 4, title: 'Salin Hasil atau Balik Arah Konversi', desc: 'Gunakan tombol tukar posisi (swap) untuk membalik arah kurs atau klik salin untuk mencatat hasil perhitungan.' }
+    ],
+    faq: [
+      { q: 'Mengapa kurs di bank atau money changer sedikit berbeda dengan konverter ini?', a: 'Konverter online menggunakan kurs pasar antarbank (mid-market rate) yang merupakan titik tengah murni tanpa markup. Bank komersial dan gerai money changer biasanya mengenakan selisih kurs beli (bid) dan jual (ask) sekitar 1% hingga 3% sebagai margin keuntungan mereka.' },
+      { q: 'Apakah konverter ini bisa digunakan saat koneksi internet lambat?', a: 'Bisa. Sistem meng-cache data kurs terbaru di peramban Anda, sehingga perhitungan tetap berjalan mulus meskipun jaringan sedang tidak stabil.' },
+      { q: 'Mata uang apa saja yang paling banyak diakses oleh pengguna Indonesia?', a: 'Mata uang yang paling sering dikonversi adalah USD (Dolar AS), SAR (Riyal Arab Saudi untuk umroh), SGD (Dolar Singapura), JPY (Yen Jepang), MYR (Ringgit Malaysia), dan EUR (Euro).' }
+    ],
+    relatedToolIds: ['kalkulator-finansial', 'kalkulator-pajak', 'invoice-generator'],
+    relatedBlogSlugs: ['cara-hitung-kurs-riyal-arab-saudi-ke-rupiah-estimasi-biaya-haji-umroh', 'cara-menghitung-diskon-bertingkat-dan-pajak-pph-21-online']
+  },
+
+  'kalkulator-finansial': {
+    id: 'kalkulator-finansial',
+    badge: 'Simulasi Keuangan & Konversi Metrik',
+    h1: 'Kalkulator Finansial, Bunga Majemuk & Konverter Satuan Praktis',
+    tagline: 'Hitung Proyeksi Bunga Majemuk, Cicilan Pinjaman, Diskon Belanja, dan Konversi Satuan Pengukuran',
+    intro: 'Kalkulator Finansial & Konverter Satuan KompresKilat adalah pusat perhitungan serbaguna yang menggabungkan simulasi keuangan modern dan utilitas konversi satuan metrik sehari-hari ke dalam satu antarmuka yang bersih dan mudah digunakan. Anda dapat mensimulasikan pertumbuhan investasi masa depan menggunakan formula bunga majemuk (compound interest), menghitung estimasi angsuran cicilan pinjaman bulanan beserta jadwal amortisasinya, menghitung diskon bertingkat belanja (seperti 50% + 20%), hingga menunaikan kewajiban zakat penghasilan. Selain perhitungan finansial, alat ini juga menyediakan konverter satuan praktis (panjang, massa/berat, luas tanah, volume, dan suhu) yang sangat berguna bagi pedagang, pelaku UMKM, mahasiswa, dan keluarga Indonesia.',
+    benefits: [
+      { icon: '📈', title: 'Simulasi Bunga Majemuk Akurat', desc: 'Hitung efek compounding modal investasi tahunan/bulanan lengkap dengan proyeksi nilai akhir.' },
+      { icon: '🏷️', title: 'Kalkulator Diskon Bertingkat', desc: 'Ketahui harga riil setelah diskon promo toko bertingkat tanpa risiko salah hitung di kasir.' },
+      { icon: '📐', title: 'Konverter Satuan Metrik Lengkap', desc: 'Ubah satuan panjang, berat, luas, volume, dan temperatur secara instan dalam satu layar.' }
+    ],
+    howToTitle: 'Cara Menggunakan Kalkulator Finansial & Satuan:',
+    howToSubtitle: 'Panduan praktis 4 langkah menghitung simulasi keuangan dan konversi satuan',
+    howToSteps: [
+      { step: 1, title: 'Pilih Modul Perhitungan', desc: 'Tentukan menu yang Anda perlukan: Bunga Majemuk, Cicilan Pinjaman, Diskon Belanja, atau Konversi Satuan.' },
+      { step: 2, title: 'Masukkan Parameter Angka', desc: 'Isi modal pokok, suku bunga tahunan, jangka waktu tenor, atau nominal harga awal barang belanjaan.' },
+      { step: 3, title: 'Lihat Rincian Kalkulasi Otomatis', desc: 'Sistem menampilkan hasil akhir seketika, lengkap dengan rincian total bunga dan penghematan biaya.' },
+      { step: 4, title: 'Salin Ringkasan Hasil', desc: 'Salin hasil perhitungan untuk dicatat pada anggaran keuangan pribadi atau dibagikan ke rekan kerja.' }
+    ],
+    faq: [
+      { q: 'Apa perbedaan antara bunga sederhana (simple interest) dan bunga majemuk (compound interest)?', a: 'Bunga sederhana hanya dihitung dari modal pokok awal. Sedangkan bunga majemuk menghitung bunga dari modal pokok ditambah akumulasi bunga yang telah didapat pada periode sebelumnya, sehingga modal Anda bertumbuh secara eksponensial seiring berjalannya waktu.' },
+      { q: 'Bagaimana cara menghitung diskon bertingkat 50% + 20%?', a: 'Diskon 50% + 20% bukan berarti diskon 70%. Diskon pertama (50%) dipotong dari harga normal, lalu diskon kedua (20%) dipotong dari sisa harga setelah diskon pertama. Kalkulator kami menghitung total potongan riil ini secara otomatis agar Anda tahu harga pasnya.' },
+      { q: 'Apakah konverter satuan mendukung konversi suhu dan ukuran luas tanah?', a: 'Ya, konverter satuan kami mendukung konversi suhu (Celsius, Fahrenheit, Kelvin, Reamur) serta satuan luas tanah umum seperti meter persegi, hektar, dan are.' }
+    ],
+    relatedToolIds: ['kalkulator-pajak', 'kalkulator-umkm', 'currency-converter'],
+    relatedBlogSlugs: ['cara-menghitung-diskon-bertingkat-dan-pajak-pph-21-online', 'cara-hitung-margin-keuntungan-diskon-dan-pajak-umkm']
   }
 };
 

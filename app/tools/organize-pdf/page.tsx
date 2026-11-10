@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { PDFDocument, degrees } from 'pdf-lib';
@@ -868,108 +869,9 @@ export default function OrganizePdfPage() {
           </div>
         )}
 
-        {/* Educational Article Section */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-10 mb-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
-                Panduan Lengkap Mengatur & Memisahkan Halaman PDF
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Solusi praktis untuk kebutuhan administrasi kantor, berkas beasiswa, pendaftaran CPNS, dan penataan skripsi.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                1. Atur Ulang Urutan Halaman
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Susun lembaran berkas dengan cara menarik dan melepas (drag and drop) thumbnail halaman, atau gunakan tombol panah navigasi. Sangat bermanfaat ketika halaman scan terbalik atau urutan lampiran belum sesuai instruksi pendaftaran.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Trash2 className="w-4 h-4 text-red-600" />
-                2. Hapus Halaman Tanpa Ribet
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Tandai lembar kosong, tanda tangan salah, atau halaman lampiran berlebih hanya dengan satu klik pada ikon tempat sampah. Sistem akan otomatis membuang lembar tersebut saat berkas diunduh.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Scissors className="w-4 h-4 text-emerald-600" />
-                3. Ekstrak Halaman Terpilih
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Ambil bagian penting dari dokumen PDF panjang (misalnya halaman rangkuman atau sertifikat tertentu) dan simpan sebagai berkas PDF baru, atau ekstrak setiap lembar menjadi file terpisah dalam format ZIP.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="organize-pdf-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Pertanyaan yang Sering Diajukan (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Apakah berkas PDF saya aman dan tidak diunggah ke internet?',
-                a: 'Benar sekali. KompresKilat menggunakan arsitektur 100% Client-Side berbasis WebAssembly dan JavaScript modern (pdf-lib & pdfjs-dist). Dokumen PDF Anda dibaca dan dimanipulasi seutuhnya di memori peramban Anda tanpa pernah dikirim ke peladen kami.',
-              },
-              {
-                q: 'Apakah teks dan tautan di dalam PDF akan tetap bisa diklik setelah diatur?',
-                a: 'Ya. Mesin penyusun kami menduplikasi dictionary halaman PDF asli secara biner (vektor dan aliran objek asli), sehingga teks, tautan, font, dan format dokumen tetap utuh tanpa penurunan resolusi.',
-              },
-              {
-                q: 'Bagaimana cara memilih halaman ganjil atau genap untuk cetak bolak-balik?',
-                a: 'Masuk ke tab "Ekstrak Halaman", lalu klik tombol pintas "Ganjil" atau "Genap". Anda juga dapat mengetikkan rentang tertentu seperti "1-5, 8, 12" pada kotak rentang.',
-              },
-              {
-                q: 'Apakah ada batasan jumlah halaman atau ukuran file?',
-                a: 'KompresKilat mendukung berkas PDF hingga 100 MB dan ratusan halaman, tergantung kapasitas memori RAM peramban di perangkat Anda.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12 mb-8">
+          <ToolEditorialSection toolId="organize-pdf" />
         </div>
 
         {/* Quick Link to Related Tools */}

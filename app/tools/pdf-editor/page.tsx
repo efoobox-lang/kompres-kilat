@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { validateUploadedFile, downloadBlobSafely } from '@/lib/file-security';
@@ -2059,37 +2060,9 @@ export default function DirectPdfEditorPage() {
           </div>
         )}
 
-        {/* Slot Iklan Kepatuhan AdSense */}
-        <div className="my-10">
-          <AdBanner zone="in-tool" label="Iklan" />
-        </div>
-
-        {/* Panduan & FAQ Praktis */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 text-xs text-slate-600 dark:text-slate-400">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <FileText className="w-4 h-4 text-indigo-600" />
-            <span>Cara Mengedit PDF Digital &amp; PDF Hasil Scan / Gambar:</span>
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 leading-relaxed">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-              <span className="font-bold text-slate-900 dark:text-white block text-xs">
-                1. Untuk PDF Digital (Word ke PDF / Dokumen Ketik):
-              </span>
-              <p>
-                Klik langsung pada teks mana pun yang ingin diubah. Kotak input akan muncul di sebelah kiri untuk mengganti teks, warna, atau ukuran font. Anda juga dapat menyeret teks untuk memindahkannya ke posisi lain.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-              <span className="font-bold text-slate-900 dark:text-white block text-xs">
-                2. Untuk PDF Hasil Scan / Foto Dokumen (0 Elemen Teks):
-              </span>
-              <p>
-                Aktifkan tombol <b>Mode Whiteout</b> dan seret mouse untuk membuat kotak penutup putih di atas tulisan lama. Setelah tertutup, klik <b>Tambah Teks Baru (+)</b> untuk mengetik kalimat perbaikan tepat di atasnya.
-              </p>
-            </div>
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12">
+          <ToolEditorialSection toolId="pdf-editor" />
         </div>
       </main>
 

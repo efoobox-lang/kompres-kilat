@@ -4,6 +4,7 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import Link from 'next/link';
@@ -604,85 +605,10 @@ export default function PdfToExcelPage() {
           </div>
         )}
 
-        {/* AdSense Slot Tengah */}
-        <div className="my-8">
-          <AdBanner slotId="8472910385" />
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12">
+          <ToolEditorialSection toolId="pdf-to-excel" />
         </div>
-
-        {/* Konten Edukasi & SEO */}
-        <section className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-slate-700 leading-relaxed text-xs sm:text-sm">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
-              Keunggulan Konversi PDF ke Excel di KompresKilat
-            </h2>
-            <p>
-              Mengonversi dokumen PDF berisi tabel seringkali menghasilkan data yang berantakan jika hanya disalin-tempel secara manual. Mesin konversi PDF ke Excel kami menggunakan engine standar <b>PDF.js</b> yang membaca lapisan teks (*text layer*) asli per koordinat spasial, memisahkan sel baris dan kolom secara akurat, kemudian menyusunnya langsung menjadi format spreadsheet <b>Microsoft Excel (.xlsx)</b> asli tanpa kode metadata mentah.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-2xl mb-1 block">🔒</span>
-              <h3 className="font-bold text-slate-900 mb-1">Privasi 100% Aman</h3>
-              <p className="text-xs text-slate-500">
-                Seluruh proses konversi berjalan di memori lokal peramban Anda. Berkas PDF tidak diunggah ke database mana pun.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-2xl mb-1 block">📑</span>
-              <h3 className="font-bold text-slate-900 mb-1">Format XLSX Standar</h3>
-              <p className="text-xs text-slate-500">
-                Kompatibel penuh dengan Microsoft Excel 2016+, Office 365, Google Sheets, dan WPS Office tanpa distorsi.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-2xl mb-1 block">⚡</span>
-              <h3 className="font-bold text-slate-900 mb-1">Cepat Tanpa Batas</h3>
-              <p className="text-xs text-slate-500">
-                Tanpa perlu mendaftar akun atau memasukkan email. Langsung unggah, sesuaikan pemisah, dan unduh hasilnya.
-              </p>
-            </div>
-          </div>
-
-          {/* Panduan Langkah demi Langkah */}
-          <div className="pt-2">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-2">
-              Cara Mengubah Berkas PDF Menjadi Excel:
-            </h3>
-            <ol className="list-decimal list-inside space-y-1.5 pl-1">
-              <li>Pilih atau seret berkas PDF tabel Anda ke kotak unggah di atas.</li>
-              <li>Sistem akan langsung memindai struktur baris dan memetakan data per kolom menggunakan koordinat spasial.</li>
-              <li>Pilih opsi pemisah kolom (Otomatis, Tab, Koma, atau Titik Koma) jika diperlukan.</li>
-              <li>Periksa pratinjau tabel yang muncul di layar untuk memastikan kolom sudah sesuai.</li>
-              <li>Klik tombol <b>Unduh Berkas Excel (.xlsx) Asli</b> untuk menyimpan lembar kerja Anda.</li>
-            </ol>
-          </div>
-
-          {/* FAQ */}
-          <div className="pt-4 border-t border-slate-100">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-3">
-              Pertanyaan yang Sering Diajukan (FAQ):
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-bold text-slate-800">Apakah alat ini gratis selamanya?</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Ya, alat konversi PDF ke Excel di KompresKilat dapat digunakan secara gratis tanpa batasan kuota harian.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-800">Apakah saya bisa mengubah dokumen PDF hasil scan?</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Untuk dokumen PDF hasil scan kamera/foto tanpa lapisan teks, Anda dapat memanfaatkan fitur{' '}
-                  <Link href="/tools/pdf-to-word" className="text-emerald-600 font-semibold hover:underline">
-                    PDF ke Word (OCR)
-                  </Link>{' '}
-                  kami yang memiliki mesin pengenalan karakter visual cerdas.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </section>
 
       {/* Footer Komprehensif */}

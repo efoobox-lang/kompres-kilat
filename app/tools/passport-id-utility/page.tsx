@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
@@ -1152,108 +1153,9 @@ export default function PassportIdUtilityPage() {
           </div>
         )}
 
-        {/* Informative Article & Security Advisory */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-10 mb-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
-                Panduan Resmi Keamanan Dokumen Identitas & Standar Paspor
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Patuhi standar biometrik internasional dan amankan identitas Anda dari kebocoran data digital.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-indigo-600" />
-                1. Kepatuhan ICAO Doc 9303
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Organisasi Penerbangan Sipil Internasional (ICAO) menetapkan bahwa proporsi wajah pada pasfoto paspor dan visa harus mencakup 70% hingga 80% dari tinggi foto, dengan mata berada di sepertiga atas foto.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Stamp className="w-4 h-4 text-red-600" />
-                2. Watermark Khusus Transaksi
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Kementerian Kominfo mengimbau masyarakat untuk selalu membubuhi tulisan tujuan (misal: &quot;HANYA UNTUK VERIFIKASI KREDIT BANK X - TGL 03/11/2026&quot;) saat mengunggah foto KTP agar tidak disalahgunakan untuk pinjol ilegal.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-emerald-600" />
-                3. Zero Server Storage
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Dokumen identitas Anda mengandung data pribadi super sensitif (NIK, Nama, Tanggal Lahir). KompresKilat menjamin pemrosesan 100% berlangsung di RAM peramban komputer/HP Anda tanpa transmisi internet.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="passport-utility-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar Paspor & Watermark Identitas (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Berapa ukuran standar pasfoto untuk paspor Indonesia dan visa Schengen?',
-                a: 'Standar resmi paspor Indonesia dan visa Eropa (Schengen) adalah 3.5 × 4.5 cm (35 × 45 mm) dengan latar belakang putih polos serta rasio wajah 70%-80%.',
-              },
-              {
-                q: 'Apakah kedutaan Amerika Serikat menerima foto 3.5 x 4.5 cm?',
-                a: 'Tidak. Kedutaan Besar AS dan formulir visa DS-160 mewajibkan foto berbentuk bujur sangkar 2 × 2 inci (51 × 51 mm). Anda dapat memilih preset "Amerika Serikat / India" di menu resizer kami.',
-              },
-              {
-                q: 'Mengapa pola watermark miring berulang (anti-crop) sangat disarankan?',
-                a: 'Karena jika watermark hanya diletakkan di sudut kosong dokumen, pelaku kejahatan siber dapat dengan mudah memotong (crop) atau menghapus stempel tersebut menggunakan aplikasi pengedit foto.',
-              },
-              {
-                q: 'Apakah foto dokumen saya aman saat diproses di KompresKilat?',
-                a: 'Mutlak aman. Seluruh rendering kanvas HTML5 dan manipulasi PDF dikerjakan secara lokal di perangkat Anda melalui WebAssembly dan JavaScript. Berkas Anda tidak pernah diunggah atau disimpan di server mana pun.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12 mb-8">
+          <ToolEditorialSection toolId="passport-id-utility" />
         </div>
 
         {/* Quick Link to Related Tools */}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import Link from 'next/link';
@@ -2867,145 +2868,10 @@ export default function InvoiceGeneratorPage() {
         </div>
       </div>
 
-        {/* AdSense Slot Tengah */}
-        <div className="my-10 print:hidden">
-          <AdBanner slotId="8472910385" />
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12 print:hidden">
+          <ToolEditorialSection toolId="invoice-generator" />
         </div>
-
-        {/* ======================================================== */}
-        {/* KONTEN EDUKASI, SEO GUIDE & FAQ RESMI */}
-        {/* ======================================================== */}
-        <section className="bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed print:hidden">
-          <div>
-            <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3 py-1 rounded-full font-bold mb-3">
-              <span>Panduan &amp; Edukasi Dokumen Usaha</span>
-            </div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Panduan Lengkap: Perbedaan Invoice, Nota Toko, dan Kwitansi Pembayaran
-            </h2>
-            <p>
-              Dalam tata kelola keuangan bisnis dan administrasi perpajakan di Indonesia, ketiga dokumen ini memiliki fungsi hukum dan momen penggunaan yang berbeda:
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2">
-              <span className="text-2xl block">📄</span>
-              <h3 className="font-bold text-slate-900 dark:text-white">1. Invoice (Faktur Penagihan)</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">
-                Dokumen resmi penagihan yang diterbitkan oleh penjual kepada pembeli <b>sebelum</b> pembayaran lunas dilakukan. Memuat batas jatuh tempo (due date), rincian pajak PPN, dan instruksi rekening bank.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2">
-              <span className="text-2xl block">🧾</span>
-              <h3 className="font-bold text-slate-900 dark:text-white">2. Nota Penjualan Toko</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">
-                Bukti transaksi jual-beli tunai atau retail langsung di tempat. Digunakan oleh toko offline, apotek, kafe, dan UMKM untuk mencatat uang yang diterima dan kembalian pelanggan.
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2">
-              <span className="text-2xl block">✅</span>
-              <h3 className="font-bold text-slate-900 dark:text-white">3. Kwitansi Resmi</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">
-                Tanda bukti bahwa sejumlah uang tunai atau transfer telah sah <b>diterima oleh pihak penjual</b>. Wajib memuat nominal terbilang huruf dan cap stempel tanda tangan basah penerima.
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base mb-2">
-              Fitur Unggulan Pembuat Dokumen di KompresKilat:
-            </h3>
-            <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
-              <li><strong>100% Client-Side Privacy:</strong> Seluruh data keuangan, rincian transaksi, dan gambar tanda tangan Anda tidak diunggah ke database server kami.</li>
-              <li><strong>Cap Stempel Digital Asli:</strong> Dilengkapi generator cap stempel bulat dinas dan stempel kotak toko dengan opsi teks kustom, pilihan warna tinta autentik, serta sudut kemiringan realistis.</li>
-              <li><strong>Tanda Tangan Interaktif:</strong> Goreskan tanda tangan langsung di layar sentuh ponsel atau unggah file PNG transparan beresolusi tinggi.</li>
-              <li><strong>Dukungan Cetak Thermal:</strong> Sedia format struk kasir 80mm dan 58mm untuk printer thermal bluetooth kasir toko Anda.</li>
-            </ul>
-          </div>
-
-          {/* FAQ Interaktif */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base mb-3">
-              Pertanyaan yang Sering Diajukan (FAQ):
-            </h3>
-
-            {[
-              {
-                q: 'Apakah layanan pembuatan invoice dan nota ini gratis?',
-                a: 'Ya, Anda dapat membuat, mencetak, dan mengunduh berkas invoice, nota, serta kwitansi tanpa batasan jumlah secara gratis tanpa perlu registrasi akun.',
-              },
-              {
-                q: 'Bagaimana cara mencetak langsung ke printer kasir thermal?',
-                a: 'Pilih ukuran kertas "Thermal 80mm" atau "Thermal 58mm" pada tab Format, kemudian klik tombol "Cetak". Pilih printer kasir Bluetooth atau USB Anda pada dialog cetak peramban.',
-              },
-              {
-                q: 'Apakah dokumen yang diunduh ke PDF bisa langsung dikirim via WhatsApp?',
-                a: 'Bisa. Berkas PDF yang dihasilkan memiliki resolusi cetak tinggi yang kompatibel dengan seluruh aplikasi pembaca PDF di Android, iOS, Windows, dan macOS.',
-              },
-            ].map((faq, idx) => (
-              <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-3.5 text-left font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${openFaq === idx ? 'rotate-180 text-indigo-600' : ''}`} />
-                </button>
-                {openFaq === idx && (
-                  <div className="p-3.5 pt-0 text-slate-600 dark:text-slate-400 text-xs border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Hub & Spoke Internal Linking */}
-          <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-            <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm mb-3">
-              Alat Pendukung Bisnis &amp; Artikel Panduan Terkait:
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <Link
-                href="/tools/kalkulator-pajak"
-                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
-              >
-                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-indigo-600">
-                  🧾 Kalkulator Pajak PPh 21 &amp; 23
-                </span>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
-                  Hitung potongan pajak jasa dan vendor secara akurat.
-                </span>
-              </Link>
-              <Link
-                href="/tools/kalkulator-umkm"
-                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
-              >
-                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-indigo-600">
-                  💰 Kalkulator Margin &amp; BEP
-                </span>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
-                  Simulasi penetapan harga jual dan batas titik impas usaha.
-                </span>
-              </Link>
-              <Link
-                href="/blog/cara-membuat-invoice-nota-kwitansi-resmi-online-gratis-cetak-thermal"
-                className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/70 border border-slate-100 dark:border-slate-700/60 transition group block"
-              >
-                <span className="font-bold block text-slate-900 dark:text-white group-hover:text-emerald-600">
-                  📚 Panduan Cetak Struk Thermal
-                </span>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
-                  Langkah praktis menghubungkan printer kasir mini Bluetooth.
-                </span>
-              </Link>
-            </div>
-          </div>
-        </section>
       </section>
 
       <div className="print:hidden">

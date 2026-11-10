@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import {
@@ -663,108 +664,9 @@ export default function CurrencyConverterPage() {
           </div>
         )}
 
-        {/* Informative Article Section */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-10 mb-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
-                Panduan Cerdas Menghitung Nilai Tukar Valuta Asing
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Pahami perbedaan kurs beli, kurs jual, dan tips menghindari potongan tersembunyi saat transaksi lintas negara.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-indigo-600" />
-                1. Kurs Tengah Pasar (Mid-Market Rate)
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Kalkulator kami menggunakan kurs tengah pasar internasional real-time yang merupakan titik tengah adil antara permintaan beli dan penawaran jual tanpa mark-up bank.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <Compass className="w-4 h-4 text-emerald-600" />
-                2. Penting untuk Traveler & PMI
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Sangat membantu Pekerja Migran Indonesia (PMI/TKI) di Malaysia, Hong Kong, Taiwan, atau Arab Saudi saat hendak mengirim remitansi uang bulanan ke keluarga di tanah air.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-amber-500" />
-                3. Privasi Finansial 100%
-              </h3>
-              <p className="text-xs leading-relaxed">
-                Nominal uang yang Anda ketik tidak pernah disimpan di server kami. Seluruh kalkulasi matematika berlangsung secara instan di peramban Anda.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="currency-converter-bottom" />
-        </div>
-
-        {/* FAQ Accordion */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar Kurs Mata Uang (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Seberapa sering kurs mata uang diperbarui?',
-                a: 'Data nilai tukar diperbarui secara berkala mengikuti pasar valuta asing global. Anda juga dapat menekan tombol "Segarkan Kurs" kapan saja untuk meminta update terbaru.',
-              },
-              {
-                q: 'Mengapa kurs di bank atau money changer berbeda dengan angka di kalkulator ini?',
-                a: 'Kalkulator ini menampilkan Kurs Tengah Pasar (Mid-Market Rate). Bank dan penyedia jasa penukaran uang biasanya menerapkan selisih (spread) berupa Kurs Jual (ketika Anda membeli valas) dan Kurs Beli (ketika Anda menjual valas) untuk mengambil keuntungan operasional.',
-              },
-              {
-                q: 'Mata uang apa saja yang didukung?',
-                a: 'Kami mendukung 22 mata uang global utama termasuk Rupiah (IDR), Dolar Amerika (USD), Riyal Saudi (SAR), Ringgit Malaysia (MYR), Dolar Singapura (SGD), Euro (EUR), Yen Jepang (JPY), Dolar Australia (AUD), dan Yuan Tiongkok (CNY).',
-              },
-              {
-                q: 'Apakah alat ini bisa digunakan secara offline tanpa internet?',
-                a: 'Bisa. Jika peramban Anda kehilangan koneksi internet atau API eksternal terhambat, sistem secara otomatis beralih ke tabel acuan kurs lokal tersemat sehingga Anda tetap dapat melakukan perhitungan konversi.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12 mb-8">
+          <ToolEditorialSection toolId="currency-converter" />
         </div>
 
         {/* Quick Link to Related Tools */}

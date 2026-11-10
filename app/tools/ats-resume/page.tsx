@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import { extractTextFromPdf } from '@/lib/pdf-text-extractor';
@@ -660,78 +661,9 @@ KEAHLIAN & TOOLS
           </Link>
         </div>
 
-        {/* Informasi Edukatif Panduan Standar ATS */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Info className="w-5 h-5 text-indigo-600 shrink-0" />
-            <h2 className="font-bold text-base sm:text-lg text-slate-900">
-              Panduan Format CV Lolos Seleksi ATS (Applicant Tracking System)
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
-              <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                Format Single Column
-              </span>
-              <p className="leading-relaxed">
-                Gunakan tata letak satu kolom lurus dari atas ke bawah. Hindari tabel bertumpuk atau multi-kolom kompleks yang dapat membingungkan robot parser.
-              </p>
-            </div>
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
-              <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-indigo-600" />
-                Ekspor Teks Digital Asli
-              </span>
-              <p className="leading-relaxed">
-                Pastikan teks di dalam PDF dapat di-blok/copy-paste secara manual. Hindari menyimpan CV sebagai gambar canvas datar tanpa lapisan font.
-              </p>
-            </div>
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
-              <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                Formula Action + Result
-              </span>
-              <p className="leading-relaxed">
-                Gunakan kata kerja aksi diikuti metrik angka nyata, contoh: <i>&ldquo;Meningkatkan engagement sosial media sebesar 40% melalui 15 kampanye aktif.&rdquo;</i>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section Accordion */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mb-6">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-indigo-600" />
-            <span>Pertanyaan yang Sering Diajukan (FAQ)</span>
-          </h3>
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full text-left px-4 py-3 bg-slate-50/50 hover:bg-slate-50 font-semibold text-xs sm:text-sm text-slate-800 flex items-center justify-between gap-3 cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ${
-                      openFaq === idx ? 'rotate-180 text-indigo-600' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 py-3 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="my-10 pt-4">
-          <AdBanner zone="in-tool" label="Iklan" />
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12">
+          <ToolEditorialSection toolId="ats-resume" />
         </div>
       </section>
 

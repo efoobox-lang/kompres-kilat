@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import {
@@ -1362,108 +1363,9 @@ Dihitung di https://kompreskilat.site/tools/kalkulator-pajak`;
           </div>
         )}
 
-        {/* Educational Informative Section */}
-        <div className="mt-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                Panduan Singkat Perpajakan Indonesia (UU HPP & PP 58/2023)
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Prinsip dasar perhitungan Dasar Pengenaan Pajak (DPP) dan tarif pemotongan resmi Kemenkeu & Ditjen Pajak.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                <Briefcase className="w-4 h-4 text-indigo-600" />
-                1. Skema Baru PPh 21 TER (2024 - Sekarang)
-              </h3>
-              <p className="leading-relaxed">
-                Sejak berlakunya PP 58/2023 dan PMK 168/2023, pemotongan bulanan (Januari–November) menggunakan Tarif Efektif Rata-rata (TER A, B, atau C) dikalikan penghasilan bruto sebulan. Pajak Desember dihitung menggunakan tarif progresif Pasal 17 UU HPP dikurangi akumulasi pajak yang telah dipotong.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                <Receipt className="w-4 h-4 text-blue-600" />
-                2. PPh 23 untuk Pengusaha & Vendor
-              </h3>
-              <p className="leading-relaxed">
-                Dipotong oleh badan usaha atas imbalan jasa teknik, manajemen, IT, konsultan, dan sewa alat sebesar 2% dari DPP (sebelum PPN). Jika penyedia jasa tidak memiliki NPWP, wajib dipotong tarif 100% lebih tinggi (menjadi 4%).
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                3. PPh 4(2) Bersifat Final & Tuntas
-              </h3>
-              <p className="leading-relaxed">
-                Pengenaan pajak atas sewa gedung/tanah (10%), jual beli properti (2.5%), dan bunga deposito (20%) tidak digabungkan dengan penghasilan neto tahunan reguler dalam perhitungan pajak progresif SPT Tahunan.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ad Placement */}
-        <div className="my-8">
-          <AdBanner slotId="kalkulator-pajak-bottom" />
-        </div>
-
-        {/* FAQ Accordion Section */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-600" />
-            Tanya Jawab Seputar Pajak Penghasilan (FAQ)
-          </h2>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Apa perbedaan Kategori TER A, TER B, dan TER C pada PPh 21?',
-                a: 'Kategori TER ditentukan berdasarkan status PTKP. TER A berlaku untuk status TK/0 (54 juta), TK/1 (58.5 juta), dan K/0 (58.5 juta). TER B berlaku untuk TK/2, TK/3, K/1, dan K/2. Sedangkan TER C berlaku untuk K/3 (72 juta).',
-              },
-              {
-                q: 'Berapakah batas Penghasilan Tidak Kena Pajak (PTKP) terbaru di Indonesia?',
-                a: 'Berdasarkan UU Harmonisasi Peraturan Perpajakan (HPP), batas PTKP dasar untuk Wajib Pajak Orang Pribadi lajang tanpa tanggungan (TK/0) adalah Rp 54.000.000 per tahun (atau Rp 4.500.000 per bulan). Setiap tambahan status kawin atau tanggungan keluarga (maksimal 3 orang) menambah Rp 4.500.000 per tahun.',
-              },
-              {
-                q: 'Berapa lapisan tarif progresif Pasal 17 UU HPP untuk Orang Pribadi?',
-                a: 'UU HPP membagi 5 lapisan tarif: 1) Rp 0 s.d. Rp 60 juta = 5%, 2) > Rp 60 juta s.d. Rp 250 juta = 15%, 3) > Rp 250 juta s.d. Rp 500 juta = 25%, 4) > Rp 500 juta s.d. Rp 5 miliar = 30%, 5) > Rp 5 miliar = 35%.',
-              },
-              {
-                q: 'Apakah data keuangan atau gaji saya aman saat menggunakan kalkulator ini?',
-                a: 'Sangat aman 100%. KompresKilat memproses seluruh algoritma matematika perpajakan secara client-side langsung di browser perangkat Anda. Tidak ada data gaji, omzet, atau nama yang dikirim atau disimpan ke server mana pun.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12 mb-8">
+          <ToolEditorialSection toolId="kalkulator-pajak" />
         </div>
 
         {/* Quick Links to Related Tools */}

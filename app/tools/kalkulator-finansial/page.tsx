@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ToolEditorialSection from '@/components/ToolEditorialSection';
 import AdBanner from '@/components/AdBanner';
 import JsonLd from '@/components/JsonLd';
 import {
@@ -1089,39 +1090,9 @@ export default function FinancialCalculatorPage() {
           </div>
         )}
 
-        {/* FAQ Accordion */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm mt-8 mb-6">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 mb-4 flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-indigo-600" />
-            <span>Pertanyaan yang Sering Diajukan (FAQ)</span>
-          </h3>
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full text-left px-4 py-3 bg-slate-50/50 hover:bg-slate-50 font-semibold text-xs sm:text-sm text-slate-800 flex items-center justify-between gap-3 cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ${
-                      openFaq === idx ? 'rotate-180 text-indigo-600' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 py-3 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="my-10 pt-4">
-          <AdBanner zone="in-tool" label="Iklan" />
+        {/* Panduan & Standar Kualitas (Template Seragam) */}
+        <div className="mt-10 sm:mt-12">
+          <ToolEditorialSection toolId="kalkulator-finansial" />
         </div>
       </section>
 
