@@ -105,11 +105,6 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
     }
   };
 
-  // Featured / Paling Sering Digunakan
-  const popularTools = useMemo(() => {
-    return ALL_TOOLS.filter((tool) => tool.isPopular).slice(0, 6);
-  }, []);
-
   // Hitung jumlah alat di tiap kategori
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { all: ALL_TOOLS.length };
@@ -272,84 +267,12 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       </section>
 
       {/* ============================================================ */}
-      {/* MAIN CONTENT WRAPPER: Most Popular, All Tools, Guides, FAQ   */}
+      {/* MAIN CONTENT WRAPPER: All Tools, Guides, FAQ                 */}
       {/* ============================================================ */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-8">
 
       {/* ============================================================ */}
-      {/* 2. FEATURED / MOST POPULAR TOOLS SECTION ("Paling Sering Digunakan") */}
-      {/* ============================================================ */}
-      <section className="mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-800/80 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 text-sm">
-                <Flame className="w-4 h-4" />
-              </span>
-              <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Paling Sering Digunakan
-              </h2>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60 hidden sm:inline-block">
-                Pilihan Utama
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Akses instan ke alat produktivitas unggulan yang paling banyak diakses pengguna setiap hari.
-            </p>
-          </div>
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
-            6 Alat Teratas
-          </span>
-        </div>
-
-        {/* Featured Grid (2 baris x 3 kolom desktop) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {popularTools.map((tool) => (
-            <Link
-              key={tool.id}
-              href={tool.href}
-              className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/90 p-5 sm:p-6 shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all duration-200 flex flex-col justify-between overflow-hidden"
-            >
-              {/* Highlight bar top */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-80 group-hover:h-1.5 transition-all" />
-
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200 shadow-2xs">
-                    {tool.icon}
-                  </div>
-                  {tool.badge && (
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getBadgeStyle(
-                        tool.badgeColor
-                      )}`}
-                    >
-                      {tool.badge}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 mb-1.5">
-                  {tool.title}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
-                  {tool.description}
-                </p>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                <span className="text-[11px] text-slate-400 font-normal">{tool.category}</span>
-                <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Buka Alat <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* 3. CATEGORY TABS & FILTERABLE ALL TOOLS                      */}
+      {/* 2. CATEGORY TABS & FILTERABLE ALL TOOLS                      */}
       {/* ============================================================ */}
       <section id="tools" className="mb-16 sm:mb-24 scroll-mt-20">
         <div className="text-center sm:text-left mb-6 sm:mb-8">
