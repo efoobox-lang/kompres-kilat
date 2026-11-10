@@ -19,12 +19,17 @@ import {
   HelpCircle,
   Lock,
   Cpu,
-  FileCheck2
+  FileCheck2,
+  Search,
+  Image as ImageIcon,
+  RefreshCw,
+  X,
 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<ToolCategoryKey>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Home FAQ Data untuk Editorial & Schema JSON-LD
@@ -64,11 +69,41 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
     })),
   };
 
-  // Filter tools sesuai tab kategori aktif
+  // Filter tools sesuai tab kategori aktif & kata kunci pencarian
   const displayedTools = useMemo(() => {
-    if (activeTab === 'all') return ALL_TOOLS;
-    return ALL_TOOLS.filter((tool) => tool.categoryKey === activeTab);
-  }, [activeTab]);
+    let list = ALL_TOOLS;
+    if (activeTab !== 'all') {
+      list = list.filter((tool) => tool.categoryKey === activeTab);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (tool) =>
+          tool.title.toLowerCase().includes(q) ||
+          tool.description.toLowerCase().includes(q) ||
+          tool.category.toLowerCase().includes(q) ||
+          (tool.keywords && tool.keywords.some((k) => k.toLowerCase().includes(q)))
+      );
+    }
+    return list;
+  }, [activeTab, searchQuery]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const el = document.getElementById('tools');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handlePopularTagClick = (categoryKey: ToolCategoryKey, query = '') => {
+    setActiveTab(categoryKey);
+    setSearchQuery(query);
+    const el = document.getElementById('tools');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Featured / Paling Sering Digunakan
   const popularTools = useMemo(() => {
@@ -105,38 +140,141 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 pb-12 sm:py-16">
-      {/* Khusus Mobile: Dark Mode Toggle Switch di kanan atas persis sesuai posisi tanda merah */}
-      <div className="flex md:hidden justify-end items-center mb-2">
-        <ThemeToggle compact={true} />
-      </div>
-
+    <div className="w-full">
       {/* ============================================================ */}
-      {/* 1. HERO SECTION                                              */}
+      {/* 1. HERO BANNER SECTION (Persis Mockup Gambar)                */}
       {/* ============================================================ */}
-      <section className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-        <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] sm:text-xs px-3.5 py-1.5 rounded-full font-bold mb-4 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-          <span>{t('hero_badge')}</span>
-        </div>
+      <section className="w-full bg-gradient-to-r from-[#eef4fe] via-[#e5f0fd] to-[#dce9fc] dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900 border-b border-blue-100/90 dark:border-slate-800 relative overflow-hidden py-10 sm:py-14 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Sisi Kiri: Teks Judul, Deskripsi, Search Bar, Quick Tags */}
+            <div className="lg:col-span-7 space-y-5 text-left">
+              {/* Judul Utama */}
+              <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
+                Semua Tools Digital <br />
+                dalam <span className="text-blue-600 dark:text-blue-400">Satu Tempat</span>
+              </h1>
 
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-3 sm:mb-4 leading-tight sm:leading-tight">
-          {t('hero_title_1')}{' '}
-          <span className="text-indigo-600 dark:text-sky-400 font-black inline-block">
-            {t('hero_title_highlight')}
-          </span>
-        </h1>
+              {/* Sub-judul dengan Badge "43 tools" */}
+              <p className="text-xs sm:text-sm md:text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed flex flex-wrap items-center gap-1.5">
+                <span>Cari, gunakan, dan selesaikan pekerjaan digitalmu lebih cepat</span>
+                <span>dengan</span>
+                <span className="bg-blue-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full inline-flex items-center shadow-xs">
+                  43 tools
+                </span>
+                <span>online terbaik dan gratis!</span>
+              </p>
 
-        <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-4">
-          {t('hero_desc')}
-        </p>
+              {/* Search Bar Berbentuk Pil Modern (Persis Gambar) */}
+              <form onSubmit={handleSearchSubmit} className="relative max-w-xl">
+                <div className="flex items-center bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm p-1.5 pl-4 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari tools... contoh: kompres PDF, ubah gambar, kalkulator..."
+                    className="w-full bg-transparent border-0 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none placeholder:text-slate-400 py-1"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 sm:px-6 py-2 rounded-full text-xs sm:text-sm flex items-center gap-1.5 shrink-0 shadow-sm transition cursor-pointer"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Cari</span>
+                  </button>
+                </div>
+              </form>
 
-        {/* Privacy Assurance Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>100% Client-Side: Berkas &amp; data diproses di peramban tanpa disimpan ke server.</span>
+              {/* Tools Populer Quick Tags (Persis Gambar) */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                <span className="font-bold text-slate-800 dark:text-slate-200 mr-1 text-xs sm:text-sm">
+                  Tools Populer:
+                </span>
+
+                {/* 1. PDF Tools */}
+                <button
+                  type="button"
+                  onClick={() => handlePopularTagClick('document')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 border border-red-200/80 dark:border-red-900/60 font-semibold text-xs hover:bg-red-100 dark:hover:bg-red-900/80 transition cursor-pointer shadow-2xs"
+                >
+                  <span className="w-4 h-4 rounded bg-red-600 text-white flex items-center justify-center text-[9px] font-black">
+                    PDF
+                  </span>
+                  <span>PDF Tools</span>
+                </button>
+
+                {/* 2. Image Tools */}
+                <button
+                  type="button"
+                  onClick={() => handlePopularTagClick('image')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-900/60 font-semibold text-xs hover:bg-sky-100 dark:hover:bg-sky-900/80 transition cursor-pointer shadow-2xs"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Image Tools</span>
+                </button>
+
+                {/* 3. Converter */}
+                <button
+                  type="button"
+                  onClick={() => handlePopularTagClick('document', 'konversi')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60 font-semibold text-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/80 transition cursor-pointer shadow-2xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Converter</span>
+                </button>
+
+                {/* 4. AI Tools */}
+                <button
+                  type="button"
+                  onClick={() => handlePopularTagClick('ai')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/60 font-semibold text-xs hover:bg-purple-100 dark:hover:bg-purple-900/80 transition cursor-pointer shadow-2xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                  <span>AI Tools</span>
+                </button>
+
+                {/* 5. Lainnya ∨ */}
+                <button
+                  type="button"
+                  onClick={() => handlePopularTagClick('all')}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer shadow-2xs"
+                >
+                  <span>Lainnya</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Sisi Kanan: Ilustrasi 3D Showcase (Laptop, Phone, 3D Flying Icons, 43 Tools Rocket Badge) */}
+            <div className="lg:col-span-5 relative flex items-center justify-center">
+              <div className="relative w-full max-w-[480px] lg:max-w-[520px] transform hover:scale-[1.02] transition-transform duration-300 select-none">
+                <img
+                  src="/images/hero-illustration.png"
+                  alt="43 Tools Digital KompresKilat"
+                  className="w-full h-auto drop-shadow-2xl object-contain rounded-2xl"
+                  width={467}
+                  height={288}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* ============================================================ */}
+      {/* MAIN CONTENT WRAPPER: Most Popular, All Tools, Guides, FAQ   */}
+      {/* ============================================================ */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-8">
 
       {/* ============================================================ */}
       {/* 2. FEATURED / MOST POPULAR TOOLS SECTION ("Paling Sering Digunakan") */}
@@ -471,6 +609,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       {/* Structured Data FAQPage for Homepage */}
       <JsonLd data={faqSchemaData} />
     </div>
+  </div>
   );
 }
 
