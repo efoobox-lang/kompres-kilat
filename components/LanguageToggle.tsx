@@ -125,7 +125,7 @@ export default function LanguageToggle({
         <>
           {/* Mobile Backdrop to catch touch outside cleanly */}
           <div
-            className="sm:hidden fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+            className="sm:hidden fixed inset-0 z-[9998] bg-black/30 backdrop-blur-[1px]"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
@@ -133,10 +133,10 @@ export default function LanguageToggle({
           <div
             translate="no"
             dir="ltr"
-            className={`notranslate fixed sm:absolute z-50 left-3 right-3 sm:left-auto sm:right-0 w-auto sm:w-[620px] md:w-[680px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 transition-all duration-150 animate-in fade-in zoom-in-95 ${
+            className={`notranslate fixed sm:absolute z-[9999] left-3 right-3 sm:left-auto sm:right-0 w-auto sm:w-[620px] md:w-[680px] max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 transition-all duration-150 animate-in fade-in zoom-in-95 ${
               direction === 'up'
-                ? 'bottom-20 sm:bottom-full sm:top-auto sm:mb-3 sm:left-0 sm:right-auto'
-                : 'top-16 sm:top-full sm:mt-2'
+                ? 'bottom-16 sm:bottom-full sm:top-auto sm:mb-3 sm:right-0 sm:left-auto'
+                : 'top-16 sm:top-full sm:mt-2 sm:right-0 sm:left-auto'
             }`}
             style={{ maxWidth: 'min(94vw, 700px)' }}
             role="dialog"

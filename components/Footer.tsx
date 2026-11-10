@@ -91,7 +91,7 @@ export default function Footer() {
       {/* ========================================================== */}
       {/* 2. MODERN DARK NAVY FOOTER CONTAINER                       */}
       {/* ========================================================== */}
-      <footer className="w-full bg-[#070d1e] text-slate-300 relative overflow-hidden pt-10 pb-6 border-t border-slate-800/80">
+      <footer className="w-full bg-[#070d1e] text-slate-300 relative pt-10 pb-6 border-t border-slate-800/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           {/* Top Row: Brand Info, Links Navigasi, Social Icons */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-800/80">
@@ -188,7 +188,7 @@ export default function Footer() {
               </button>
 
               {/* Language Switcher di Footer (Direction UP) */}
-              <div className="ml-1">
+              <div className="ml-1 relative z-30">
                 <LanguageToggle variant="footer" direction="up" />
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function Footer() {
         </div>
 
         {/* Elegant Curved Gradient Waves Decoration at Footer Bottom (Persis Gambar) */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none opacity-40">
+        <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none opacity-40 overflow-hidden">
           <svg
             className="w-full h-full"
             viewBox="0 0 1440 120"
