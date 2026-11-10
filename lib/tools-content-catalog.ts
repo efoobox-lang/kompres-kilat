@@ -377,27 +377,28 @@ export const TOOLS_EDITORIAL_CATALOG: Record<string, ToolEditorialData> = {
 
   'zip-utility': {
     id: 'zip-utility',
-    badge: 'Kompresi Arsip Tanpa Upload',
-    h1: 'Arsip ZIP Multi-File: Ekstrak & Kompresi Berkas Online',
-    tagline: 'Bungkus Banyak Berkas Jadi Satu Arsip .zip atau Ekstrak Isi ZIP Langsung di Peramban',
-    intro: 'Arsip ZIP Multi-File KompresKilat adalah solusi praktis untuk mengelola kumpulan berkas berukuran besar langsung di dalam browser tanpa harus menginstal aplikasi pihak ketiga seperti WinRAR atau 7-Zip. Alat ini sangat berguna ketika Anda perlu membungkus puluhan dokumen tugas, foto portofolio, invoice, atau aset kode ke dalam satu berkas .zip yang rapi sebelum dikirim melalui email atau diunggah ke Google Drive. Selain itu, Anda juga dapat membuka dan mengekstrak isi file ZIP yang Anda terima dari internet untuk mengunduh dokumen di dalamnya satu per satu secara selektif dengan keamanan data 100% terjaga di perangkat lokal Anda.',
+    badge: 'Proteksi Sandi & Ekstraksi Arsip',
+    h1: 'Pengolah Arsip ZIP Online: Buat, Kunci Sandi & Ekstrak Berkas',
+    tagline: 'Kemas & Lindungi Dokumen Penting dengan Password atau Buka Proteksi ZIP Terkunci Secara Instan',
+    intro: 'Arsip ZIP Multi-File KompresKilat adalah solusi lengkap untuk mengelola berkas dokumen, gambar, laporan, dan aset digital dalam satu tempat tanpa perlu memasang aplikasi berat seperti WinRAR atau 7-Zip. Fitur "Add to Archive & Protect" memungkinkan Anda mengunggah banyak file sekaligus dan menguncinya dengan kata sandi (password encryption) berstandar ZipCrypto yang kompatibel di semua sistem operasi seperti Windows, Mac, Android, dan iPhone. Jika Anda menerima file arsip ZIP yang terkunci, gunakan tab "Unprotect" untuk memasukkan kata sandi, melihat pratinjau daftar file di dalamnya, dan mengunduh berkas yang didekripsi satu per satu atau sekaligus. Semua proses pengemasan dan dekripsi diproses secara aman dengan standar privasi tinggi tanpa menyimpan file Anda secara permanen di server.',
     benefits: [
-      { icon: '🗜️', title: 'Kompresi Cepat & Efisien', desc: 'Kemas ratusan file dokumen dan foto menjadi satu file arsip .zip yang terstruktur rapi.' },
-      { icon: '📦', title: 'Ekstraksi Selektif', desc: 'Buka dan lihat daftar isi berkas ZIP langsung di browser tanpa perlu mengekstrak seluruh isi file.' },
-      { icon: '🛡️', title: 'Bebas Risiko Virus Server', desc: 'Semua proses kompresi dan unzipping dieksekusi secara lokal di dalam memori komputer Anda.' }
+      { icon: '🔒', title: 'Proteksi Sandi ZipCrypto', desc: 'Lindungi arsip ZIP Anda dengan kata sandi opsional yang kompatibel dengan Windows Explorer & WinRAR.' },
+      { icon: '📁', title: 'Multi-File Drop & Preview', desc: 'Unggah puluhan dokumen sekaligus dengan pratinjau nama file, ukuran, dan opsi hapus berkas fleksibel.' },
+      { icon: '🔓', title: 'Ekstraksi ZIP Terproteksi', desc: 'Buka file ZIP berkata sandi dan unduh dokumen di dalamnya satu per satu secara selektif.' }
     ],
-    howToTitle: 'Cara Mengompres atau Mengekstrak Berkas Arsip ZIP:',
-    howToSubtitle: 'Panduan mudah mengelola file arsip ZIP secara cepat tanpa instalasi software',
+    howToTitle: 'Cara Mengompres, Mengunci & Mengekstrak Arsip ZIP:',
+    howToSubtitle: 'Panduan lengkap membuat arsip ZIP berpassword dan mengekstrak isinya secara praktis',
     howToSteps: [
-      { step: 1, title: 'Pilih Mode (Kemas ZIP atau Ekstrak)', desc: 'Tentukan apakah Anda ingin membungkus banyak file menjadi ZIP baru, atau mengekstrak file ZIP yang sudah ada.' },
-      { step: 2, title: 'Unggah Dokumen atau File ZIP', desc: 'Seret berkas-berkas Anda ke area dropzone. Daftar nama file dan ukuran akan tampil secara rapi.' },
-      { step: 3, title: 'Tentukan Nama Arsip (Jika Membuat)', desc: 'Ketik nama berkas arsip yang diinginkan sebelum proses pengemasan dimulai.' },
-      { step: 4, title: 'Unduh Hasil ZIP atau File yang Diekstrak', desc: 'Klik tombol unduh untuk menyimpan file .zip baru atau mengambil dokumen yang telah didekompresi.' }
+      { step: 1, title: 'Pilih Mode: Buat/Kunci atau Ekstrak', desc: 'Tentukan tab "Buat & Kunci ZIP" untuk mengarsipkan berkas baru, atau tab "Ekstrak ZIP" untuk membuka arsip yang terkunci.' },
+      { step: 2, title: 'Unggah Dokumen atau Berkas ZIP', desc: 'Pilih banyak file sekaligus menggunakan fitur multi-upload. Sistem akan menampilkan rincian nama dan ukuran setiap file.' },
+      { step: 3, title: 'Masukkan Kata Sandi (Opsional)', desc: 'Ketik password untuk mengamankan arsip baru, atau masukkan kata sandi yang sesuai untuk membuka arsip ZIP yang terkunci.' },
+      { step: 4, title: 'Proses & Unduh Berkas', desc: 'Klik "Buat & Kunci Arsip ZIP" untuk mengunduh file .zip yang terlindungi, atau klik "Buka Proteksi & Ekstrak" untuk mengambil berkas hasil ekstraksi.' }
     ],
     faq: [
-      { q: 'Apakah ada batasan ukuran file yang bisa dikompres menjadi ZIP di sini?', a: 'Kapasitas bergantung pada memori RAM perangkat Anda. Untuk komputer dan ponsel modern, Anda dapat mengemas hingga puluhan atau ratusan megabyte dengan sangat lancar.' },
-      { q: 'Apakah file ZIP yang dihasilkan kompatibel dengan Windows, Mac, dan HP?', a: 'Ya, file .zip yang dibuat berstandar kompresi PKZIP internasional sehingga dapat dibuka di Windows Explorer, macOS Finder, iOS Files, maupun Android tanpa kendala.' },
-      { q: 'Apakah berkas rahasia di dalam ZIP aman dari pencurian data?', a: 'Sangat aman. Tidak ada transmisi jaringan ke server mana pun karena seluruh pembacaan byte data ZIP dilakukan di browser Anda sendiri.' }
+      { q: 'Bagaimana cara kerja enkripsi kata sandi pada arsip ZIP di sini?', a: 'Sistem menggunakan algoritma ZipCrypto (PKWARE Encryption) standar global. Format ini menjamin berkas arsip Anda dapat dibuka langsung menggunakan Windows Explorer, macOS Finder, 7-Zip, WinRAR, maupun aplikasi unzipper smartphone setelah memasukkan password yang benar.' },
+      { q: 'Apakah file dokumen atau kata sandi saya disimpan di server?', a: 'Sama sekali tidak. KompresKilat beroperasi dengan prinsip zero-retention. Berkas hanya diproses secara ephemeral di dalam memori saat enkripsi/dekripsi berlangsung dan langsung dimusnahkan seketika setelah transmisi selesai. Kami tidak pernah menyimpan file, log isi arsip, maupun password Anda.' },
+      { q: 'Apa yang terjadi jika saya lupa kata sandi dari file ZIP yang saya kunci?', a: 'Karena sifat enkripsi yang independen dan tanpa pintu belakang (backdoor), file ZIP yang terkunci tidak dapat dipulihkan tanpa kata sandi yang valid. Pastikan Anda mengingat atau mencatat kata sandi yang Anda tentukan saat membuat arsip.' },
+      { q: 'Apakah saya bisa membuat arsip ZIP biasa tanpa kata sandi?', a: 'Tentu saja. Anda cukup mengosongkan kolom kata sandi. Sistem akan secara otomatis mengemas semua berkas pilihan Anda menjadi arsip ZIP standar yang dapat langsung dibuka oleh siapa saja tanpa sandi.' }
     ],
     relatedToolIds: ['pdf-merge', 'file-utility', 'batch-compress'],
     relatedBlogSlugs: ['cara-menggabungkan-file-pdf-menjadi-satu-online-gratis', 'cara-edit-foto-dokumen-ktp-watermark-keamanan']
