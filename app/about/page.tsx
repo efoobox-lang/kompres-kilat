@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       <Navbar />
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-6 sm:space-y-8">

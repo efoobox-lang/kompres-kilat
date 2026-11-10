@@ -93,7 +93,7 @@ export default function QrGeneratorPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       <JsonLd data={schema} />
       <Navbar />
 

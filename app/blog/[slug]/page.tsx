@@ -84,7 +84,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     : null;
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {articleSchema && <JsonLd data={articleSchema} />}
 
       {/* Header / Navbar Responsif */}

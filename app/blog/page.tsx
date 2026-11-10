@@ -13,7 +13,7 @@ export default async function BlogPage() {
   const posts = await getAllPublicBlogPosts();
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Header / Navbar */}
       <Navbar />
 

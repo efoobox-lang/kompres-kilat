@@ -141,7 +141,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       {/* ============================================================ */}
       {/* 2. FEATURED / MOST POPULAR TOOLS SECTION ("Paling Sering Digunakan") */}
       {/* ============================================================ */}
-      <section className="mb-14 sm:mb-20">
+      <section className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-800/80 pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -371,7 +371,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       {/* ============================================================ */}
       {/* 5. EDITORIAL GUIDE & FAQ EKOSISTEM KOMPRESKILAT (AdSense Value) */}
       {/* ============================================================ */}
-      <section className="mb-14 sm:mb-20">
+      <section className="mb-6 sm:mb-8">
         <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 md:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-8 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
           <div>
             <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-bold mb-3">

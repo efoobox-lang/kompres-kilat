@@ -606,7 +606,7 @@ export default function InvoiceGeneratorPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans">
       <JsonLd data={schema} />
       <div className="print:hidden">
         <Navbar />

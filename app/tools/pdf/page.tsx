@@ -133,7 +133,7 @@ export default function CompressPdfPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       <Navbar />
 
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">

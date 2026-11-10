@@ -20,7 +20,7 @@ export default function CreativeStudioPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans transition-colors pb-16">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans transition-colors">
       <JsonLd data={schemaData} />
       <Navbar />
 

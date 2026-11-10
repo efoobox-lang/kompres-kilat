@@ -308,7 +308,7 @@ export default function SeoAuditPage() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16 transition-colors">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors">
       <Navbar />
 
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
