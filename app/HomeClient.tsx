@@ -23,6 +23,7 @@ import {
   Search,
   Image as ImageIcon,
   RefreshCw,
+  Volume2,
   X,
 } from 'lucide-react';
 
@@ -345,57 +346,440 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       </section>
 
       {/* ============================================================ */}
-      {/* 4. BLOG & ARTIKEL TERBARU SECTION                            */}
+      {/* 3. SHOWCASE TIER: TOOLS POPULER, TERBARU & PROMO (Persis Mockup) */}
       {/* ============================================================ */}
-      <section className="pt-10 sm:pt-14 border-t border-slate-200 dark:border-slate-800">
+      <section className="pt-8 sm:pt-12 border-t border-slate-200/80 dark:border-slate-800 mb-10 sm:mb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          
+          {/* Kolom 1: Tools Populer */}
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔥</span>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">
+                    Tools Populer
+                  </h3>
+                </div>
+                <a
+                  href="#tools"
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-0.5 transition"
+                >
+                  <span>Lihat Semua</span>
+                  <span>→</span>
+                </a>
+              </div>
+
+              <div className="space-y-3.5">
+                {/* 1. Kompres PDF */}
+                <Link
+                  href="/tools/pdf"
+                  className="flex items-center justify-between gap-2.5 py-1 hover:translate-x-1 transition-transform group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      1
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                      Kompres PDF
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      1.2M+ kali digunakan
+                    </span>
+                    <svg className="w-10 h-3.5 text-blue-500" viewBox="0 0 48 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M 2 12 Q 10 4, 18 10 T 34 6 T 46 8" />
+                    </svg>
+                  </div>
+                </Link>
+
+                {/* 2. Resize Gambar */}
+                <Link
+                  href="/tools/image"
+                  className="flex items-center justify-between gap-2.5 py-1 hover:translate-x-1 transition-transform group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      2
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                      Resize Gambar
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      980K+ kali digunakan
+                    </span>
+                    <svg className="w-10 h-3.5 text-blue-500" viewBox="0 0 48 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M 2 11 Q 12 3, 22 9 T 36 5 T 46 7" />
+                    </svg>
+                  </div>
+                </Link>
+
+                {/* 3. PDF ke Word */}
+                <Link
+                  href="/tools/pdf-to-word"
+                  className="flex items-center justify-between gap-2.5 py-1 hover:translate-x-1 transition-transform group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      3
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                      PDF ke Word
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      720K+ kali digunakan
+                    </span>
+                    <svg className="w-10 h-3.5 text-blue-500" viewBox="0 0 48 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M 2 13 Q 14 5, 24 11 T 38 7 T 46 9" />
+                    </svg>
+                  </div>
+                </Link>
+
+                {/* 4. Konversi JPG ke PNG */}
+                <Link
+                  href="/tools/image"
+                  className="flex items-center justify-between gap-2.5 py-1 hover:translate-x-1 transition-transform group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-black flex items-center justify-center shrink-0">
+                      4
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                      Konversi JPG ke PNG
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      680K+ kali digunakan
+                    </span>
+                    <svg className="w-10 h-3.5 text-blue-500" viewBox="0 0 48 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M 2 12 Q 10 4, 18 10 T 34 6 T 46 8" />
+                    </svg>
+                  </div>
+                </Link>
+
+                {/* 5. Gabung PDF */}
+                <Link
+                  href="/tools/pdf-merge"
+                  className="flex items-center justify-between gap-2.5 py-1 hover:translate-x-1 transition-transform group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-black flex items-center justify-center shrink-0">
+                      5
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                      Gabung PDF
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      560K+ kali digunakan
+                    </span>
+                    <svg className="w-10 h-3.5 text-blue-500" viewBox="0 0 48 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M 2 11 Q 12 3, 22 9 T 36 5 T 46 7" />
+                    </svg>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Kolom 2: Terbaru Ditambahkan */}
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">⭐</span>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">
+                    Terbaru Ditambahkan
+                  </h3>
+                </div>
+                <a
+                  href="#tools"
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-0.5 transition"
+                >
+                  <span>Lihat Semua</span>
+                  <span>→</span>
+                </a>
+              </div>
+
+              <div className="space-y-3.5">
+                {/* Tool 1: AI Summarizer */}
+                <Link
+                  href="/tools/document-summarizer"
+                  className="flex items-center justify-between gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                        AI Summarizer
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        Ringkas teks dengan AI
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
+                    Baru
+                  </span>
+                </Link>
+
+                {/* Tool 2: PDF ke PowerPoint */}
+                <Link
+                  href="/tools/pdf-to-ppt"
+                  className="flex items-center justify-between gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-red-500 text-white flex items-center justify-center shrink-0 shadow-xs font-black text-xs">
+                      PPT
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                        PDF ke PowerPoint
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        Konversi PDF ke PPT
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
+                    Baru
+                  </span>
+                </Link>
+
+                {/* Tool 3: Teks ke Suara */}
+                <Link
+                  href="/tools/pro-editor"
+                  className="flex items-center justify-between gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Volume2 className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
+                        Teks ke Suara
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        Ubah teks menjadi suara
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
+                    Baru
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Kolom 3: Promo Banner Lebih Produktif dengan Roket */}
+          <div className="lg:col-span-4 bg-gradient-to-br from-[#2563eb] via-[#1d4ed8] to-[#1e40af] rounded-3xl p-6 sm:p-7 text-white relative overflow-hidden shadow-lg shadow-blue-500/20 flex flex-col justify-between group">
+            {/* Background Graphic: 3D Rocket blasting off with clouds */}
+            <div className="absolute right-0 bottom-0 w-44 sm:w-52 h-44 sm:h-52 pointer-events-none select-none">
+              <svg viewBox="0 0 240 220" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="rocketBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="70%" stopColor="#f1f5f9" />
+                    <stop offset="100%" stopColor="#cbd5e1" />
+                  </linearGradient>
+                  <linearGradient id="rocketCone" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#b91c1c" />
+                  </linearGradient>
+                  <linearGradient id="rocketFlame" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" />
+                    <stop offset="60%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </linearGradient>
+                </defs>
+
+                {/* Flame Trail */}
+                <g transform="translate(130, 115) rotate(45)">
+                  <path d="M-12,0 C-18,25 -28,60 0,85 C28,60 18,25 12,0 Z" fill="url(#rocketFlame)" opacity="0.95" />
+                  <path d="M-6,0 C-9,15 -12,35 0,50 C12,35 9,15 6,0 Z" fill="#fef08a" />
+                </g>
+
+                {/* Angled Rocket Body */}
+                <g transform="translate(170, 75) rotate(45)">
+                  {/* Left Fin */}
+                  <path d="M-22,35 C-38,45 -42,70 -38,78 C-30,76 -20,60 -18,48 Z" fill="url(#rocketCone)" />
+                  {/* Right Fin */}
+                  <path d="M22,35 C38,45 42,70 38,78 C30,76 20,60 18,48 Z" fill="url(#rocketCone)" />
+                  {/* Center Fin */}
+                  <path d="M-3,40 L3,40 L2,72 L-2,72 Z" fill="#991b1b" />
+
+                  {/* Fuselage */}
+                  <path d="M0,-55 C22,-20 25,35 20,55 C12,58 -12,58 -20,55 C-25,35 -22,-20 0,-55 Z" fill="url(#rocketBody)" />
+
+                  {/* Nose Cone */}
+                  <path d="M0,-55 C12,-38 18,-20 19,-10 L-19,-10 C-18,-20 -12,-38 0,-55 Z" fill="url(#rocketCone)" />
+
+                  {/* Window Ring */}
+                  <circle cx="0" cy="8" r="13" fill="#0284c7" stroke="#38bdf8" strokeWidth="2.5" />
+                  <circle cx="0" cy="8" r="9.5" fill="#0369a1" />
+                  <ellipse cx="-3" cy="5" rx="3.5" ry="2" fill="#bae6fd" opacity="0.8" transform="rotate(-30, -3, 5)" />
+                  <line x1="-19" y1="36" x2="19" y2="36" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="2 2" />
+                </g>
+
+                {/* Fluffy white clouds at bottom */}
+                <circle cx="210" cy="205" r="45" fill="#ffffff" opacity="0.95" />
+                <circle cx="160" cy="210" r="38" fill="#ffffff" opacity="0.92" />
+                <circle cx="120" cy="225" r="32" fill="#ffffff" opacity="0.85" />
+                <circle cx="225" cy="165" r="32" fill="#ffffff" opacity="0.9" />
+                <circle cx="185" cy="180" r="35" fill="#ffffff" opacity="0.95" />
+              </svg>
+            </div>
+
+            <div className="relative z-10">
+              <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-2 tracking-tight">
+                Lebih Produktif<br />dengan KompresKilat
+              </h3>
+              <p className="text-xs sm:text-sm text-blue-100 max-w-[210px] leading-relaxed mb-6 font-medium">
+                Akses 43 tools terbaik, cepat, mudah dan gratis!
+              </p>
+            </div>
+
+            <div className="relative z-10 pt-2">
+              <a
+                href="#tools"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-slate-900 font-bold text-xs sm:text-sm hover:bg-blue-50 hover:scale-105 active:scale-95 transition-all shadow-md w-fit cursor-pointer"
+              >
+                <span>Mulai Sekarang</span>
+                <span className="font-bold">→</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 4. ARTIKEL & PANDUAN TERBARU SECTION (Persis Mockup 4 Cards) */}
+      {/* ============================================================ */}
+      <section className="mb-12 sm:mb-16">
         <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
-          <div>
-            <span className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">
-              {t('blog_heading_badge')}
-            </span>
-            <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {t('blog_heading_title')}
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📖</span>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              Artikel &amp; Panduan Terbaru
             </h2>
           </div>
           <Link
             href="/blog"
-            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition whitespace-nowrap shrink-0 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-100 dark:border-indigo-800/80 flex items-center gap-1"
+            className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 transition"
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>{t('blog_see_all')}</span>
+            <span>Lihat Semua Artikel</span>
+            <span>→</span>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-          {latestPosts.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800/90 shadow-xs hover:shadow-xl hover:-translate-y-1 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all duration-200 flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md font-bold">
-                    {post.category}
-                  </span>
-                  <span className="text-[11px] text-slate-400">{post.readTime}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {/* Card 1: Cara Mengecilkan Ukuran PDF dengan Mudah */}
+          <Link
+            href="/blog/cara-memperkecil-ukuran-pdf-tugas-kuliah"
+            className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-xl hover:-translate-y-1 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 flex flex-col justify-between group"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-sky-50 dark:from-blue-950/80 dark:to-slate-800 flex items-center justify-center mb-4 transition-transform group-hover:scale-105 duration-200">
+                <div className="w-9 h-11 bg-red-500 rounded-lg shadow-xs flex flex-col items-center justify-center text-white relative">
+                  <span className="text-[10px] font-black tracking-tight">PDF</span>
+                  <div className="w-3 h-1 bg-white/40 rounded-full mt-1"></div>
                 </div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 mb-2 leading-snug transition-colors">
-                  {post.title}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                  {post.excerpt}
-                </p>
               </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-1.5 leading-snug transition-colors">
+                Cara Mengecilkan Ukuran PDF dengan Mudah
+              </h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-2.5">
+                3 Jun 2025 • 5 menit baca
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                Pelajari cara kompres PDF tanpa mengurangi kualitas file.
+              </p>
+            </div>
+          </Link>
 
-              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-                <span>{post.date}</span>
-                <span className="text-indigo-600 dark:text-indigo-400 font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                  {t('blog_read_more')} &rarr;
-                </span>
+          {/* Card 2: Cara Mengubah JPG ke PNG */}
+          <Link
+            href="/blog/perbedaan-format-jpg-png-webp-dan-kapan-harus-dipakai"
+            className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-xl hover:-translate-y-1 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 flex flex-col justify-between group"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-sky-50 dark:from-blue-950/80 dark:to-slate-800 flex items-center justify-center mb-4 transition-transform group-hover:scale-105 duration-200">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl shadow-xs flex items-center justify-center text-white">
+                  <ImageIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
-            </Link>
-          ))}
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-1.5 leading-snug transition-colors">
+                Cara Mengubah JPG ke PNG
+              </h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-2.5">
+                1 Jun 2025 • 4 menit baca
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                Ubah gambar JPG ke PNG dengan kualitas terbaik.
+              </p>
+            </div>
+          </Link>
+
+          {/* Card 3: Cara Menggabungkan File PDF */}
+          <Link
+            href="/blog/cara-menggabungkan-file-pdf-menjadi-satu-online-gratis"
+            className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-xl hover:-translate-y-1 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 flex flex-col justify-between group"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-950/80 dark:to-slate-800 flex items-center justify-center mb-4 transition-transform group-hover:scale-105 duration-200">
+                <div className="w-10 h-10 bg-amber-400 rounded-xl shadow-xs flex items-center justify-center text-blue-700 font-extrabold text-base">
+                  <svg className="w-5 h-5 text-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m8 9-5 3 5 3" />
+                    <path d="M3 12h18" />
+                    <path d="m16 9 5 3-5 3" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-1.5 leading-snug transition-colors">
+                Cara Menggabungkan File PDF
+              </h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-2.5">
+                28 Mei 2025 • 5 menit baca
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                Gabungkan beberapa file PDF menjadi satu dokumen.
+              </p>
+            </div>
+          </Link>
+
+          {/* Card 4: Mengenal OCR: Ekstrak Teks dari Gambar */}
+          <Link
+            href="/blog/cara-ubah-pdf-hasil-scan-ke-word-bisa-diedit-ocr"
+            className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-xl hover:-translate-y-1 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 flex flex-col justify-between group"
+          >
+            <div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-50 dark:from-purple-950/80 dark:to-slate-800 flex items-center justify-center mb-4 transition-transform group-hover:scale-105 duration-200">
+                <div className="w-10 h-10 bg-purple-600 rounded-xl shadow-xs flex items-center justify-center text-white font-black text-[11px] tracking-wider">
+                  OCR
+                </div>
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-1.5 leading-snug transition-colors">
+                Mengenal OCR: Ekstrak Teks dari Gambar
+              </h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-2.5">
+                25 Mei 2025 • 6 menit baca
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                Ubah gambar berisi teks menjadi dokumen teks.
+              </p>
+            </div>
+          </Link>
         </div>
       </section>
 
