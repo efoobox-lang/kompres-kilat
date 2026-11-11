@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog-data';
 import { useLanguage } from '@/context/LanguageContext';
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Flame,
   Layers,
+  ChevronLeft,
   ChevronRight,
   BookOpen,
   ChevronDown,
@@ -32,6 +33,35 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
   const [activeTab, setActiveTab] = useState<ToolCategoryKey>('document');
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Slideshow Gambar Banner Hero (Bergantian otomatis tiap 5 detik)
+  const heroSlides = useMemo(() => [
+    {
+      id: 1,
+      src: '/images/hero-illustration.png',
+      alt: 'Semua Tools Digital dalam Satu Tempat - 43 Tools KompresKilat',
+      width: 467,
+      height: 288,
+    },
+    {
+      id: 2,
+      src: '/images/hero-security.jpg',
+      alt: 'Standar Keamanan Tertinggi - Zero-Knowledge Client-Side Processing KompresKilat',
+      width: 1024,
+      height: 576,
+    },
+  ], []);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isSlidePaused, setIsSlidePaused] = useState(false);
+
+  useEffect(() => {
+    if (isSlidePaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isSlidePaused, heroSlides.length]);
 
   // Home FAQ Data untuk Editorial & Schema JSON-LD
   const homeFaqItems = [
@@ -245,16 +275,69 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
               </div>
             </div>
 
-            {/* Sisi Kanan: Ilustrasi 3D Showcase (Laptop, Phone, 3D Flying Icons, 43 Tools Rocket Badge) */}
+            {/* Sisi Kanan: Slideshow Ilustrasi 3D & Banner Keamanan (Otomatis bergantian tiap 5 detik) */}
             <div className="lg:col-span-5 relative flex items-center justify-center">
-              <div className="relative w-full max-w-[480px] lg:max-w-[520px] transform hover:scale-[1.02] transition-transform duration-300 select-none">
-                <img
-                  src="/images/hero-illustration.png"
-                  alt="43 Tools Digital KompresKilat"
-                  className="w-full h-auto drop-shadow-2xl object-contain rounded-2xl"
-                  width={467}
-                  height={288}
-                />
+              <div
+                className="relative w-full max-w-[480px] lg:max-w-[520px] select-none group"
+                onMouseEnter={() => setIsSlidePaused(true)}
+                onMouseLeave={() => setIsSlidePaused(false)}
+              >
+                {/* Slideshow Card Container */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-100/90 dark:border-slate-800 shadow-xl dark:shadow-slate-950/50 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-3">
+                  {heroSlides.map((slide, index) => (
+                    <div
+                      key={slide.id}
+                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center p-2 sm:p-3 ${
+                        index === currentSlide
+                          ? 'opacity-100 z-10 pointer-events-auto'
+                          : 'opacity-0 z-0 pointer-events-none'
+                      }`}
+                    >
+                      <img
+                        src={slide.src}
+                        alt={slide.alt}
+                        className="w-full h-full object-contain drop-shadow-md rounded-xl"
+                        width={slide.width}
+                        height={slide.height}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Tombol Navigasi Kiri / Kanan (Tampil saat di-hover) */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    aria-label="Slide sebelumnya"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    aria-label="Slide berikutnya"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Indikator Titik Slideshow */}
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/30 dark:bg-black/50 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-xs">
+                    {heroSlides.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={() => setCurrentSlide(dotIdx)}
+                        className={`transition-all duration-300 rounded-full cursor-pointer ${
+                          dotIdx === currentSlide
+                            ? 'w-5 h-1.5 bg-blue-500'
+                            : 'w-1.5 h-1.5 bg-white/70 hover:bg-white'
+                        }`}
+                        aria-label={`Ke slide ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
