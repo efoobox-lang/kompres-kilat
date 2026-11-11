@@ -187,19 +187,14 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                 <span>online terbaik dan gratis!</span>
               </p>
 
-              {/* Keterangan Standar Keamanan Tertinggi (Client-Side First & Zero-Knowledge) */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white/85 dark:bg-slate-900/85 border border-blue-200/90 dark:border-blue-900/60 shadow-xs space-y-1.5 backdrop-blur-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
-                    Standar Keamanan Tertinggi: Zero-Knowledge Client-Side Processing
-                  </h2>
+              {/* Standar Keamanan Tertinggi (Persis Gambar Lampiran) */}
+              <div className="flex items-center gap-2 py-0.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Berbeda dengan situs kompresi konvensional yang mewajibkan Anda mengunggah dokumen pribadi ke server cloud asing, KompresKilat dibangun dengan arsitektur <strong>Client-Side First</strong>. Berkas Anda diproses secara instan di dalam memori peramban pengguna memanfaatkan teknologi modern <strong>HTML5 Canvas, WebAssembly, dan Web Workers</strong>. Data Anda tidak pernah diunggah atau disimpan di server kami, menjamin kepatuhan penuh terhadap <strong>UU Perlindungan Data Pribadi (UU PDP)</strong>.
-                </p>
+                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                  Standar Keamanan Tertinggi: Zero-Knowledge Client-Side Processing
+                </span>
               </div>
 
               {/* Search Bar Berbentuk Pil Modern (Persis Gambar) */}
