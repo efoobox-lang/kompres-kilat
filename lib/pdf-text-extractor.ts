@@ -218,7 +218,7 @@ export async function extractTextFromPdf(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pdfDoc: any;
   try {
-    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+    const loadingTask = pdfjs.getDocument({ data: arrayBuffer.slice(0) });
     pdfDoc = await loadingTask.promise;
   } catch (err: unknown) {
     const error = err as Error;

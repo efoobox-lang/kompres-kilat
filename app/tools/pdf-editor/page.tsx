@@ -281,7 +281,7 @@ export default function DirectPdfEditorPage() {
 
       const pdfjs = await loadPdfJs();
       const loadingTask = pdfjs.getDocument({
-        data: bytes,
+        data: new Uint8Array(bytes.slice()),
         cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
         cMapPacked: true,
       });
@@ -387,7 +387,7 @@ export default function DirectPdfEditorPage() {
 
       const pdfjs = await loadPdfJs();
       const loadingTask = pdfjs.getDocument({
-        data: bytes,
+        data: new Uint8Array(bytes.slice()),
         cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
         cMapPacked: true,
       });

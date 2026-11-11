@@ -68,6 +68,25 @@ export default function PdfToImagePage() {
     };
   }, [cleanImageUrls]);
 
+  // Helper untuk mendapatkan bytes PDF segar (mencegah bug ArrayBuffer Detached saat setting diubah)
+  const getFreshPdfBytes = async (selectedFile?: File | null): Promise<Uint8Array | null> => {
+    if (cachedPdfBytes.current && cachedPdfBytes.current.byteLength > 0) {
+      return cachedPdfBytes.current;
+    }
+    const targetFile = selectedFile || file;
+    if (targetFile) {
+      try {
+        const arrayBuffer = await targetFile.arrayBuffer();
+        const freshBytes = new Uint8Array(arrayBuffer);
+        cachedPdfBytes.current = freshBytes;
+        return freshBytes;
+      } catch (err) {
+        console.error('Error re-reading file buffer:', err);
+      }
+    }
+    return null;
+  };
+
   // Main PDF rendering engine
   const renderPdfPages = async (bytes: Uint8Array, format: ImageFormat, scale: DpiScale) => {
     cleanImageUrls();
@@ -76,15 +95,25 @@ export default function PdfToImagePage() {
     setErrorMessage('');
     setSuccessMessage('');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let pdfDoc: any = null;
+
     try {
       const pdfjs = await loadPdfJs();
+
+      // PENTING: Selalu buat salinan bytes (cloned buffer) untuk ditransfer ke Web Worker PDF.js.
+      // Jika bytes asli di-transfer tanpa disalin, ArrayBuffer miliknya akan 'detached' (panjang 0)
+      // dan aksi berikutnya (seperti ganti ke PNG Tajam atau 3x Ultra HD) akan memicu error:
+      // "Failed to execute 'postMessage' on 'Worker': An ArrayBuffer is detached and could not be cloned."
+      const bytesForWorker = new Uint8Array(bytes.slice());
+
       const loadingTask = pdfjs.getDocument({
-        data: bytes,
+        data: bytesForWorker,
         cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
         cMapPacked: true,
       });
 
-      const pdfDoc = await loadingTask.promise;
+      pdfDoc = await loadingTask.promise;
       const totalPages = pdfDoc.numPages;
       setRenderProgress({ current: 0, total: totalPages });
 
@@ -97,8 +126,8 @@ export default function PdfToImagePage() {
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
 
         if (ctx) {
           // Fill background white for JPG to avoid black backgrounds
@@ -123,8 +152,8 @@ export default function PdfToImagePage() {
               pageNumber: i,
               imageUrl: url,
               blob: blob,
-              width: viewport.width,
-              height: viewport.height,
+              width: canvas.width,
+              height: canvas.height,
               format: format,
             });
           }
@@ -132,12 +161,17 @@ export default function PdfToImagePage() {
       }
 
       setRenderedPages(newPages);
-      setSuccessMessage(`Berhasil me-render ${newPages.length} halaman menjadi gambar ${format.toUpperCase()}.`);
+      setSuccessMessage(`Berhasil me-render ${newPages.length} halaman menjadi gambar ${format.toUpperCase()} (${scale}x).`);
     } catch (err: unknown) {
       console.error('Error rendering PDF pages to image:', err);
       const msg = err instanceof Error ? err.message : 'Gagal mengubah lembar PDF menjadi gambar.';
       setErrorMessage(msg.includes('password') ? 'Berkas PDF terenkripsi sandi. Buka kuncinya terlebih dahulu.' : msg);
     } finally {
+      if (pdfDoc) {
+        try {
+          await pdfDoc.destroy();
+        } catch {}
+      }
       setIsRendering(false);
     }
   };
@@ -162,10 +196,10 @@ export default function PdfToImagePage() {
     setIsLoading(true);
 
     try {
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      cachedPdfBytes.current = bytes;
-      await renderPdfPages(bytes, selectedFormat, scaleFactor);
+      const bytes = await getFreshPdfBytes(selectedFile);
+      if (bytes) {
+        await renderPdfPages(bytes, selectedFormat, scaleFactor);
+      }
     } catch (err) {
       console.error('Error preparing PDF file:', err);
       setErrorMessage('Gagal membaca berkas PDF.');
@@ -175,11 +209,15 @@ export default function PdfToImagePage() {
   };
 
   const handleSettingsChange = async (newFormat: ImageFormat, newScale: DpiScale) => {
+    if (isRendering) return;
     setSelectedFormat(newFormat);
     setScaleFactor(newScale);
 
-    if (cachedPdfBytes.current) {
-      await renderPdfPages(cachedPdfBytes.current, newFormat, newScale);
+    const bytes = await getFreshPdfBytes();
+    if (bytes) {
+      await renderPdfPages(bytes, newFormat, newScale);
+    } else {
+      setErrorMessage('Berkas PDF tidak ditemukan atau memori telah dilepas. Silakan pilih ulang file PDF.');
     }
   };
 
@@ -374,22 +412,24 @@ export default function PdfToImagePage() {
                 <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs">
                   <button
                     type="button"
+                    disabled={isRendering}
                     onClick={() => handleSettingsChange('jpg', scaleFactor)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedFormat === 'jpg'
                         ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     JPG (Ringan)
                   </button>
                   <button
                     type="button"
+                    disabled={isRendering}
                     onClick={() => handleSettingsChange('png', scaleFactor)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedFormat === 'png'
                         ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     PNG (Tajam)
@@ -400,9 +440,10 @@ export default function PdfToImagePage() {
                 <div className="flex items-center gap-1.5 text-xs">
                   <Sliders className="w-3.5 h-3.5 text-slate-400" />
                   <select
+                    disabled={isRendering}
                     value={scaleFactor}
                     onChange={(e) => handleSettingsChange(selectedFormat, parseInt(e.target.value, 10) as DpiScale)}
-                    className="text-xs px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-none text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
+                    className="text-xs px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-none text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <option value={1}>1x (Standar 72 DPI)</option>
                     <option value={2}>2x (HD 150 DPI)</option>
@@ -413,9 +454,9 @@ export default function PdfToImagePage() {
                 {/* Download All ZIP */}
                 <button
                   type="button"
-                  disabled={isZipping || isRendering}
+                  disabled={isZipping || isRendering || renderedPages.length === 0}
                   onClick={downloadAllAsZip}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isZipping ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
                   Unduh Semua (ZIP)

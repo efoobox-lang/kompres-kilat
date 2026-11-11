@@ -441,7 +441,7 @@ export default function PassportIdUtilityPage() {
 
         // Render first page preview via pdfjs-dist
         const pdfjs = await loadPdfJs();
-        const loadingTask = pdfjs.getDocument({ data: bytes });
+        const loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes.slice()) });
         const doc = await loadingTask.promise;
         setPdfTotalPages(doc.numPages);
 
