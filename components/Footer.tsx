@@ -25,7 +25,7 @@ export default function Footer() {
       {/* 1. VALUE PROPOSITION / TRUST BADGES BAR (Persis Mockup)   */}
       {/* ========================================================== */}
       <div className="w-full bg-white dark:bg-slate-900/90 border-y border-slate-200/90 dark:border-slate-800 py-6 px-4 transition-colors">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {/* Badge 1: Cepat & Gratis */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -92,7 +92,7 @@ export default function Footer() {
       {/* 2. MODERN DARK NAVY FOOTER CONTAINER                       */}
       {/* ========================================================== */}
       <footer className="w-full bg-[#070d1e] text-slate-300 relative pt-10 pb-6 border-t border-slate-800/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Top Row: Brand Info, Links Navigasi, Social Icons */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-800/80">
             {/* Sisi Kiri: Logo & Tagline */}

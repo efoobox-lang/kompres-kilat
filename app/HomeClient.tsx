@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Volume2,
   X,
+  ZoomIn,
 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
@@ -54,6 +55,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isSlidePaused, setIsSlidePaused] = useState(false);
+  const [previewSlideModal, setPreviewSlideModal] = useState<string | null>(null);
 
   useEffect(() => {
     if (isSlidePaused) return;
@@ -185,6 +187,21 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                 <span>online terbaik dan gratis!</span>
               </p>
 
+              {/* Keterangan Standar Keamanan Tertinggi (Client-Side First & Zero-Knowledge) */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white/85 dark:bg-slate-900/85 border border-blue-200/90 dark:border-blue-900/60 shadow-xs space-y-1.5 backdrop-blur-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                    Standar Keamanan Tertinggi: Zero-Knowledge Client-Side Processing
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Berbeda dengan situs kompresi konvensional yang mewajibkan Anda mengunggah dokumen pribadi ke server cloud asing, KompresKilat dibangun dengan arsitektur <strong>Client-Side First</strong>. Berkas Anda diproses secara instan di dalam memori peramban pengguna memanfaatkan teknologi modern <strong>HTML5 Canvas, WebAssembly, dan Web Workers</strong>. Data Anda tidak pernah diunggah atau disimpan di server kami, menjamin kepatuhan penuh terhadap <strong>UU Perlindungan Data Pribadi (UU PDP)</strong>.
+                </p>
+              </div>
+
               {/* Search Bar Berbentuk Pil Modern (Persis Gambar) */}
               <form onSubmit={handleSearchSubmit} className="relative max-w-xl">
                 <div className="flex items-center bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm p-1.5 pl-4 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
@@ -275,19 +292,22 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
               </div>
             </div>
 
-            {/* Sisi Kanan: Slideshow Ilustrasi 3D & Banner Keamanan (Otomatis bergantian tiap 5 detik) */}
-            <div className="lg:col-span-5 relative flex items-center justify-center">
+            {/* Sisi Kanan: Slideshow Ilustrasi 3D & Banner Keamanan (Diperbesar & Jernih) */}
+            <div className="lg:col-span-5 relative flex items-center justify-center w-full">
               <div
-                className="relative w-full max-w-[480px] lg:max-w-[520px] select-none group"
+                className="relative w-full max-w-full lg:max-w-[560px] xl:max-w-[620px] select-none group"
                 onMouseEnter={() => setIsSlidePaused(true)}
                 onMouseLeave={() => setIsSlidePaused(false)}
               >
-                {/* Slideshow Card Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-100/90 dark:border-slate-800 shadow-xl dark:shadow-slate-950/50 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-3">
+                {/* Slideshow Card Container (Format 16/9 presisi sesuai gambar infografis) */}
+                <div 
+                  onClick={() => setPreviewSlideModal(heroSlides[currentSlide].src)}
+                  className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-200/90 dark:border-slate-800 shadow-xl dark:shadow-slate-950/50 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-center p-1 sm:p-2 cursor-pointer group/card"
+                >
                   {heroSlides.map((slide, index) => (
                     <div
                       key={slide.id}
-                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center p-2 sm:p-3 ${
+                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center p-1 sm:p-2 ${
                         index === currentSlide
                           ? 'opacity-100 z-10 pointer-events-auto'
                           : 'opacity-0 z-0 pointer-events-none'
@@ -296,17 +316,34 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                       <img
                         src={slide.src}
                         alt={slide.alt}
-                        className="w-full h-full object-contain drop-shadow-md rounded-xl"
+                        className="w-full h-full object-contain drop-shadow-md rounded-xl transition-transform duration-300 group-hover/card:scale-[1.01]"
                         width={slide.width}
                         height={slide.height}
                       />
                     </div>
                   ))}
 
+                  {/* Tombol Perbesar / Zoom Modal */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewSlideModal(heroSlides[currentSlide].src);
+                    }}
+                    className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 hover:bg-black/60 text-white text-[10px] font-semibold backdrop-blur-xs transition-opacity duration-200 opacity-80 group-hover:opacity-100 cursor-pointer shadow-xs"
+                    title="Klik untuk memperbesar gambar"
+                  >
+                    <ZoomIn className="w-3 h-3" />
+                    <span className="hidden sm:inline">Perbesar</span>
+                  </button>
+
                   {/* Tombol Navigasi Kiri / Kanan (Tampil saat di-hover) */}
                   <button
                     type="button"
-                    onClick={() => setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
+                    }}
                     className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
                     aria-label="Slide sebelumnya"
                   >
@@ -314,7 +351,10 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+                    }}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
                     aria-label="Slide berikutnya"
                   >
@@ -327,7 +367,10 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                       <button
                         key={dotIdx}
                         type="button"
-                        onClick={() => setCurrentSlide(dotIdx)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentSlide(dotIdx);
+                        }}
                         className={`transition-all duration-300 rounded-full cursor-pointer ${
                           dotIdx === currentSlide
                             ? 'w-5 h-1.5 bg-blue-500'
@@ -346,8 +389,9 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
 
       {/* ============================================================ */}
       {/* MAIN CONTENT WRAPPER: All Tools, Guides, FAQ                 */}
+      {/* Lebar Kontainer Sejajar Presisi dengan Header (max-w-7xl)    */}
       {/* ============================================================ */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-12">
 
       {/* ============================================================ */}
       {/* 2. CATEGORY TABS & FILTERABLE ALL TOOLS                      */}
@@ -965,6 +1009,42 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
           </div>
         </div>
       </section>
+
+      {/* Lightbox Preview Modal for Slideshow Graphic */}
+      {previewSlideModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPreviewSlideModal(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8 animate-in fade-in duration-200 cursor-zoom-out"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-5xl w-full max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl p-2 sm:p-4 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center cursor-default"
+          >
+            <div className="w-full flex items-center justify-between pb-2 px-2 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Infografis Arsitektur Keamanan Zero-Knowledge
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewSlideModal(null)}
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                aria-label="Tutup preview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="w-full h-full flex items-center justify-center overflow-auto p-2">
+              <img
+                src={previewSlideModal}
+                alt="Infografis Keamanan KompresKilat"
+                className="max-h-[75vh] w-auto object-contain rounded-lg shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Structured Data FAQPage for Homepage */}
       <JsonLd data={faqSchemaData} />
