@@ -27,6 +27,10 @@ import {
   Volume2,
   X,
   ZoomIn,
+  Check,
+  Zap,
+  Trash2,
+  Heart,
 } from 'lucide-react';
 
 export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] }) {
@@ -166,38 +170,50 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
       {/* ============================================================ */}
       {/* 1. HERO BANNER SECTION (Persis Mockup Gambar)                */}
       {/* ============================================================ */}
-      <section className="w-full bg-gradient-to-r from-[#eef4fe] via-[#e5f0fd] to-[#dce9fc] dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900 border-b border-blue-100/90 dark:border-slate-800 relative overflow-hidden py-10 sm:py-14 lg:py-16">
+      <section className="w-full bg-gradient-to-b from-[#eef4fe] via-[#e8f1fd] to-[#f4f8fe] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border-b border-blue-100/90 dark:border-slate-800 relative overflow-hidden pt-8 sm:pt-12 pb-10 sm:pb-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Sisi Kiri: Teks Judul, Deskripsi, Search Bar, Quick Tags */}
             <div className="lg:col-span-7 space-y-5 text-left">
-              {/* Judul Utama */}
-              <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
-                Semua Tools Digital <br />
-                dalam <span className="text-blue-600 dark:text-blue-400">Satu Tempat</span>
-              </h1>
-
-              {/* Sub-judul dengan Badge "43 tools" */}
-              <p className="text-xs sm:text-sm md:text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed flex flex-wrap items-center gap-1.5">
-                <span>Cari, gunakan, dan selesaikan pekerjaan digitalmu lebih cepat</span>
-                <span>dengan</span>
-                <span className="bg-blue-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full inline-flex items-center shadow-xs">
-                  43 tools
+              
+              {/* Badge Pill di Atas Judul (Persis Mockup) */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/90 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 text-xs font-semibold shadow-2xs">
+                <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 text-[10px]">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
-                <span>online terbaik dan gratis!</span>
-              </p>
-
-              {/* Standar Keamanan Tertinggi (Persis Gambar Lampiran) */}
-              <div className="flex items-center gap-2 py-0.5">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                  Standar Keamanan Tertinggi: Zero-Knowledge Client-Side Processing
-                </span>
+                <span>Privasi Anda, Prioritas Kami</span>
               </div>
 
-              {/* Search Bar Berbentuk Pil Modern (Persis Gambar) */}
+              {/* Judul Utama dengan Garis Lengkung Kuning / Oranye di "Satu Tempat" */}
+              <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.14]">
+                Semua Tools Digital <br />
+                dalam{' '}
+                <span className="relative inline-block text-blue-600 dark:text-blue-400">
+                  Satu Tempat
+                  {/* Garis lengkung oranye dekoratif (Persis Gambar Mockup) */}
+                  <svg
+                    className="absolute -bottom-1.5 sm:-bottom-2 left-0 w-full h-3 sm:h-3.5 text-amber-400 pointer-events-none"
+                    viewBox="0 0 250 20"
+                    fill="none"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 14C60 4 180 3 247 12"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              {/* Sub-judul Deskripsi Bersih & Kompak */}
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg">
+                Kompres file, ubah format, dan kelola dokumen Anda dengan cepat, aman, dan 100% gratis.
+              </p>
+
+              {/* Search Bar Berbentuk Pil Modern (Persis Gambar Mockup) */}
               <form onSubmit={handleSearchSubmit} className="relative max-w-xl">
                 <div className="flex items-center bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm p-1.5 pl-4 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                   <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0 mr-2" />
@@ -212,7 +228,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1"
+                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -227,7 +243,7 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                 </div>
               </form>
 
-              {/* Tools Populer Quick Tags (Persis Gambar) */}
+              {/* Tools Populer Quick Tags (Persis Gambar Mockup) */}
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
                 <span className="font-bold text-slate-800 dark:text-slate-200 mr-1 text-xs sm:text-sm">
                   Tools Populer:
@@ -287,22 +303,24 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
               </div>
             </div>
 
-            {/* Sisi Kanan: Slideshow Ilustrasi 3D & Banner Keamanan (Diperbesar & Jernih) */}
+            {/* Sisi Kanan: Slideshow Ilustrasi 3D & Banner Keamanan (Persis Mockup Gambar) */}
             <div className="lg:col-span-5 relative flex items-center justify-center w-full">
               <div
-                className="relative w-full max-w-full lg:max-w-[560px] xl:max-w-[620px] select-none group"
+                className="relative w-full max-w-full lg:max-w-[560px] select-none group"
                 onMouseEnter={() => setIsSlidePaused(true)}
                 onMouseLeave={() => setIsSlidePaused(false)}
+                onTouchStart={() => setIsSlidePaused(true)}
+                onTouchEnd={() => setIsSlidePaused(false)}
               >
-                {/* Slideshow Card Container (Format 16/9 presisi sesuai gambar infografis) */}
+                {/* Slideshow Card Container (Format presisi, rounded-3xl, shadow lembut) */}
                 <div 
                   onClick={() => setPreviewSlideModal(heroSlides[currentSlide].src)}
-                  className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-200/90 dark:border-slate-800 shadow-xl dark:shadow-slate-950/50 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-center p-1 sm:p-2 cursor-pointer group/card"
+                  className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-100/90 dark:border-slate-800 shadow-xl dark:shadow-slate-950/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-center p-2 sm:p-3 cursor-pointer"
                 >
                   {heroSlides.map((slide, index) => (
                     <div
                       key={slide.id}
-                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center p-1 sm:p-2 ${
+                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center p-2 sm:p-3 ${
                         index === currentSlide
                           ? 'opacity-100 z-10 pointer-events-auto'
                           : 'opacity-0 z-0 pointer-events-none'
@@ -311,53 +329,15 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                       <img
                         src={slide.src}
                         alt={slide.alt}
-                        className="w-full h-full object-contain drop-shadow-md rounded-xl transition-transform duration-300 group-hover/card:scale-[1.01]"
+                        className="w-full h-full object-contain drop-shadow-md rounded-xl transition-transform duration-300 hover:scale-[1.01]"
                         width={slide.width}
                         height={slide.height}
                       />
                     </div>
                   ))}
 
-                  {/* Tombol Perbesar / Zoom Modal */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewSlideModal(heroSlides[currentSlide].src);
-                    }}
-                    className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 hover:bg-black/60 text-white text-[10px] font-semibold backdrop-blur-xs transition-opacity duration-200 opacity-80 group-hover:opacity-100 cursor-pointer shadow-xs"
-                    title="Klik untuk memperbesar gambar"
-                  >
-                    <ZoomIn className="w-3 h-3" />
-                    <span className="hidden sm:inline">Perbesar</span>
-                  </button>
-
-                  {/* Tombol Navigasi Kiri / Kanan (Tampil saat di-hover) */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
-                    }}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
-                    aria-label="Slide sebelumnya"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-                    }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 sm:p-2 rounded-full bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md backdrop-blur-xs transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer"
-                    aria-label="Slide berikutnya"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-
-                  {/* Indikator Titik Slideshow */}
-                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/30 dark:bg-black/50 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-xs">
+                  {/* Indikator Titik Slideshow di Pojok Kanan Bawah Sesuai Gambar */}
+                  <div className="absolute bottom-3 right-4 sm:right-6 z-20 flex items-center gap-1.5 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-xs border border-slate-200/70 dark:border-slate-800">
                     {heroSlides.map((_, dotIdx) => (
                       <button
                         key={dotIdx}
@@ -368,13 +348,108 @@ export default function HomeClient({ latestPosts }: { latestPosts: BlogPost[] })
                         }}
                         className={`transition-all duration-300 rounded-full cursor-pointer ${
                           dotIdx === currentSlide
-                            ? 'w-5 h-1.5 bg-blue-500'
-                            : 'w-1.5 h-1.5 bg-white/70 hover:bg-white'
+                            ? 'w-5 h-2 bg-blue-600'
+                            : 'w-2 h-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
                         }`}
                         aria-label={`Ke slide ${dotIdx + 1}`}
                       />
                     ))}
                   </div>
+                </div>
+
+                {/* Tombol Panah Kiri (Navigasi Manual & Berulang Terus) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
+                  }}
+                  className="absolute left-1.5 sm:-left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                  aria-label="Slide sebelumnya"
+                  title="Slide sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Tombol Panah Kanan (Navigasi Manual & Berulang Terus) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+                  }}
+                  className="absolute right-1.5 sm:-right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                  aria-label="Slide berikutnya"
+                  title="Slide berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* TRUST BADGES FLOATING BAR (Persis Mockup Gambar)             */}
+          {/* ============================================================ */}
+          <div className="mt-10 sm:mt-14 bg-white/95 dark:bg-slate-900/95 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-6 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800">
+              {/* 1. Keamanan Tingkat Tinggi */}
+              <div className="flex items-center gap-3.5 pr-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/25">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Keamanan Tingkat Tinggi
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Data Anda tidak pernah tersimpan
+                  </p>
+                </div>
+              </div>
+
+              {/* 2. Pemrosesan di Perangkat Anda */}
+              <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:pl-4 sm:pr-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/25">
+                  <Zap className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Pemrosesan di Perangkat Anda
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Tanpa mengunggah ke server
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Data Langsung Terhapus */}
+              <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:pl-4 sm:pr-2">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Data Langsung Terhapus
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Tidak ada jejak data
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. Gratis Selamanya */}
+              <div className="flex items-center gap-3.5 pt-3 sm:pt-0 sm:pl-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/25">
+                  <Heart className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Gratis Selamanya
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Tanpa biaya tersembunyi
+                  </p>
                 </div>
               </div>
             </div>
